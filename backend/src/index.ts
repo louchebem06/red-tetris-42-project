@@ -10,6 +10,8 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Hello World!' })
 });
 
-app.listen(8080, async () => {
+const server = app.listen(8080, () => {
   console.log('Server is running at http://localhost:8080')
 });
+
+export default server;
