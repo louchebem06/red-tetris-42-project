@@ -1,0 +1,29 @@
+name: Test back
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    name: Check test backend
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 18.14.1
+
+    - name: Install dependencies
+      working-directory: backend/
+      run: npm install
+
+    - name: Run run test
+      working-directory: backend/
+      run: npm run test
+
+    - name: Run build
+      working-directory: backend/
+      run: npm run build
