@@ -1,9 +1,14 @@
-name: Test back
+name: Test backend
 
-on: [push, pull_request]
+on:
+  push:
+    paths: ['backend/**']
+  pull_request:
+    branches: ['main']
+    paths: ['backend/**']
 
 jobs:
-  lint:
+  test-backend:
     name: Check test backend
     runs-on: ubuntu-latest
 
