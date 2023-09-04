@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+/dist
+/package
+.env
+.env.*
+!.env.example
+.npmrc
+*.sw[op]
+*/*.sw[op]
+*/*/*.sw[op]
