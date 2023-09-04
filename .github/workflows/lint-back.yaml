@@ -1,9 +1,19 @@
 name: Linter backend
 
-on: [push, pull_request]
+on:
+  push:
+    paths: ['backend/**']
+    branches: [
+      'feat/**', 'feature/**',
+      'fix/**', 'hotfix/**',
+      'facto/**', 'refactorisation/**'
+    ]
+  pull_request:
+    branches: ['main']
+    paths: ['backend/**']
 
 jobs:
-  lint:
+  lint-backend:
     name: Check lint backend
     runs-on: ubuntu-latest
 
