@@ -4,27 +4,39 @@ module.exports = {
 		'eslint:recommended',
 		'plugin:@typescript-eslint/recommended',
 		'plugin:svelte/recommended',
-		'prettier'
+		'prettier',
 	],
 	parser: '@typescript-eslint/parser',
 	plugins: ['@typescript-eslint'],
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020,
-		extraFileExtensions: ['.svelte']
+		extraFileExtensions: ['.svelte'],
 	},
 	env: {
 		browser: true,
 		es2017: true,
-		node: true
+		node: true,
 	},
 	overrides: [
 		{
 			files: ['*.svelte'],
 			parser: 'svelte-eslint-parser',
 			parserOptions: {
-				parser: '@typescript-eslint/parser'
-			}
-		}
-	]
+				parser: '@typescript-eslint/parser',
+			},
+		},
+	],
+	ignorePatterns: ['.eslintrc.csjs'],
+	rules: {
+		'@typescript-eslint/interface-name-prefix': 'off',
+		'@typescript-eslint/explicit-function-return-type': 'error',
+		'@typescript-eslint/explicit-module-boundary-types': 'warn',
+		'@typescript-eslint/no-explicit-any': 'warn',
+		'max-len': ['error', { code: 100 }],
+		'@typescript-eslint/naming-convention': 'error',
+		'@typescript-eslint/no-unused-vars': 'error',
+		'@typescript-eslint/no-var-requires': 'error',
+		'require-await': 'error',
+	},
 };
