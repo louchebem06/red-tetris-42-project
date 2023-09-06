@@ -1,16 +1,6 @@
 name: Test frontend
 
-on:
-  push:
-    paths: ['frontend/**']
-    branches: [
-      'feat/**', 'feature/**',
-      'fix/**', 'hotfix/**',
-      'facto/**', 'refactorisation/**'
-    ]
-  pull_request:
-    branches: ['main']
-    paths: ['frontend/**']
+on: workflow_call
 
 jobs:
   test-frontend:

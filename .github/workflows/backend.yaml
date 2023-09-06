@@ -1,0 +1,19 @@
+name: Backend
+
+on:
+  push:
+    paths: ['backend/**']
+    branches: [
+      'feat/**', 'feature/**',
+      'fix/**', 'hotfix/**',
+      'facto/**', 'refactorisation/**'
+    ]
+  pull_request:
+    branches: ['main']
+    paths: ['backend/**']
+
+jobs:
+  linter-back:
+    uses: ./.github/workflows/lint-back.yaml
+  test-back:
+    uses: ./.github/workflows/test-back.yaml

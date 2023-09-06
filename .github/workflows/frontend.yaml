@@ -1,0 +1,19 @@
+name: Frontend
+
+on:
+  push:
+    paths: ['frontend/**']
+    branches: [
+      'feat/**', 'feature/**',
+      'fix/**', 'hotfix/**',
+      'facto/**', 'refactorisation/**'
+    ]
+  pull_request:
+    branches: ['main']
+    paths: ['frontend/**']
+
+jobs:
+  linter-front:
+    uses: ./.github/workflows/lint-front.yaml
+  test-front:
+    uses: ./.github/workflows/test-front.yaml

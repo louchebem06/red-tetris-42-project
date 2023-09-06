@@ -1,16 +1,6 @@
 name: Linter backend
 
-on:
-  push:
-    paths: ['backend/**']
-    branches: [
-      'feat/**', 'feature/**',
-      'fix/**', 'hotfix/**',
-      'facto/**', 'refactorisation/**'
-    ]
-  pull_request:
-    branches: ['main']
-    paths: ['backend/**']
+on: workflow_call
 
 jobs:
   lint-backend:
