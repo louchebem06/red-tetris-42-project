@@ -6,14 +6,14 @@ on:
 
 jobs:
   linter-back:
-    if: ${{ contains(github.ref_name, 'dependabot/') }}
+    if: ${{ contains(github.base_ref, 'dependabot/') }}
     uses: ./.github/workflows/lint-back.yaml
   test-back:
-    if: ${{ contains(github.ref_name, 'dependabot/') }}
+    if: ${{ contains(github.base_ref, 'dependabot/') }}
     uses: ./.github/workflows/test-back.yaml
   linter-front:
-    if: ${{ contains(github.ref_name, 'dependabot/') }}
+    if: ${{ contains(github.base_ref, 'dependabot/') }}
     uses: ./.github/workflows/lint-front.yaml
   test-front:
-    if: ${{ contains(github.ref_name, 'dependabot/') }}
+    if: ${{ contains(github.base_ref, 'dependabot/') }}
     uses: ./.github/workflows/test-front.yaml
