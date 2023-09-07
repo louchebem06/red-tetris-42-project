@@ -2,12 +2,12 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "jest",
     "build": "npx tsc",
-    "start": "TZ='UTC' node dist/index.js",
-    "dev": "TZ='UTC' nodemon src/index.ts",
+    "start": "TZ='UTC' node dist/app.js",
+    "dev": "TZ='UTC' nodemon src/app.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix"
   },
