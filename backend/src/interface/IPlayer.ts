@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 
 interface IPlayer {
 	username?: string;
-	socket?: Socket;
+	socketId?: string;
 	active?:boolean;
 }
 
