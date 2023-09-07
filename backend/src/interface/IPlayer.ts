@@ -1,7 +1,6 @@
-import { Socket } from "socket.io";
-
 interface IPlayer {
 	username?: string;
+	id?: number;
 	socketId?: string;
 	active?:boolean;
 }
