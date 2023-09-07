@@ -21,6 +21,8 @@ const io = new Server(server);
 const users: IPlayer[] = [];
 let	nbActivePlayers = 0;
 
+const usernamesRecurrence = new Map<string, number>();
+
 function getAllUsernames(users: IPlayer[]): string[] {
 	return users.map(elt => elt.username || "");
 }
@@ -29,29 +31,19 @@ function filterUsernames(username: string, usernames: string[]): string[] {
 	return usernames.filter(e => e.includes(username));
 }
 
-function setNewUsername(username: string, users: IPlayer[]): string {
-	// si le username est trouvé 	
-	// on l'update avec le nb d'users ayant le meme pseudo
-	const usernames = filterUsernames(username, getAllUsernames(users));
-	console.log(`username is ${username} and users are ${usernames}`);
-	if (users.map(elt => elt.username).indexOf(username) !== -1) {
-	//if (users.map(elt => elt.username).includes(username)) {
-		//const usernames = users.filter(e => e.username?.includes(username))
-		//						.map(e => e.username);
-		const lastUsername = usernames[usernames.length - 1];
-		const regexId = `/${username}(\d)*$/`;
-		const results = lastUsername?.match(regexId);
-		if (results || lastUsername === username) {
-			let nextPos = 1;
-			if (results) {
-				const order = parseInt(results[1]);
-				nextPos = order + 1;
-			}
-			console.log(`last username is ${lastUsername} next post available: ${nextPos}, ${regexId}`, usernames);
-			username += nextPos.toString();
-		}
+function startsWithUsernames(username: string, usernames: string[]): string[] {
+	return usernames.filter(e => e.startsWith(username));
+}
 
-		//username += users.map(elt => elt.username?.indexOf(username) !== -1).length.toString();
+function setNewUsername(username: string, usernamesRecurrence: Map<string, number>): string {
+	let recurrence = usernamesRecurrence.get(username);
+	if (!recurrence) {
+		recurrence = 0;
+	}
+	usernamesRecurrence.set(username, ++recurrence);
+	if (recurrence > 1) {
+		username += (recurrence - 1).toString();
+		usernamesRecurrence.set(username, 1);
 	}
 	return username;
 }
@@ -74,7 +66,6 @@ io.on('connection', (socket: Socket) => {
   socket.on("join", (data: {username?: string, id?: string}) => {
   	  const { username } = data;
 
-	 // console.log(`data: ${data} - ${username} - ${data.username}`, data);
 	  // soit on trouve le player avec la socket, soit on en cree un nouveau
 	  // (data.id || socket.id) permet de verif qu'on usurpe pas la socket
 	  // si on laisse data.id seulement, ca va creer plusieurs users sur la meme
@@ -87,7 +78,7 @@ io.on('connection', (socket: Socket) => {
 	  };
 
 	  if (users.indexOf(player) == -1) {
-		  player.username = setNewUsername(username || "anon", users);
+		  player.username = setNewUsername(username || "anon", usernamesRecurrence);
 		  users.push(player);
 		  ++nbActivePlayers;
 	  }
