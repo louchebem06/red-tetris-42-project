@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import { Server, Socket } from "socket.io";
 import IPlayer from "./interface/IPlayer";
 import Player from "./model/Player";
+import UsernamesList from './model/UsernamesList';
 
 const app: Express = express();
 
@@ -21,107 +22,153 @@ const io = new Server(server);
 
 const users: IPlayer[] = [];
 
-const usernamesRecurrence = new Map<string, number>();
+/*class UsernamesList {
+	static datas: Map<string, number> = new Map();
 
-function setNewUsername(username: string, usernamesRecurrence: Map<string, number>): string {
-	let recurrence = getNewPlayerId(username, usernamesRecurrence);
-	++recurrence;
-	if (recurrence === 1) {
-		usernamesRecurrence.set(username, recurrence);
-		return username;
+	static setRecurrence(value: string, recurrence: number): void {
+		if (value && recurrence) {
+			this.datas.set(value, recurrence);
+		}
 	}
-	let newUsername = username + "#" + (recurrence - 1).toString();
 
-	usernamesRecurrence.set(username, recurrence);
-	while (usernamesRecurrence.has(newUsername)) {
-		newUsername = username + "#" + (++recurrence - 1).toString(); 
+	static addRecurrence(value: string): void {
+		if (this.hasRecurrence(value)) {
+			const recurrence = this.getRecurrence(value);
+			this.setRecurrence(value, recurrence + 1);
+		} else {
+			this.setRecurrence(value, 1);
+		}
 	}
-	usernamesRecurrence.set(newUsername, 1);
-   return newUsername;
-}
 
-function getNewPlayerId(username: string, usernames: Map<string, number>): number {
-	return usernamesRecurrence.get(username) || 0;
-}
+	static removeRecurrence(value: string): boolean {
+		if (this.hasRecurrence(value)) {
+			const recurrence = this.getRecurrence(value);
+			if (recurrence > 1) {
+				this.setRecurrence(value, recurrence - 1);
+				return true;
+			} else {
+				this.deleteRecurrence(value);
+			}
+		}
+		return false;
+	}
 
-function removeUser(socketId: string, users: IPlayer[], usernames: Map<string, number>): boolean {
+	static getRecurrence(value: string): number {
+		if (this.hasRecurrence(value)) {
+			return this.datas.get(value) || 0;
+		}
+		return 0;
+	}
+
+	static hasRecurrence(value: string): boolean {
+		if (this.datas?.has(value))
+			return true;
+		return false;
+	}
+
+	static deleteRecurrence(value: string): void {
+		console.log(`deleteRecurrence: ${value}`);
+		if (this.hasRecurrence(value)) {
+			this.datas.delete(value);
+			console.log(`deleted: ${value} - ${this.hasRecurrence(value)}`);
+			if (this.datas.size === 0) {
+				this.datas.clear();
+				console.log(`all clear: ${value} - ${this.hasRecurrence(value)}`);
+			}
+		}
+	}
+
+	static getNewUsername(value: string): string {
+		if (!this.hasRecurrence(value)) {
+			this.addRecurrence(value);
+			return value;
+		}
+
+		let newUsername = value;
+		while (this.hasRecurrence(newUsername)) {
+			const recurrence = this.getRecurrence(newUsername);
+
+			newUsername = value + "#" + recurrence.toString();
+			this.addRecurrence(value);
+		}
+		this.addRecurrence(newUsername);
+		return newUsername;
+	}
+
+	static get list(): string[] {
+		return Array.from(this.datas.keys()).map((key: string) => key) || [];
+	}
+}*/
+
+function removeUser(socketId: string, users: IPlayer[]): boolean {
    const player = users.find(user => user.socketId === socketId);
 
    if (!player) {
-   	   return false;
+	   return false;
    }
-
    const { username } = player;
-   const recurrence = usernames.get(username || "") || 0;
 
-   console.log(`${username} is leaving us.`);
+   if (username) {
+	   console.log(`${username} is leaving us.`);
+	   const sharpIdx = username.indexOf("#");
 
-   if (username && recurrence > 0) {
-   	   usernames.set(username, recurrence - 1);
-
-   	   const sharpIdx = username.indexOf("#");
-   	   if (sharpIdx !== -1) {
+	   UsernamesList.removeRecurrence(username);
+	   if (sharpIdx !== -1) {
 		   const root = username.substring(0, sharpIdx);
-		   if (usernames.has(root)) {
-			   const recRoot = usernames.get(root) || 1;
-			   usernames.set(root, recRoot - 1);
-			   if (recRoot === 1) {
-				   usernames.delete(root)
-			   }
+		   if (UsernamesList.hasRecurrence(root)) {
+			   UsernamesList.removeRecurrence(root);
 		   }
-   	   }
-	   if (recurrence === 1)
-		   usernames.delete(username);
+	   }
    }
    users.splice(users.indexOf(player), 1);
    Player.decremente();
-/*   console.log(`Les users restants sont: ${JSON.stringify(users)},
-{${Player.getNbActivePlayers()}}
-${recurrence}, les usernames restant ${JSON.stringify([...usernames.keys()])}`);*/
+   console.log(`${Player.getNbActivePlayers()} players still active: ${JSON.stringify(users)}`);
    return true;
+}
+
+function getNbUsersInfo(): string {
+	const be = `${Player.getNbActivePlayers() < 2 ? "is" : "are"}`;
+	const s = `${Player.getNbActivePlayers() < 2 ? "" : "s"}`;
+	return `There ${be} ${Player.getNbActivePlayers()} player${s} on the server`;
+}
+function getConnectionUserInfos(username: string, socketId: string): string {
+	let msg = `${username} has just joined on ${socketId} socket`;
+	msg += "\n" + getNbUsersInfo();
+	return msg;
 }
 
 io.on('connection', (socket: Socket) => {
 	console.log(`Socket \x1b[96;4m${socket.id}\x1b[0m is connected`);
   
   socket.on("join", (data: {username?: string, id?: string}) => {
-  	  const { username } = data;
+	 const { username, id } = data;
+	
+	 if (id && id !== socket.id) {
+	 	 socket.emit("error id", {id: id});
+	 } else if (username && username.indexOf("#") !== -1) {
+	 	 socket.emit("error username", {username: username});
+	 } else {
+		const player: IPlayer = users.find(elt => elt.socketId === socket.id) 
+			|| new Player(socket.id);
 
-	  // soit on trouve le player avec la socket, soit on en cree un nouveau
-	  // (data.id || socket.id) permet de verif qu'on usurpe pas la socket
-	  // si on laisse data.id seulement, ca va creer plusieurs users sur la meme
-	  // socket pas sure que ce soit ce qu'on veut
-	  // const player: IPlayer = users.find(elt => elt.socketId === (data.id)) || {
-	  /*const player: IPlayer = users.find(elt => elt.socketId === (data.id || socket.id)) || {
-		  username: "",
-		  socketId: socket.id,
-		  active: true
-	  };*/
-	 const player: IPlayer = users.find(elt => elt.socketId === (data.id || socket.id)) 
-	 	 || new Player(socket.id);
-
-	  if (users.indexOf(player) === -1) {
-		  player.username = setNewUsername(username || "anon", usernamesRecurrence);
-		  player.id = getNewPlayerId(username || "anon", usernamesRecurrence);
-		  users.push(player);
-	  } else {
-	  	  // changement de pseudo?
-	  }
-
-	  const be = `${Player.getNbActivePlayers() < 2 ? "is" : "are"}`;
-	  const s = `${Player.getNbActivePlayers() < 2 ? "" : "s"}`;
-  	  console.log(`${player.username} has just joined on ${player.socketId} socket
-There ${be} ${Player.getNbActivePlayers()} player${s} on the server`);
-
-  	  io.emit("join", {username: player.username, id: player.socketId});
-
-  	  const msg: string = `${player.username} has just joined on ${player.socketId} socket
-There ${be} ${Player.getNbActivePlayers()} player${s} on the server`;
-  	  socket.broadcast.emit("join", msg);
+		if (users.indexOf(player) === -1) {
+			player.username = UsernamesList.getNewUsername(username || "anon");
+			users.push(player);
+			console.log(player, users);
+		} else if (username && player.username) {
+			const oldUsername = player.username;
+			if (oldUsername !== username) {
+				player.username = UsernamesList.getNewUsername(username) || oldUsername;
+				UsernamesList.removeRecurrence(oldUsername);
+			}
+		}
+		console.log(`${getConnectionUserInfos(player.username || "", player.socketId || "")}`);
+		io.emit("join", {username: player.username, id: player.socketId});
+	 }
   });
 
   socket.on('disconnect', (data) => {
-	  removeUser(socket.id, users, usernamesRecurrence);
+	  removeUser(socket.id, users);
 	  console.log(`Socket \x1b[96;4m${socket.id}\x1b[0m is disconnected`, 
 	  			  Player.getNbActivePlayers(), data);
   });
