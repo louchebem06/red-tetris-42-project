@@ -1,16 +1,25 @@
 {
-    "parser": "@typescript-eslint/parser",
-    "extends": [
-        "plugin:@typescript-eslint/recommended",
-        "prettier"
-    ],
-    "plugins": ["prettier"],
-    "parserOptions": {
-        "ecmaVersion": 2018,
-        "sourceType": "module"
-    },
-    "ignorePatterns": [".eslintrc"],
+	"parser": "@typescript-eslint/parser",
+	"extends": ["plugin:@typescript-eslint/recommended", "prettier"],
+	"plugins": ["prettier"],
+	"parserOptions": {
+		"ecmaVersion": 2018,
+		"sourceType": "module"
+	},
+	"ignorePatterns": [
+		".eslintrc",
+		"dist",
+		"src/tests/coverage-final.json",
+		"src/tests/coverage-reports/",
+		"src/tests/coverage-reports/*",
+		"node_modules",
+		"jest.config.ts",
+		"prettierrc.json",
+		"package*.json",
+		"tsconfig.json"
+	],
 	"rules": {
+		"@typescript-eslint/explicit-member-accessibility": "error",
 		"@typescript-eslint/interface-name-prefix": "off",
 		"@typescript-eslint/explicit-function-return-type": "error",
 		"@typescript-eslint/explicit-module-boundary-types": "warn",

@@ -2,10 +2,10 @@
 node_modules
 /dist
 /package
+/coverage
 .env
 .env.*
 !.env.example
 .npmrc
-*.sw[op]
-*/*.sw[op]
-*/*/*.sw[op]
+src/tests/coverage-final.json
+src/tests/coverage-reports
