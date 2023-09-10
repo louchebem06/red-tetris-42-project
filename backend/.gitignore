@@ -2,10 +2,8 @@
 node_modules
 /dist
 /package
+/coverage
 .env
 .env.*
 !.env.example
 .npmrc
-*.sw[op]
-*/*.sw[op]
-*/*/*.sw[op]
