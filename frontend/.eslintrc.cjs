@@ -7,7 +7,7 @@ module.exports = {
 		'prettier',
 	],
 	parser: '@typescript-eslint/parser',
-	plugins: ['@typescript-eslint'],
+	plugins: ['@typescript-eslint', 'prefer-arrow-functions'],
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020,
@@ -38,5 +38,14 @@ module.exports = {
 		'@typescript-eslint/no-unused-vars': 'error',
 		'@typescript-eslint/no-var-requires': 'error',
 		'require-await': 'error',
+		'prefer-arrow-functions/prefer-arrow-functions': [
+			'error',
+			{
+				classPropertiesAllowed: false,
+				disallowPrototype: false,
+				returnStyle: 'unchanged',
+				singleReturnOnly: false,
+			},
+		],
 	},
 };
