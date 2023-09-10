@@ -1,16 +1,15 @@
 name: Main
 
 on:
-  push:
-    paths: ['backend/**', 'frontend/**', '.github/**']
+  pull_request:
     branches: ['main']
 
 jobs:
   linter-back:
-    uses: ./.github/workflows/lint-back.yaml
+    uses: ./.github/workflows/jobs_lint-back.yaml
   test-back:
-    uses: ./.github/workflows/test-back.yaml
+    uses: ./.github/workflows/jobs_test-back.yaml
   linter-front:
-    uses: ./.github/workflows/lint-front.yaml
+    uses: ./.github/workflows/jobs_lint-front.yaml
   test-front:
-    uses: ./.github/workflows/test-front.yaml
+    uses: ./.github/workflows/jobs_test-front.yaml

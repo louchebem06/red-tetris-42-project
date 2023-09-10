@@ -1,6 +1,6 @@
 //import {describe, expect, test} from '@jest/globals';
 import request from 'supertest'
-import server from './index';
+import server from './app';
 
 describe('Home page', () => {
   test('Hello World!', async () => {

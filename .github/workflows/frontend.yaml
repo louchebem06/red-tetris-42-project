@@ -8,12 +8,9 @@ on:
       'fix/**', 'hotfix/**',
       'facto/**', 'refactorisation/**'
     ]
-  pull_request:
-    branches: ['main']
-    paths: ['frontend/**']
 
 jobs:
   linter-front:
-    uses: ./.github/workflows/lint-front.yaml
+    uses: ./.github/workflows/jobs_lint-front.yaml
   test-front:
-    uses: ./.github/workflows/test-front.yaml
+    uses: ./.github/workflows/jobs_test-front.yaml
