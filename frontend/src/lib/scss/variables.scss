@@ -1,0 +1,24 @@
+@use 'sass:map';
+
+$tetriminos: (
+	'size': 25px,
+	'colors': (
+		'I': cyan,
+		'O': yellow,
+		'T': purple,
+		'L': orange,
+		'J': blue,
+		'Z': red,
+		'S': green,
+	),
+);
+
+$tetrisLen: (
+	'column': 10,
+	'line': 20,
+);
+
+$tetrisSize: (
+	'width': calc(map.get($tetriminos, 'size') * map.get($tetrisLen, 'column')),
+	'height': calc(map.get($tetriminos, 'size') * map.get($tetrisLen, 'line')),
+);
