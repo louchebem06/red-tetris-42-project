@@ -31,3 +31,13 @@ jobs:
     - name: Run check svelte
       working-directory: frontend/
       run: npm run check
+
+    - name: Forbidden tag
+      working-directory: frontend/
+      run: |
+        if grep -rnw './src' -e 'svg' -e 'canvas' -e 'table'; then
+          echo "Forbidden tags found."
+          exit 1
+        else
+          echo "Not forbidden tags found"
+        fi
