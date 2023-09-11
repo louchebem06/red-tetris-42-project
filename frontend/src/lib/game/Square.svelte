@@ -8,8 +8,6 @@
 	<div class="lumens" />
 </div>
 
-<div class="element" />
-
 <style lang="scss">
 	@use 'sass:map';
 
