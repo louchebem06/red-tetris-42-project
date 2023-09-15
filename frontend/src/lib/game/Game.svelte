@@ -14,6 +14,7 @@
 		type TetriminosType,
 	} from './gameUtils';
 	import KeysGame from './keyboard/KeysGame.svelte';
+	import Sound from './Sound.svelte';
 
 	const up = (): void => {
 		if (!comandIsEnable) return;
@@ -22,6 +23,7 @@
 			tab = joinMapTetriminos(map, newTetriminos);
 			tetriminos = newTetriminos;
 			stateTetriminos < 3 ? stateTetriminos++ : (stateTetriminos = 0);
+			effects.rotate.play();
 		} catch (e) {
 			if (e instanceof Error) console.error(e?.message);
 		}
@@ -33,6 +35,7 @@
 			const newTetriminos = moveDown(tetriminos);
 			tab = joinMapTetriminos(map, newTetriminos);
 			tetriminos = newTetriminos;
+			effects.move.play();
 		} catch (e) {
 			if (e instanceof Error) console.error(e?.message);
 		}
@@ -44,6 +47,7 @@
 			const newTetriminos = moveLeft(tetriminos);
 			tab = joinMapTetriminos(map, newTetriminos);
 			tetriminos = newTetriminos;
+			effects.move.play();
 		} catch (e) {
 			if (e instanceof Error) console.error(e?.message);
 		}
@@ -55,6 +59,7 @@
 			const newTetriminos = moveRight(tetriminos);
 			tab = joinMapTetriminos(map, newTetriminos);
 			tetriminos = newTetriminos;
+			effects.move.play();
 		} catch (e) {
 			if (e instanceof Error) console.error(e?.message);
 		}
@@ -67,6 +72,7 @@
 				const newTetriminos = moveDown(tetriminos);
 				tab = joinMapTetriminos(map, newTetriminos);
 				tetriminos = newTetriminos;
+				effects.hardDrop.play();
 			} catch (e) {
 				if (e instanceof Error) {
 					checkTouchDown(e);
@@ -113,6 +119,7 @@
 					map[yy] = map[yy - 1];
 				}
 				map[0] = ['', '', '', '', '', '', '', '', '', ''];
+				effects.lineClear.play();
 				nbOfLine++;
 				y++;
 			}
@@ -145,10 +152,13 @@
 
 	comandIsEnable = true;
 	setTimeout(game, 1000);
+
+	let effects: { [key: string]: HTMLAudioElement };
 </script>
 
 <Controller {...controller} />
 <KeysGame />
+<Sound bind:effects />
 
 <div class="content">
 	<div class="game">
