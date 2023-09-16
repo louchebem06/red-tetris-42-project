@@ -22,3 +22,15 @@ $tetrisSize: (
 	'width': calc(map.get($tetriminos, 'size') * map.get($tetrisLen, 'column')),
 	'height': calc(map.get($tetriminos, 'size') * map.get($tetrisLen, 'line')),
 );
+
+$primary: #312244;
+$primary2: #3e1f47;
+$background: linear-gradient(259deg, $primary -11.45%, $primary2 112.96%);
+
+$black: #342145;
+$yellow: #ffca28;
+$orange: #ff8228;
+$white2: #f4f4f4;
+$white70: rgba(255, 255, 255, 0.7);
+$green: #4bff53;
+$red: #ff7171;
