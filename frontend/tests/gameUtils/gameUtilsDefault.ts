@@ -9,10 +9,14 @@ import { addLine as addLineZ } from '../../src/lib/game/tetriminos/tetriminosZ';
 
 const line: TetriminosArrayType = [['', '', '', '', '', '', '', '', '', '']];
 
-const compliteMap = (): TetriminosArrayType => {
+const createLines = (nbOfLine: number): TetriminosArrayType => {
 	let newLines: TetriminosArrayType = [];
-	for (let i = 0; i < 16; i++) newLines = [...newLines, ...line];
+	for (let i = 0; i < nbOfLine; i++) newLines = [...newLines, ...line];
 	return newLines;
+};
+
+const compliteMap = (removeLine: number = 0): TetriminosArrayType => {
+	return createLines(16 - removeLine);
 };
 
 const compliteForTetriminos = (tretrimonos: TetriminosType): TetriminosArrayType => {
@@ -41,6 +45,109 @@ const compliteForTetriminos = (tretrimonos: TetriminosType): TetriminosArrayType
 			break;
 	}
 	return newLines;
+};
+
+const generateIMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', '', 'I', '', '', '', ''],
+		['', '', '', '', '', 'I', '', '', '', ''],
+		['', '', '', '', '', 'I', '', '', '', ''],
+		['', '', '', '', '', 'I', '', '', '', ''],
+		...compliteMap(m),
+		...compliteForTetriminos('I'),
+	];
+};
+
+const generateOMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', 'O', 'O', '', '', '', ''],
+		['', '', '', '', 'O', 'O', '', '', '', ''],
+		...line,
+		...line,
+		...compliteMap(m),
+		...compliteForTetriminos('O'),
+	];
+};
+
+const generateTMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', '', 'T', '', '', '', ''],
+		['', '', '', '', 'T', 'T', 'T', '', '', ''],
+		...line,
+		...line,
+		...compliteMap(m),
+		...compliteForTetriminos('T'),
+	];
+};
+
+const generateLMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', 'L', '', '', '', '', ''],
+		['', '', '', '', 'L', '', '', '', '', ''],
+		['', '', '', '', 'L', 'L', '', '', '', ''],
+		...line,
+		...compliteMap(m),
+		...compliteForTetriminos('L'),
+	];
+};
+
+const generateJMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', '', 'J', '', '', '', ''],
+		['', '', '', '', '', 'J', '', '', '', ''],
+		['', '', '', '', 'J', 'J', '', '', '', ''],
+		...line,
+		...compliteMap(m),
+		...compliteForTetriminos('J'),
+	];
+};
+
+const generateSMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', 'S', '', '', '', '', ''],
+		['', '', '', '', 'S', 'S', '', '', '', ''],
+		['', '', '', '', '', 'S', '', '', '', ''],
+		...line,
+		...compliteMap(m),
+		...compliteForTetriminos('S'),
+	];
+};
+
+const generateZMove = (m: number): TetriminosArrayType => {
+	return [
+		...createLines(m),
+		['', '', '', '', '', 'Z', '', '', '', ''],
+		['', '', '', '', 'Z', 'Z', '', '', '', ''],
+		['', '', '', '', 'Z', '', '', '', '', ''],
+		...line,
+		...compliteMap(m),
+		...compliteForTetriminos('Z'),
+	];
+};
+
+export const generateMove = (type: TetriminosType, m: number): TetriminosArrayType => {
+	switch (type) {
+		case 'I':
+			return generateIMove(m);
+		case 'J':
+			return generateJMove(m);
+		case 'L':
+			return generateLMove(m);
+		case 'O':
+			return generateOMove(m);
+		case 'S':
+			return generateSMove(m);
+		case 'T':
+			return generateTMove(m);
+		case 'Z':
+			return generateZMove(m);
+	}
 };
 
 export const defaultMap: TetriminosArrayType = [
@@ -90,8 +197,8 @@ export const defaultIstep3: TetriminosArrayType = [
 export const defaultO: TetriminosArrayType = [
 	['', '', '', '', 'O', 'O', '', '', '', ''],
 	['', '', '', '', 'O', 'O', '', '', '', ''],
-	['', '', '', '', '', '', '', '', '', ''],
-	['', '', '', '', '', '', '', '', '', ''],
+	...line,
+	...line,
 	...compliteMap(),
 	...compliteForTetriminos('O'),
 ];
