@@ -23,9 +23,13 @@ jobs:
       working-directory: frontend/
       run: npm install
 
-    - name: Run run test
+    - name: Run run test playwright
       working-directory: frontend/
-      run: npm run test
+      run: npm run test:playwright
+
+    - name: Run run test vitest
+      working-directory: frontend/
+      run: npm run test:vitest
     
     - name: Run build
       working-directory: frontend/
