@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { moveRight, moveLeft, type TetriminosType } from '../../src/lib/game/gameUtils';
+import {
+	moveRight,
+	moveLeft,
+	moveDown,
+	type TetriminosType,
+	getTetriminos,
+} from '../../src/lib/game/gameUtils';
+import { generateMove } from './gameUtilsDefault';
 
 test.describe('Moving', () => {
 	const tetriminosType: TetriminosType[] = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
@@ -26,6 +33,22 @@ test.describe('Moving', () => {
 				expect(() => {
 					moveLeft([[type]]);
 				}).toThrowError();
+			});
+		});
+	});
+
+	test.describe('Down', () => {
+		tetriminosType.forEach((type) => {
+			test.describe(type, () => {
+				for (let i = 1; i <= 10; i++) {
+					let tetriminos = getTetriminos(type);
+					for (let j = 0; j < i; j++) {
+						tetriminos = moveDown(tetriminos);
+					}
+					test(i.toString(), () => {
+						expect(tetriminos).toStrictEqual(generateMove(type, i));
+					});
+				}
 			});
 		});
 	});
