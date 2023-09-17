@@ -8,30 +8,28 @@ class PlayerController {
 	async createPlayer(
 		socket: Socket,
 		userData: {
-			usrnm?: string
+			username?: string
 			id?: string
 		},
 	): Promise<Player> {
 		return await new Promise((resolve, reject) => {
 			setTimeout(() => {
-				let msg = `PlayerController: troubles when create player`
-				const { usrnm, id } = userData
+				const { username, id } = userData
 				if (id && socket.id !== id) {
 					reject(new Error(`${id} is not valid.`))
-				} else if (usrnm && usrnm.indexOf('#') !== -1) {
-					reject(new Error(`${usrnm} is not valid.`))
+				} else if (username && username.indexOf('#') !== -1) {
+					reject(new Error(`${username} is not valid.`))
 				} else {
 					try {
-						const player = this.playerManager.generatePlayer(socket.id, usrnm || 'anon')
-						if (player) {
-							resolve(player)
-						} else {
-							reject(new Error(msg))
-						}
+					const player = this.playerManager.generatePlayer(socket.id, username || 'anon')
+					if (player) {
+					resolve(player);
+					} else {
+						reject(new Error(`PlayerController: troubles when create player`));
+					}
 					} catch (e) {
 						if (e instanceof Error) {
-							msg += ` <${e?.message}>`
-							throw new Error(msg)
+							throw new Error(`PlayerController: troubles when create player: <${e?.message}>`);
 						}
 					}
 				}

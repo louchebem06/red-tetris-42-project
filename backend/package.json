@@ -6,13 +6,12 @@
 	"scripts": {
 		"test": "jest --no-cache --detectOpenHandles --coverage --forceExit",
 		"testDev": "jest --coverage --detectOpenHandles --watchAll --no-cache",
-		"build": "npx tsc --build --clean",
+		"build": "npx tsc",
 		"start": "TZ='UTC' node dist/app.js",
 		"dev": "TZ='UTC' nodemon src/app.ts",
 		"lint": "prettier . --check . && eslint .",
 		"lint:fix": "prettier . --check . && eslint . --fix",
-		"format": "prettier  . --write .",
-		"bfl": "npm run build && npm run format && npm run lint"
+		"format": "prettier  . --write ."
 	},
 	"keywords": [],
 	"author": "",

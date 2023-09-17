@@ -2,7 +2,7 @@ import io, { Socket as SocketClt } from 'socket.io-client'
 import socketEvents from './socketEvents'
 import Player from '../model/Player'
 
-type DataPlayer = { player: Player }
+type DataPlayer = { player: Player; };
 
 class SocketClient {
 	private socket: SocketClt | null = null
@@ -21,7 +21,7 @@ class SocketClient {
 			this.socket.on(socketEvents.connect, () => {
 				//	console.log(`CLIENT SOCKET CONNECTED`);
 				if (this.socket) {
-					resolve(this.socket)
+					resolve(this.socket);
 				}
 			})
 
