@@ -1,6 +1,5 @@
 import request from 'supertest'
 import app from './app'
-import App from './model/App'
 import SocketClient from './tests/SocketClient'
 import usersMocked from './tests/usersDatasMocked'
 
@@ -11,7 +10,7 @@ const host = process.env.HOST || 'localhost'
 const serverPort = process.env.PORT || '8080'
 
 beforeAll(async () => {
-	await new Promise<App>((resolve) => {
+	await new Promise<void>((resolve) => {
 		//console.log(`SERVER CONNECTED`);
 		resolve(app)
 	})

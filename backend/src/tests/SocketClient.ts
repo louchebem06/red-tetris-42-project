@@ -1,16 +1,13 @@
 import io, { Socket as SocketClt } from 'socket.io-client'
 import socketEvents from './socketEvents'
-import Player from '../model/Player'
-
-type DataPlayer = { player: Player; };
 
 class SocketClient {
 	private socket: SocketClt | null = null
 
 	constructor(private url: string) {}
 
-	async connect(): Promise<SocketClt> {
-		return await new Promise<SocketClt>((resolve, reject) => {
+	async connect(): Promise<unknown> {
+		return await new Promise<unknown>((resolve, reject) => {
 			this.socket = io(this.url, {
 				reconnectionDelay: 0,
 				forceNew: true,
@@ -20,9 +17,7 @@ class SocketClient {
 			// successful connection
 			this.socket.on(socketEvents.connect, () => {
 				//	console.log(`CLIENT SOCKET CONNECTED`);
-				if (this.socket) {
-					resolve(this.socket);
-				}
+				resolve(this.socket)
 			})
 
 			// unsuccessful connection
@@ -47,13 +42,13 @@ class SocketClient {
 		})
 	}
 
-	async simulateEcho(): Promise<string> {
-		return await new Promise<string>((resolve, reject) => {
+	async simulateEcho(): Promise<unknown> {
+		return await new Promise<unknown>((resolve, reject) => {
 			if (this.socket) {
-				this.socket.on(socketEvents.echo, (data: string) => {
+				this.socket.on(socketEvents.echo, (data: unknown) => {
 					resolve(data)
 				})
-				this.socket.on(socketEvents.error, (error: Error) => {
+				this.socket.on(socketEvents.error, (error: unknown) => {
 					reject(error)
 				})
 			} else {
@@ -62,16 +57,16 @@ class SocketClient {
 		})
 	}
 
-	async simulateACKJoin(userData: { username?: string; id?: string }): Promise<DataPlayer> {
+	async simulateACKJoin(userData: { username?: string; id?: string }): Promise<unknown> {
 		{
 			return await new Promise((resolve, reject) => {
 				if (this.socket) {
 					this.socket.emit(socketEvents.join, userData)
-					this.socket.on(socketEvents.join, (data: DataPlayer) => {
+					this.socket.on(socketEvents.join, (data: unknown) => {
 						//	console.log("CLIENT DATA ONJOIN", userData, data)
 						resolve({ player: data.player })
 					})
-					this.socket.on(socketEvents.error, (error: Error) => {
+					this.socket.on(socketEvents.error, (error: unknown) => {
 						//	console.log("CLIENT DATA ONERROR", userData, error)
 						reject(error)
 					})

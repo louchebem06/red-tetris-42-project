@@ -20,18 +20,8 @@ class PlayerController {
 				} else if (username && username.indexOf('#') !== -1) {
 					reject(new Error(`${username} is not valid.`))
 				} else {
-					try {
 					const player = this.playerManager.generatePlayer(socket.id, username || 'anon')
-					if (player) {
-					resolve(player);
-					} else {
-						reject(new Error(`PlayerController: troubles when create player`));
-					}
-					} catch (e) {
-						if (e instanceof Error) {
-							throw new Error(`PlayerController: troubles when create player: <${e?.message}>`);
-						}
-					}
+					resolve(player)
 				}
 			}, 1000)
 		})

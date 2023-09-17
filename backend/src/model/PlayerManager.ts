@@ -38,7 +38,7 @@ class PlayerManager {
 		return this.players.has(id)
 	}
 
-	createPlayer(id: string, username: string): Player | undefined {
+	createPlayer(id: string, username: string): Player {
 		try {
 			const player = this.factory.createPlayer(id, '')
 			player.username = this.usernamesList.setNewUsername(username)
@@ -49,7 +49,6 @@ class PlayerManager {
 				throw new Error(`PlayerManager: troubles when create player: <${e?.message}>`)
 			}
 		}
-		return undefined;
 	}
 
 	updatePlayer(id: string, username: string): void {
@@ -62,7 +61,7 @@ class PlayerManager {
 		}
 	}
 
-	generatePlayer(id: string, username: string): Player | undefined {
+	generatePlayer(id: string, username: string): Player {
 		if (this.hasPlayer(id)) {
 			this.updatePlayer(id, username)
 		}
