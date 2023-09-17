@@ -15,6 +15,10 @@ describe('HttpServer Basic Connection Home Page', () => {
 	})
 
 	test('Port listening', (done) => {
+		// npx tsc met adress().port en erreur jsp pq car dans le console.log,
+		// la prop existe bien... Et on a besoin de tester qu'on atteint bien le
+		// port qu'on souhaite
+		// console.log("client: address(): ", server.getHttpServer()?.address());
 		expect(server.getHttpServer()?.address()?.port).toBe(4242)
 		done()
 	})
