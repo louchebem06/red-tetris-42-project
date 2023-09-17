@@ -7,7 +7,7 @@ class Player implements IPlayer {
 
 	constructor(socketId: string, username: string = 'anon', active: boolean = false) {
 		if (!socketId) throw new Error('Player: id socket is mandatory')
-		if (socketId.length < 21) throw new Error('Player: format socket is invalid')
+		if (socketId.length < 20) throw new Error('Player: format socket is invalid')
 		this.socketId = socketId
 		this.active = active
 		if (!username) username = 'anon'
