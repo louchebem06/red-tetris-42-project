@@ -49,7 +49,7 @@ class PlayerManager {
 				throw new Error(`PlayerManager: troubles when create player: <${e?.message}>`)
 			}
 		}
-		return undefined;
+		return undefined
 	}
 
 	updatePlayer(id: string, username: string): void {

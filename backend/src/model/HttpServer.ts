@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import http, { Server as ServerHttp } from 'http'
-import { Socket } from 'node:net';
+import { Socket } from 'node:net'
 
 class HttpServer {
 	private app: Express
@@ -30,7 +30,7 @@ class HttpServer {
 		this.server.on('close', (socket: Socket) => {
 			//console.log("Server HTTP Stream closed");
 			if (socket && socket.connecting) {
-				socket.destroy();
+				socket.destroy()
 				this.sockets.delete(socket)
 			}
 			this.sockets.clear()
