@@ -62,7 +62,7 @@ class SocketClient {
 			return await new Promise((resolve, reject) => {
 				if (this.socket) {
 					this.socket.emit(socketEvents.join, userData)
-					this.socket.on(socketEvents.join, (data: unknown) => {
+					this.socket.on(socketEvents.join, (data: { player?: string }) => {
 						//	console.log("CLIENT DATA ONJOIN", userData, data)
 						resolve({ player: data.player })
 					})

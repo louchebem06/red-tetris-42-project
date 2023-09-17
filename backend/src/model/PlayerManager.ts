@@ -49,6 +49,7 @@ class PlayerManager {
 				throw new Error(`PlayerManager: troubles when create player: <${e?.message}>`)
 			}
 		}
+		throw new Error(`PlayerManager: troubles when create <${username}>`)
 	}
 
 	updatePlayer(id: string, username: string): void {

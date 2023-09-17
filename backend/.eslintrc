@@ -6,7 +6,7 @@
 		"ecmaVersion": 2018,
 		"sourceType": "module"
 	},
-	"ignorePatterns": [".eslintrc"],
+	"ignorePatterns": [".eslintrc", "dist"],
 	"rules": {
 		"@typescript-eslint/interface-name-prefix": "off",
 		"@typescript-eslint/explicit-function-return-type": "error",
