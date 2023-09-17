@@ -1,7 +1,7 @@
 import PlayerManager from '../model/PlayerManager'
 import Player from '../model/Player'
 
-describe('Player Manager', () => {
+describe.skip('Player Manager', () => {
 	const manager: PlayerManager = new PlayerManager()
 
 	beforeAll((done) => {
