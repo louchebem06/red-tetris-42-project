@@ -167,7 +167,7 @@
 		.game {
 			width: map.get($tetrisSize, 'width');
 			height: map.get($tetrisSize, 'height');
-			border: 1px solid black;
+			border: 1px solid $black;
 			border-radius: 3px;
 			overflow: hidden;
 			position: relative;

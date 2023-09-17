@@ -25,7 +25,7 @@
 		height: 100%;
 		top: 0;
 		left: 0;
-		background: transparent;
+		background: $white2;
 
 		.lines {
 			display: flex;
@@ -38,7 +38,7 @@
 			left: 0;
 
 			.line {
-				border: 1px solid grey;
+				border: 1px solid $black;
 			}
 		}
 
@@ -52,7 +52,7 @@
 			left: -2px;
 
 			.column {
-				border: 1px solid grey;
+				border: 1px solid $black;
 			}
 		}
 	}

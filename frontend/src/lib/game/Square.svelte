@@ -15,10 +15,10 @@
 	$right: 2px;
 
 	.visible {
-		border-top: $top solid black;
-		border-left: $top solid black;
-		border-right: $right solid black;
-		border-bottom: $right solid black;
+		border-top: $top solid $black;
+		border-left: $top solid $black;
+		border-right: $right solid $black;
+		border-bottom: $right solid $black;
 		width: calc(map.get($tetriminos, 'size') - ($top + $right));
 		height: calc(map.get($tetriminos, 'size') - ($top + $right));
 
