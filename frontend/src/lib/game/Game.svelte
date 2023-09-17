@@ -13,6 +13,7 @@
 		type TetriminosArrayType,
 		type TetriminosType,
 	} from './gameUtils';
+	import KeysGame from './keyboard/KeysGame.svelte';
 
 	const up = (): void => {
 		if (!comandIsEnable) return;
@@ -147,6 +148,7 @@
 </script>
 
 <Controller {...controller} />
+<KeysGame />
 
 <div class="content">
 	<div class="game">
