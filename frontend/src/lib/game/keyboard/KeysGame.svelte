@@ -89,6 +89,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+		background: $white2;
 
 		.key {
 			display: flex;

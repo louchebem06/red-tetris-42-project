@@ -175,6 +175,7 @@
 		flex-direction: column;
 		gap: 10px;
 		z-index: 2;
+		background: $white2;
 
 		.setting {
 			padding: 10px;
@@ -197,6 +198,8 @@
 					border-radius: 2px;
 					border: none;
 					background: none;
+					width: 30px;
+					height: 30px;
 					box-shadow: rgba(0, 0, 0, 0.15) 2.4px 2.4px 3.2px;
 				}
 			}
@@ -208,7 +211,7 @@
 		top: 10px;
 		right: 10px;
 		cursor: pointer;
-		background: none;
+		background: $white2;
 		border: none;
 		border-radius: 6px;
 		width: 50px;
