@@ -1,0 +1,34 @@
+<script lang="ts">
+	import ImageUser from '$lib/componante/ImageUser.svelte';
+
+	export let message: string;
+	export let username: string;
+	export let me: boolean = false;
+</script>
+
+<div class="message" class:me>
+	<ImageUser bind:username />
+	<p>{message}</p>
+</div>
+
+<style lang="scss">
+	.message {
+		padding: 10px;
+		border-radius: 10px;
+		background: $black;
+		color: $white70;
+		position: relative;
+		max-width: 25vw;
+		gap: 10px;
+		display: flex;
+		align-items: center;
+
+		p {
+			max-width: calc(25vw - 100px);
+		}
+	}
+
+	.me {
+		margin-left: 25vw;
+	}
+</style>

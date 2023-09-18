@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "npm run build:svelteconfig && vite dev",
 		"build": "npm run build:svelteconfig && vite build",
 		"build:svelteconfig": "esbuild svelte.config.ts --outfile=svelte.config.js",
 		"preview": "vite preview",
