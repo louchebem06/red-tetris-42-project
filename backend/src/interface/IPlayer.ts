@@ -1,7 +1,7 @@
 interface IPlayer {
-	username?: string;
-	socketId?: string;
-	active?:boolean;
+	username: string
+	socketId: string
+	active: boolean
 }
 
-export default IPlayer;
+export default IPlayer
