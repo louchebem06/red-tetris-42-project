@@ -31,9 +31,8 @@ class UsernameManager {
 		if (hasReccurrence) {
 			const root = this.getRootUsername(value)
 			if (!this.isRootUsername(value) && this.hasRecurrence(root)) {
-				const recur = this.getRecurrence(root)(recur > 1)
-					? this.setRecurrence(root, recur - 1)
-					: this.removeRecurrence(root)
+				const recur = this.getRecurrence(root)
+				recur > 1 ? this.setRecurrence(root, recur - 1) : this.removeRecurrence(root)
 			}
 			this.deleteRecurrence(value)
 		}
@@ -181,7 +180,7 @@ class UsernameManager {
 		if (values && values.length > 1) {
 			console.log(`total recurrences: ${values.reduce((a, b) => a + b)}`)
 		}
-		return size
+		return size ? true : false
 	}
 
 	public displayUsername(value: string): boolean {

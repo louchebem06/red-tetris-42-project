@@ -7,14 +7,14 @@
 		"test": "jest --detectOpenHandles --no-cache --forceExit",
 		"testDev": "jest --coverage --detectOpenHandles --watchAll --no-cache",
 		"check": "open src/tests/coverage-reports/lcov-report/index.html",
-		"build": "npx tsc --build --clean",
+		"build": "npx tsc --build",
 		"start": "TZ='UTC' node dist/app.js",
 		"dev": "TZ='UTC' nodemon src/app.ts",
 		"lint": "prettier . --check . && eslint .",
 		"lint:fix": "prettier . --check . && eslint . --fix",
 		"format": "prettier  . --write .",
 		"indent": "npm run format && npm run lint",
-		"bfl": "npm run test && npm run indent && npm run build"
+		"bfl": "npm run indent && npm run build && npm run test"
 	},
 	"keywords": [],
 	"author": "",

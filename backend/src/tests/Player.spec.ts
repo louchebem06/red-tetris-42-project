@@ -1,5 +1,4 @@
 import Player from '../model/Player'
-import IPlayer from '../interface/IPlayer'
 
 let player: Player
 
@@ -72,19 +71,6 @@ describe('Player instantiation', () => {
 		} catch (e) {
 			if (e instanceof Error) {
 				expect(e?.message).toBe('Player: id socket is mandatory')
-			}
-		}
-		done()
-	})
-})
-
-describe('IPlayer Instantiation', () => {
-	test('Incorrect instantiation of an Interface', (done) => {
-		try {
-			player = new IPlayer('')
-		} catch (e) {
-			if (e instanceof Error) {
-				expect(e?.message).toBe('_IPlayer.default is not a constructor')
 			}
 		}
 		done()

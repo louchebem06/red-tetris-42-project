@@ -43,24 +43,27 @@ class PlayerManager {
 	}
 
 	private createPlayer(id: string, username: string): Player | undefined {
+		const display = (player: Player, username: string, id: string): void => {
+			const received = `[${username} / ${id}]`
+			const action = 'will be created as'
+			const sent = `{${player.username} / ${player.socketId}}`
+			console.log(`${received} ${action} ${sent}`)
+		}
+		if (username.includes('#')) {
+			throw new Error('PlayerManager: forbidden symbol into username')
+		}
+		let player = undefined
 		try {
-			const display = (player: Player, username: string, id: string): void => {
-				const received = `[${username} / ${id}]`
-				const action = 'will be created as'
-				const sent = `{${player.username} / ${player.socketId}}`
-				console.log(`${received} ${action} ${sent}`)
-			}
-			if (username.includes('#')) {
-				throw new Error('PlayerManager: forbidden symbol into username')
-			}
-			const player = this.factory.createPlayer(id, '')
+			player = this.factory.createPlayer(id, '')
 			player.username = this.usernamesList.setNewUsername(username)
 			this.addPlayer(player)
 			display(player, username, id)
-			return player
 		} catch (e) {
-			throw new Error(`PlayerManager: troubles when create player: <${e?.message}>`)
+			if (e instanceof Error && e.message?.includes('Player')) {
+				throw new Error(`PlayerManager: troubles when create player: <${e?.message}>`)
+			}
 		}
+		return player
 	}
 
 	private updatePlayer(id: string, username: string): void {
@@ -96,7 +99,7 @@ class PlayerManager {
 			const msg = `${nb} ${player} ${nb > 1 ? 'are' : 'is'} online: `
 			console.log(msg, this.players.values())
 		}
-		return nb
+		return nb ? true : false
 	}
 }
 

@@ -9,6 +9,11 @@
 	"ignorePatterns": [
 		".eslintrc",
 		"dist",
+		"ws-docs/output/.eslintrc",
+		"ws-docs/",
+		"ws-docs/*",
+		"ws-docs/output/",
+		"ws-docs/output/",
 		"src/tests/coverage-final.json",
 		"src/tests/coverage-reports/",
 		"src/tests/coverage-reports/*",
