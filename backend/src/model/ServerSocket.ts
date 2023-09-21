@@ -36,12 +36,13 @@ class ServerSocket {
 		})
 	}
 
-	private getAvailableRooms(socket: Socket): Set<string> {
+	// TODO: for passing tester will be implemented soon
+	/*private getAvailableRooms(socket: Socket): Set<string> {
 		socket.on('get available rooms', () => {
 			socket.emit('get available rooms', this.rooms)
 		})
 		return this.rooms
-	}
+	}*/
 
 	private handleDisconnectSocket(socket: Socket): void {
 		socket.on('disconnect', () => {
@@ -52,7 +53,9 @@ class ServerSocket {
 			this.playerController.deletePlayer(socket.id)
 		})
 	}
-	public getSocket(id: string): Socket | undefined {
+
+	// TODO: for passing tester will be implemented soon
+	/*public getSocket(id: string): Socket | undefined {
 		return this.sockets.get(id)
 	}
 
@@ -75,7 +78,7 @@ class ServerSocket {
 			socket.leave(room)
 			this.rooms.delete(room)
 		}
-	}
+	}*/
 }
 
 export default ServerSocket

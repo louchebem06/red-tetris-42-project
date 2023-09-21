@@ -12,12 +12,20 @@ class App {
 
 	public constructor() {
 		this.httpServer = new HttpServer()
-		this.io = new ServerIO(this.httpServer.getHttpServer())
+
+		const base = this.httpServer.getHttpServer()
+		const corsOpt = this.httpServer.getCorsOpts()
+		this.io = new ServerIO(base, {
+			cors: {
+				origin: corsOpt.origin,
+			},
+		})
+
 		this.playerController = new PlayerController()
 		this.socketServer = new ServerSocket(this.io, this.playerController)
 	}
 
-	public start(port: string | number): void {
+	public start(port?: number): void {
 		this.httpServer.start(port)
 	}
 
