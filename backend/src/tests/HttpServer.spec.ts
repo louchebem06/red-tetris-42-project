@@ -74,7 +74,7 @@ describe('HttpServer Basic Connection Home Page default port', () => {
 	})
 
 	test('Port listening', (done) => {
-		expect(getServerPort(server)).toBe(8181)
+		expect(getServerPort(server)).toBe(8080)
 		done()
 	})
 

@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import http, { Server as ServerHttp } from 'http'
+import 'dotenv/config'
 import cors, { CorsOptions } from 'cors'
 import AsyncAPICustomDocumentation from '../docs/AsyncAPIDocumentation'
 
@@ -9,7 +10,7 @@ class HttpServer {
 	private app: Express
 	private server: ServerHttp
 	private whiteList: string[] = []
-	private port: number = 8181
+	private port: number = parseInt(process.env.PORT || '') || 8080
 	private corsOpt: CorsOptions = {}
 
 	public constructor() {
@@ -23,7 +24,7 @@ class HttpServer {
 	public start(port?: number): void {
 		this.port = port || this.port
 		this.server.listen(this.port.toString(), () => {
-			//console.log(`Server is running at http://localhost:${port}`);
+			console.log(`Server is running at http://localhost:${port}`)
 		})
 	}
 
