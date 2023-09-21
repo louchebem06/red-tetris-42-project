@@ -21,7 +21,10 @@
 		"jest.config.ts",
 		"prettierrc.json",
 		"package*.json",
-		"tsconfig.json"
+		"tsconfig.json",
+		"README.md",
+		"package.json",
+		"asyncapi.yaml"
 	],
 	"rules": {
 		"@typescript-eslint/explicit-member-accessibility": "error",

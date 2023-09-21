@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import http, { Server as ServerHttp } from 'http'
 import cors, { CorsOptions } from 'cors'
+import AsyncAPICustomDocumentation from '../docs/AsyncAPIDocumentation'
 
 // TODO inserer le vrai port par default (process.env.PORT)
 class HttpServer {
@@ -72,6 +73,16 @@ class HttpServer {
 	private setupHttpRoutes(): void {
 		this.app.get('/', (req: Request, res: Response) => {
 			res.json({ message: 'Hello World!' })
+		})
+
+		this.app.get('/ws-docs', async (req: Request, res: Response) => {
+			const doc = new AsyncAPICustomDocumentation()
+			await doc.generateDoc('asyncapi.yaml')
+			res.send(doc.html)
+		})
+
+		this.app.get('/leaderboard', (req: Request, res: Response) => {
+			res.json({ message: 'Leaderboard coming soon' })
 		})
 	}
 

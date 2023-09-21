@@ -63,10 +63,9 @@ describe('Home page', () => {
 
 describe('Socket.io Simulate Echo', () => {
 	test('server and client should communicate on echo event once', async () => {
-		app.getIoServer().emit('echo', 'Hello World')
 		await socketClt.simulateEcho().then((message: string) => {
 			//console.log("MESSAGE", message);
-			expect(message).toBe('Hello World')
+			expect(message).toBe('Hello World!')
 		})
 	})
 })
@@ -120,10 +119,10 @@ describe('Socket.io Simulate Same Client Several Successful Connection', () => {
 				expect(active).toBeFalsy
 			} catch (e) {
 				if (!user.id && user.username && user.username.includes('#')) {
-					expect(e).toBe(`${user.username} is not valid.`)
+					expect(e.error).toBe(`${user.username} is not valid.`)
 				}
 				if (user.id && user.id !== socketClt.id) {
-					expect(e).toBe(`${user.id} is not valid.`)
+					expect(e.error).toBe(`${user.id} is not valid.`)
 				}
 			}
 		},
@@ -152,10 +151,10 @@ describe('Socket.io Simulate Several Clients on One Successful Connection', () =
 				expect(active).toBeFalsy
 			} catch (e) {
 				if (!user.id && user.username && user.username.includes('#')) {
-					expect(e).toBe(`${user.username} is not valid.`)
+					expect(e.error).toBe(`${user.username} is not valid.`)
 				}
 				if (user.id && user.id !== socketClt.id) {
-					expect(e).toBe(`${user.id} is not valid.`)
+					expect(e.error).toBe(`${user.id} is not valid.`)
 				}
 			}
 		},
@@ -167,5 +166,5 @@ describe('Socket.io Simulate Several Clients on One Successful Connection', () =
 	})
 })
 
-jest.useRealTimers()
+//jest.useRealTimers()
 // TODO tests deco / reco / deco a faire

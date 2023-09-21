@@ -1,0 +1,117 @@
+asyncapi: 2.6.0
+
+info:
+    title: Red Tetris
+    version: 1.0.0
+    description: Better than the real one!
+
+servers:
+    localhost:
+        url: ws://localhost:8080
+        protocol: ws
+        variables:
+            port:
+                enum: ['8080', '8081']
+                default: '8080'
+            url:
+                enum: ['localhost', '127.0.0.1']
+                default: 'localhost'
+
+channels:
+    join: # when a player wants to join. client needs to emit first
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/JoinEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/JoinOnClt'
+    echo: # a basic testing event
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/EchoEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/EchoOnClt'
+    error: # a basic testing event
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/ErrorEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/ErrorOnClt'
+
+components:
+    messages:
+        JoinEmitClt:
+            name: join
+            description: 'When client is emitting a join event'
+            payload:
+                type: object
+                properties:
+                    username:
+                        type: string
+                        description: 'The player username. May be empty for the first joining. No # allowed for the first joining'
+                    id:
+                        type: string
+                        description: The player id (May be empty for the first joining. Usually. it is its socket's id; length = 20)
+                        minLength: 20
+                        maxLength: 20
+
+        JoinOnClt: # Response from server after clt emits join event
+            name: join
+            description: 'When client is listening on the join event. A Player is returned if all is ok'
+            payload:
+                type: object
+                properties:
+                    player:
+                        type: object
+                        description: The object Player is returned
+                        properties:
+                            Player:
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+        EchoEmitClt:
+            name: echo
+            description: 'When client is emitting echo event. No payload is required'
+            payload:
+                type: 'null'
+                default: null
+
+        EchoOnClt:
+            name: echo
+            description: 'When client is listening on echo event.'
+            payload:
+                type: object
+                description: 'expected to receive an Hello World'
+                properties:
+                    data:
+                        type: string
+                        default: 'Hello World'
+
+        ErrorOnClt:
+            name: error
+            description: 'When client is listening on error event. The payload is relative to the error description'
+            payload:
+                type: object
+                description: 'Description Error'
+                properties:
+                    error:
+                        type: string
+                        description: 'The message describing the error'
+        ErrorEmitClt:
+            name: error
+            description: 'When client is emitting error event. An Error object is expected'
+            payload:
+                type: object
+                description: 'Error object expected'
+                properties:
+                    message:
+                        type: string
+                        description: 'Error object expected !!! (this message prop tries to represent those one in Error object)'
