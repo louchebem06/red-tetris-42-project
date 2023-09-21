@@ -1,5 +1,12 @@
 import HttpServer from '../model/HttpServer'
 import request from 'supertest'
+import { AddressInfo } from 'net'
+
+function getServerPort(server: HttpServer): number {
+	const base = server.getHttpServer()
+	const address = base.address() as AddressInfo
+	return address.port
+}
 
 describe('HttpServer Basic Connection Home Page port 4242', () => {
 	let server: HttpServer
@@ -15,7 +22,7 @@ describe('HttpServer Basic Connection Home Page port 4242', () => {
 	})
 
 	test('Port listening', (done) => {
-		expect(server.getHttpServer()?.address()?.port).toBe(4242)
+		expect(getServerPort(server)).toBe(4242)
 		done()
 	})
 
@@ -55,7 +62,7 @@ describe('HttpServer Basic Connection Home Page default port', () => {
 	})
 
 	test('Port listening', (done) => {
-		expect(server.getHttpServer()?.address()?.port).toBe(8181)
+		expect(getServerPort(server)).toBe(8181)
 		done()
 	})
 

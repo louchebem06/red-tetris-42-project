@@ -50,7 +50,7 @@ describe('Player Manager', () => {
 			expect(player?.username).toBe(user.username)
 			manager.displayPlayers()
 		} catch (e) {
-			if (e?.message?.includes('Player')) {
+			if (e instanceof Error && e?.message?.includes('Player')) {
 				expect(e).toBeInstanceOf(Error)
 				expect(e?.message).toContain('PlayerManager')
 				console.log(e.message)
