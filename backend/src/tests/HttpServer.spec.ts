@@ -36,6 +36,18 @@ describe('HttpServer Basic Connection Home Page port 4242', () => {
 			})
 	})
 
+	test.skip('Hello World! Fail cors', (done) => {
+		request(server.getHttpServer())
+			.get('http://localhost:7777')
+			.catch((error) => {
+				if (error instanceof Error) {
+					console.log(`***[ERROR]*** ${error}`)
+					expect(error.message).toBe('connect ECONNREFUSED 127.0.0.1:80')
+					done()
+				}
+			})
+	})
+
 	test('Server get Express app', () => {
 		expect(server.getExpressApp()).toBeInstanceOf(Function)
 		expect(server.getExpressApp()).toHaveProperty('listen')

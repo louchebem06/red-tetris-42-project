@@ -1,11 +1,15 @@
 import express, { Express, Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import http, { Server as ServerHttp } from 'http'
+import cors, { CorsOptions } from 'cors'
 
 // TODO inserer le vrai port par default (process.env.PORT)
 class HttpServer {
 	private app: Express
 	private server: ServerHttp
+	private whiteList: string[] = []
+	private port: number = 8181
+	private corsOpt: CorsOptions = {}
 
 	public constructor() {
 		this.app = express()
@@ -15,9 +19,10 @@ class HttpServer {
 		this.setupHttpRoutes()
 	}
 
-	public start(port: string | number = 8181): void {
-		this.server.listen(port, () => {
-			//	console.log(`Server is running at http://localhost:${port}`);
+	public start(port?: number): void {
+		this.port = port || this.port
+		this.server.listen(this.port.toString(), () => {
+			//console.log(`Server is running at http://localhost:${port}`);
 		})
 	}
 
@@ -28,8 +33,40 @@ class HttpServer {
 	}
 
 	private setupHttpConfig(): void {
+		this.setupCors()
 		this.app.use(bodyParser.urlencoded({ extended: false }))
 		this.app.use(bodyParser.json())
+	}
+
+	private setupCors(): void {
+		this.setCorsOpts()
+		this.app.use(cors(this.getCorsOpts()))
+	}
+
+	private setCorsOpts(): void {
+		this.whiteList = [
+			`http://127.0.0.1:${this.port}`,
+			'http://127.0.0.1:80',
+			'http://127.0.0.1:4173',
+			'http://127.0.0.1:5173',
+			`http://localhost:${this.port}`,
+			'http://localhost:80',
+			'http://localhost:4173',
+			'http://localhost:5173',
+		]
+		this.corsOpt = {
+			origin: (orig, cb): void => {
+				if ((orig && this.whiteList.includes(orig)) || !orig) {
+					cb(null, true)
+				} else {
+					cb(new Error(`${orig} not allowed by CORS`))
+				}
+			},
+		}
+	}
+
+	public getCorsOpts(): CorsOptions {
+		return this.corsOpt
 	}
 
 	private setupHttpRoutes(): void {

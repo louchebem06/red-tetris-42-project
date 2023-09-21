@@ -28,8 +28,6 @@ afterAll((done) => {
 beforeEach(async () => {
 	socketClt = new SocketClient(`${protocol}://${host}:${serverPort}`)
 	await socketClt.connect()
-	//jest.runAllTimers();
-	//jest.useRealTimers();
 })
 
 afterEach(async () => {
@@ -84,6 +82,27 @@ describe('Socket.io Simulate Successful Connection', () => {
 		expect(player.socketId).toBe(socketClt.id)
 		expect(player.username).toBe(user.username)
 		expect(player.active).toBeFalsy
+	}, 1500)
+})
+
+// TODO
+// Le test fonctionne, pas sur que ca teste le CORS, la co est refusee en tout
+// cas
+// Et j'ai un pb de server ouvert en fn de test, ca fait pas fail mais faut
+// trouver comment close proprement
+describe.skip('Socket.io Simulate UnSuccessful Connection', () => {
+	test('UnSuccessful Connection', async () => {
+		const socketCltFail = new SocketClient(`${protocol}://${host}:7777`)
+		try {
+			await socketCltFail.connect()
+		} catch (e) {
+			if (e instanceof Error) {
+				socketClt.disconnect()
+				socketCltFail.disconnect()
+				expect(e.message).toBe('Failed to connect within 5 seconds')
+				console.log(`***[ERROR]*** ${e}`)
+			}
+		}
 	}, 1500)
 })
 
