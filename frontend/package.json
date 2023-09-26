@@ -44,7 +44,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"playwright": "^1.38.0",
+		"playwright": "^1.38.1",
 		"socket.io-client": "^4.7.2"
 	}
 }
