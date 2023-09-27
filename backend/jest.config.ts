@@ -9,8 +9,9 @@ const config: Config = {
 	coveragePathIgnorePatterns: [
 		'<rootDir>/node_modules/',
 		'<rootDir>/dist/',
+		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
-		'<rootDir>/src/tests//coverage-reports/',
+		'<rootDir>/src/tests/coverage-reports/',
 	],
 	coverageThreshold: {
 		global: {

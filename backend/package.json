@@ -14,7 +14,14 @@
 		"lint:fix": "prettier . --check . && eslint . --fix",
 		"format": "prettier  . --write .",
 		"indent": "npm run format && npm run lint",
-		"bfl": "npm run indent && npm run build && npm run test"
+		"ibt": "npm run indent && npm run build && npm run test",
+		"wsdoc": "open http://localhost:8080/ws-docs"
+	},
+	"generator": {
+		"renderer": "react",
+		"supportedProtocols": [
+			"ws"
+		]
 	},
 	"keywords": [],
 	"author": "",
@@ -43,6 +50,10 @@
 		"typescript": "^5.2.2"
 	},
 	"dependencies": {
+		"@asyncapi/cli": "^0.58.0",
+		"@asyncapi/generator": "^1.12.0",
+		"@asyncapi/generator-react-sdk": "^0.2.25",
+		"@asyncapi/parser": "^2.1.0",
 		"body-parser": "^1.20.2",
 		"cors": "^2.8.5",
 		"express": "^4.18.2",

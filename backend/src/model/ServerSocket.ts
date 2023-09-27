@@ -19,6 +19,8 @@ class ServerSocket {
 			this.sockets.set(socket.id, socket)
 			this.handleNewConnection(socket)
 			this.handleDisconnectSocket(socket)
+			this.handleErrorEvent(socket)
+			this.handleEchoEvent(socket)
 		})
 	}
 
@@ -31,7 +33,7 @@ class ServerSocket {
 					// TODO si le player est crée l'envoyer dans le lobby
 				})
 				.catch((error) => {
-					socket.emit('error', error.message)
+					socket.emit('error', { error: error.message })
 				})
 		})
 	}
@@ -44,6 +46,18 @@ class ServerSocket {
 		return this.rooms
 	}*/
 
+	private handleEchoEvent(socket: Socket): void {
+		socket.on('echo', () => {
+			socket.emit('echo', 'Hello World!')
+		})
+	}
+
+	private handleErrorEvent(socket: Socket): void {
+		socket.on('error', (error) => {
+			console.log('TODO: Something that handles error', error)
+			socket.emit('disconnect', { reason: error })
+		})
+	}
 	private handleDisconnectSocket(socket: Socket): void {
 		socket.on('disconnect', () => {
 			socket.disconnect()

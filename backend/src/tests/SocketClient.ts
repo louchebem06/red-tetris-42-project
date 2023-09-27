@@ -52,6 +52,7 @@ class SocketClient {
 	public async simulateEcho(): Promise<string> {
 		return await new Promise<string>((resolve, reject) => {
 			if (this.socket) {
+				this.socket.emit(socketEvents.echo)
 				this.socket.on(socketEvents.echo, (data: string) => {
 					resolve(data)
 				})

@@ -9,3 +9,6 @@ node_modules
 .npmrc
 src/tests/coverage-final.json
 src/tests/coverage-reports
+ws-docs/
+ws-docs/*
+asyncapi-v1-socketio.yaml
