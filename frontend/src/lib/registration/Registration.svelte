@@ -1,0 +1,108 @@
+<script lang="ts">
+	import { username } from '../../store';
+	import { io } from '$lib/socket';
+	import { onDestroy, onMount } from 'svelte';
+
+	let error = false;
+	let errorMsg: string = '';
+	let valueForm: string;
+
+	const onSubmit = (): void => {
+		error = true;
+		const usernameRegExp: RegExp = /^[a-zA-Z0-9]{3,}$/;
+		if (!usernameRegExp.test(valueForm))
+			errorMsg = 'Your username is not valid: min 3 char and a-z A-Z 0-9 only';
+		else {
+			username.set(valueForm);
+			valueForm = '';
+		}
+	};
+
+	onMount(() => {
+		io.on('connect', () => {
+			console.log('Connected to socket');
+		});
+		io.on('disconnect', () => {
+			console.log('Disconect to socket');
+		});
+		io.on('connect_error', () => {
+			console.log('Error connection socket');
+		});
+		io.on('reconnecting', () => {
+			console.log('Reconnecting to socket');
+		});
+		io.on('reconnect', () => {
+			console.log('reconnect to socket');
+		});
+	});
+
+	onDestroy(() => {
+		io.close();
+	});
+
+	$: if (valueForm?.length == 0) error = false;
+</script>
+
+<div>
+	<h1>Choose your username</h1>
+	<form on:submit={onSubmit}>
+		{#if error}
+			<p class:error>{errorMsg}</p>
+		{/if}
+		<input bind:value={valueForm} class:error placeholder="username" />
+		<button type="submit">Enter in Red Tetris</button>
+	</form>
+</div>
+
+<style lang="scss">
+	p {
+		width: 100%;
+		&.error {
+			color: $red;
+		}
+	}
+
+	div {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		min-height: 100vh;
+		gap: 20px;
+	}
+
+	form {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 300px;
+		gap: 10px;
+
+		input {
+			border: none;
+			background: $white05;
+			color: $white2;
+			padding: 10px;
+			border-radius: 50px;
+			width: 100%;
+
+			&.error {
+				border: 1px solid $red;
+			}
+
+			&:focus {
+				outline: none;
+			}
+		}
+
+		button {
+			max-width: 200px;
+			padding: 10px;
+			border-radius: 10px;
+		}
+	}
+
+	h1 {
+		color: $white2;
+	}
+</style>
