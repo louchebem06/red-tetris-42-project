@@ -18,7 +18,7 @@ servers:
                 default: 'localhost'
 
 channels:
-    join: # when a player wants to join. client needs to emit first
+    firstJoin: # when a player wants to join. client needs to emit first
         publish: # events clt could emit
             message:
                 $ref: '#/components/messages/JoinEmitClt'
@@ -39,11 +39,46 @@ channels:
         subscribe: # events clt should listen
             message:
                 $ref: '#/components/messages/ErrorOnClt'
+    createRoom: # create rooms
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/CreateRoomEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/CreateRoomOnClt'
+    joinRoom: # join rooms
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/JoinRoomEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/JoinRoomOnClt'
+    leaveRoom: # join rooms
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/LeaveRoomEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/LeaveRoomOnClt'
+    getRooms: # join rooms
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/GetRoomsEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/GetRoomsOnClt'
+    sendPrivateMessage: # join rooms
+        publish: # events clt could emit
+            message:
+                $ref: '#/components/messages/SendPrivateMessageEmitClt'
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/SendPrivateMessageOnClt'
 
 components:
     messages:
         JoinEmitClt:
-            name: join
+            name: first join
             description: 'When client is emitting a join event'
             payload:
                 type: object
@@ -58,14 +93,15 @@ components:
                         maxLength: 20
 
         JoinOnClt: # Response from server after clt emits join event
-            name: join
+            name: first join
             description: 'When client is listening on the join event. A Player is returned if all is ok'
             payload:
                 type: object
+                description: The object returned contain all the datas of the new Player and the names of all available rooms
                 properties:
                     player:
                         type: object
-                        description: The object Player is returned
+                        description: This object contains all the datas relative to the player
                         properties:
                             Player:
                                 type: object
@@ -77,6 +113,16 @@ components:
                                     active:
                                         type: boolean
                                         default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Game
+                    rooms:
+                        type: array
+                        description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
+                        items:
+                            type: string
         EchoEmitClt:
             name: echo
             description: 'When client is emitting echo event. No payload is required'
@@ -88,30 +134,187 @@ components:
             name: echo
             description: 'When client is listening on echo event.'
             payload:
-                type: object
+                type: string
                 description: 'expected to receive an Hello World'
-                properties:
-                    data:
-                        type: string
-                        default: 'Hello World'
+                examples:
+                    - 'Hello World!'
 
         ErrorOnClt:
             name: error
             description: 'When client is listening on error event. The payload is relative to the error description'
             payload:
-                type: object
-                description: 'Description Error'
-                properties:
-                    error:
-                        type: string
-                        description: 'The message describing the error'
+                type: string
+                description: 'The message describing the error'
+                examples:
+                    - 'PlayerManager: forbidden symbol into username'
+
         ErrorEmitClt:
             name: error
-            description: 'When client is emitting error event. An Error object is expected'
+            description: '[WIP] When client is emitting error event. An Error object is expected'
             payload:
                 type: object
-                description: 'Error object expected'
+                description: 'Error object expected - but maybe only a string would suffice'
                 properties:
                     message:
                         type: string
                         description: 'Error object expected !!! (this message prop tries to represent those one in Error object)'
+
+        CreateRoomOnClt:
+            name: create room
+            description: 'When client is listening on create room event'
+            payload:
+                type: object
+                description: The object returned contain all the datas of the new Player and the names of all available rooms
+                properties:
+                    player:
+                        type: object
+                        description: This object contains all the datas relative to the player
+                        properties:
+                            Player:
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Gam
+                    rooms:
+                        type: array
+                        description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
+                        items:
+                            type: string
+
+        CreateRoomEmitClt:
+            name: create room
+            description: 'When client is emitting a create room event'
+            payload:
+                type: string
+                description: The room that we try to create
+                examples:
+                    - 'game'
+
+        JoinRoomOnClt:
+            name: join room
+            description: 'When client is listening on join room event'
+            payload:
+                type: object
+                description: The object returned contain all the datas of the new Player and the names of all available rooms
+                properties:
+                    player:
+                        type: object
+                        description: This object contains all the datas relative to the player
+                        properties:
+                            Player:
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Gam
+                    rooms:
+                        type: array
+                        description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
+                        items:
+                            type: string
+        JoinRoomEmitClt:
+            name: join room
+            description: 'When client is emitting a join room event'
+            payload:
+                type: string
+                description: The room that we try to enter
+                examples:
+                    - 'game'
+
+        LeaveRoomOnClt:
+            name: leave room
+            description: 'When client is listening on leave room event'
+            payload:
+                type: object
+                description: The object returned contain all the datas of the new Player and the names of all available rooms
+                properties:
+                    player:
+                        type: object
+                        description: This object contains all the datas relative to the player
+                        properties:
+                            Player:
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Gam
+                    rooms:
+                        type: array
+                        description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
+                        items:
+                            type: string
+        LeaveRoomEmitClt:
+            name: leave room
+            description: 'When client is emitting a leave room event'
+            payload:
+                type: string
+                description: The room that we try to leave
+                examples:
+                    - 'game'
+
+        GetRoomsOnClt:
+            name: get rooms
+            description: 'When client is listening on get rooms event'
+            payload:
+                type: array
+                description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
+                items:
+                    type: string
+        GetRoomsEmitClt:
+            name: get rooms
+            description: 'When client is emitting a get rooms event. No Payload required'
+            payload:
+                type: 'null'
+
+        SendPrivateMessageOnClt:
+            name: private message
+            description: '[WIP] When client is listening on private message event'
+            payload:
+                type: object
+                properties:
+                    dstId:
+                        type: string
+                        description: 'The socket id of the dest of the message'
+                    message:
+                        type: string
+                        description: 'The message'
+        SendPrivateMessageEmitClt:
+            name: private message
+            description: '[WIP] When client is emitting a private message event'
+            payload:
+                type: object
+                properties:
+                    dstId:
+                        type: string
+                        description: 'The socket id of the dest of the message'
+                    message:
+                        type: string
+                        description: 'The message'

@@ -1,6 +1,6 @@
-import App from './model/App'
+import App from './model/App';
 
-const app = new App()
-app.start()
+const app = new App();
+app.start();
 
-export default app
+export default app;

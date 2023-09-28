@@ -1,9 +1,13 @@
 const socketEvents = {
 	connect: 'connect',
 	disconnect: 'disconnect',
-	join: 'join',
+	firstJoin: 'first join',
+	createRoom: 'create room',
+	joinRoom: 'join room',
+	leaveRoom: 'leave room',
+	getRooms: 'get rooms',
+	sendPrivateMessage: 'send private message',
 	echo: 'echo',
-	lobby: 'lobby',
 	error: 'error',
 
 	// requests
@@ -15,6 +19,6 @@ const socketEvents = {
 	resJoin: '@join',
 	resEcho: '@echo',
 	resBello: '@bello',
-}
+};
 
-export default socketEvents
+export default socketEvents;

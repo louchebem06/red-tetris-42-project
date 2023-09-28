@@ -22,6 +22,6 @@ const usersMocked = [
 	{ username: 'Blibli#1', id: '6P4I-snhy8uGZxkgAAAH' },
 	{ username: 'Blibli#1', id: '6P4I-snhy8uGZxkgAAAH' },
 	{ username: '', id: '' },
-]
+];
 
-export default usersMocked
+export default usersMocked;
