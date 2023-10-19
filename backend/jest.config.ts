@@ -1,4 +1,4 @@
-import type { Config } from 'jest'
+import type { Config } from 'jest';
 
 const config: Config = {
 	verbose: true,
@@ -32,6 +32,6 @@ const config: Config = {
 	//slowTestThreshold: 5,
 	testTimeout: 1000,
 	roots: ['<rootDir>/src/'],
-}
+};
 
-export default config
+export default config;
