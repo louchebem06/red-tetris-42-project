@@ -2,7 +2,6 @@ import { Socket, Server } from 'socket.io';
 
 import IUserData from '../interface/IUserData';
 import ISocketEvent from '../interface/ISocketEvent';
-import IPrivateMessage from '../interface/IPrivateMessage';
 
 import Player from '../model/Player';
 
@@ -33,18 +32,15 @@ export default class SocketController {
 		private roomController: RoomController,
 		io: Server,
 	) {
-		// TODO event pour changer de username ?
-		// faire broadcast
 		// handshake
 		this.socketService = new SocketService(io);
 		this.events = [
-			{ name: 'first join', middleware: this.join.bind(this) },
+			{ name: 'join', middleware: this.join.bind(this) },
 			{ name: 'echo', middleware: this.echo.bind(this) },
 			{ name: 'create room', middleware: this.createRoom.bind(this) },
 			{ name: 'join room', middleware: this.joinRoom.bind(this) },
 			{ name: 'leave room', middleware: this.leaveRoom.bind(this) },
 			{ name: 'get rooms', middleware: this.getRooms.bind(this) },
-			{ name: 'send private message', middleware: this.sendPrivateMessage.bind(this) },
 			{ name: 'error', middleware: this.error.bind(this) },
 			{ name: 'disconnect', middleware: this.disconnect.bind(this) },
 		];
@@ -57,11 +53,8 @@ export default class SocketController {
 				console.log(`\x1b[35m${msg}\x1b[0m`);
 				this.eventController.handleEvent(event, data);
 			} catch (e) {
-				if (e instanceof Error) {
-					const msg = e.message;
-					console.error(`Socket Controller: ${msg}`);
-					this.sendErrorPayload(msg);
-				}
+				// console.error(`Socket Controller: ${e instanceof Error && e.message}`);
+				this.sendErrorPayload(`${e instanceof Error && e.message}`);
 			}
 		});
 	}
@@ -152,14 +145,11 @@ export default class SocketController {
 		this.playerController
 			.getPlayerById(id)
 			.then((player: Player) => {
-				if (player) {
-					const username = player.username;
-					this.sendErrorPayload(`SocketController: player ${username} already joined`);
-				}
+				this.sendPlayerPayload('join')(player);
 			})
 			.catch(() => {
 				const playerAction: IProcessPlayerActionParams = {
-					actionCallback: this.sendPlayerPayload('first join'),
+					actionCallback: this.sendPlayerPayload('join'),
 					userData: data as IUserData,
 				};
 				this.processPlayerAction(playerAction);
@@ -225,7 +215,6 @@ export default class SocketController {
 							resolve(player);
 						})
 						.catch((e) => {
-							this.sendErrorPayload(`${e instanceof Error && e.message}`);
 							reject(e);
 						});
 				});
@@ -257,13 +246,9 @@ export default class SocketController {
 						.getPlayerById(id)
 						.then((player: Player) => {
 							this.roomController.handleJoinRoom(this.socket, roomName, player);
-							// TODO gestion du broadcast a affiner
-							const msg = `${player.username} has joined the room`;
-							this.socketService.broadcastToRoom(roomName, 'incoming', msg);
 							resolve(player);
 						})
 						.catch((e) => {
-							this.sendErrorPayload(`${e instanceof Error && e.message}`);
 							reject(e);
 						});
 				});
@@ -290,19 +275,20 @@ export default class SocketController {
 			 * @return {Promise<Player>} A Promise that resolves with the Player object.
 			 */
 			roomActionCb: (roomName: string): Promise<Player> => {
-				return new Promise(async (resolve, reject) => {
-					try {
+				return new Promise(
+					/*async*/ (resolve, reject) => {
 						const id = this.socket.id;
-						const player = await this.playerController.getPlayerById(id);
-						if (player) {
-							this.roomController.handleLeaveRoom(this.socket, roomName, player);
-							resolve(player);
-						}
-						reject(new Error(`Socket Controller: Player ${id} not found`));
-					} catch (e) {
-						this.sendErrorPayload(`${e instanceof Error && e.message}`);
-					}
-				});
+						this.playerController
+							.getPlayerById(id)
+							.then((player: Player) => {
+								this.roomController.handleLeaveRoom(this.socket, roomName, player);
+								resolve(player);
+							})
+							.catch((e) => {
+								reject(e);
+							});
+					},
+				);
 			},
 		};
 		this.processRoomAction(roomAction);
@@ -314,25 +300,5 @@ export default class SocketController {
 	private getRooms(): void {
 		const data = this.roomController.getRooms();
 		this.socketService.emitToSocket(this.socket, 'get rooms', data);
-	}
-
-	/**
-	 * Sends a private message.
-	 *
-	 * @param {unknown} data - The data object containing the destination ID and message.
-	 * @return {void}
-	 */
-	// TODO A finir
-	private sendPrivateMessage(data: unknown): void {
-		const { dstId, message } = data as IPrivateMessage;
-		if (typeof data === 'object' && dstId && message) {
-			// Recup le message. Recup le player dst. Ajouter dans historique de message
-			// envoyer event message recu
-			console.log('SocketController, sendPrivateMessage', dstId, message);
-			const channel = 'send private message';
-			this.socketService.emitToPrivateSocket(this.socket, dstId, channel, data);
-		} else {
-			this.sendErrorPayload(`${JSON.stringify(data)} is not a valid message`);
-		}
 	}
 }

@@ -21,42 +21,14 @@ export default class RoomService {
 	 * @return {void} This function does not return a value.
 	 */
 	public createRoom(roomName: string): void {
-		if (!this.hasRoom(roomName)) {
-			this.socketService.createRoom(roomName);
-		}
+		this.socketService.createRoom(roomName);
 		console.log('all rooms', this.getAllRooms());
 		console.log('public rooms', this.getRooms());
 		console.log('private rooms', this.getPrivateRooms());
 	}
 
-	/**
-	 * Check if the given room exists in the server.
-	 *
-	 * @param {string} roomName - The name of the room to check.
-	 * @return {boolean} Whether the room exists or not.
-	 */
-	public hasRoom(roomName: string): boolean {
-		return this.socketService.rooms.has(roomName);
-	}
-
-	/**
-	 * Joins a socket to a room.
-	 * Specific to a socket
-	 *
-	 * @param {Socket} socket - The socket to join the room.
-	 * @param {string} roomName - The name of the room to join.
-	 * @throws {Error} If the room is private.
-	 * @throws {Error} If the room does not exist.
-	 * @return {void}
-	 */
 	public joinRoom(socket: Socket, roomName: string): void {
-		if (this.isPrivateRooms(roomName)) {
-			throw new Error(`RoomService: ${roomName} is a private room`);
-		} else if (!this.hasRoom(roomName)) {
-			throw new Error(`RoomService: ${roomName} does not exist. You cannot join it`);
-		} else {
-			this.socketService.joinRoom(socket, roomName);
-		}
+		this.socketService.joinRoom(socket, roomName);
 	}
 
 	/**
@@ -68,11 +40,23 @@ export default class RoomService {
 	 * @throws {Error} If the room is private or does not exist.
 	 */
 	public leaveRoom(socket: Socket, roomName: string): void {
-		if (this.hasRoom(roomName) && !this.isPrivateRooms(roomName)) {
-			this.socketService.leaveRoom(socket, roomName);
-		} else {
-			throw new Error(`RoomService: You cannot leave ${roomName} room.`);
-		}
+		this.socketService.leaveRoom(socket, roomName);
+	}
+
+	public alertRoom(room: string, event: string, data: unknown): void {
+		this.socketService.broadcastToRoom(room, event, data);
+	}
+
+	public alertAll(event: string, data: unknown): void {
+		this.socketService.broadcastToAll(event, data);
+	}
+
+	public alertRoomButSelf(socket: Socket, room: string, event: string, data: unknown): void {
+		this.socketService.brdcstRoomButSender(socket, room, event, data);
+	}
+
+	public alertPlayer(socket: Socket, event: string, data: unknown): void {
+		this.socketService.emitToSocket(socket, event, data);
 	}
 
 	/**
@@ -107,14 +91,7 @@ export default class RoomService {
 		return this.socketService.sids.keys();
 	}
 
-	/**
-	 * Determines if the given room name corresponds to a private room.
-	 * It can be annoying to join a room if this one is a player!
-	 *
-	 * @param {string} roomName - The name of the room to check.
-	 * @return {boolean} Returns true if the room is a private room, false otherwise.
-	 */
-	public isPrivateRooms(roomName: string): boolean {
-		return this.socketService.sids.has(roomName);
+	public getPlayerSocket(id: string): Socket {
+		return this.socketService.getSocket(id);
 	}
 }

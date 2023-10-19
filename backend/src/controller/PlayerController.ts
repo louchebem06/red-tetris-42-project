@@ -15,17 +15,15 @@ class PlayerController {
 	 */
 	public async createPlayer(socket: Socket, userData: IUserData): Promise<Player> {
 		return await new Promise((resolve, reject) => {
-			setTimeout(() => {
-				const { username, id } = userData;
-				if (id && socket.id !== id) {
-					reject(new Error(`${id} is not valid.`));
-				} else if (username && username.indexOf('#') !== -1) {
-					reject(new Error(`${username} is not valid.`));
-				} else {
-					const player = this.playerManager.generatePlayer(socket.id, username || 'anon');
-					player && resolve(player);
-				}
-			}, 1000);
+			const { username, id } = userData;
+			if (id && socket.id !== id) {
+				reject(new Error(`${id} is not valid.`));
+			} else if (username && username.indexOf('#') !== -1) {
+				reject(new Error(`${username} is not valid.`));
+			} else {
+				const player = this.playerManager.generatePlayer(socket.id, username || 'anon');
+				player && resolve(player);
+			}
 		});
 	}
 

@@ -1,7 +1,7 @@
 const socketEvents = {
 	connect: 'connect',
 	disconnect: 'disconnect',
-	firstJoin: 'first join',
+	firstJoin: 'join',
 	createRoom: 'create room',
 	joinRoom: 'join room',
 	leaveRoom: 'leave room',

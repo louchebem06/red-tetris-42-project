@@ -16,24 +16,32 @@ export default class SocketService {
 	 *
 	 * @param {Socket} socket - The socket to emit the event to.
 	 * @param {string} event - The name of the event to emit.
-	 * @param {unknown} [data] - Optional data to send along with the event.
+	 * @param {unknown} [data] - data to send along with the event.
 	 * @return {void}
 	 */
-	public emitToSocket(socket: Socket, event: string, data?: unknown): void {
+	public emitToSocket(socket: Socket, event: string, data: unknown): void {
 		socket.emit(event, data);
+	}
+
+	public getSocket(id: string): Socket {
+		const socket = this.io.sockets.sockets.get(id);
+		if (!socket) {
+			throw new Error('Socket not found');
+		}
+		return socket;
 	}
 
 	/**
 	 * Sends an event with optional data to a specific socket in a private room.
 	 *
-	 * @param {Socket} socket - The socket to send the event to.
 	 * @param {string} dstId - The ID of the destination private room.
 	 * @param {string} event - The name of the event to emit.
-	 * @param {unknown} [data] - Optional data to send with the event.
+	 * @param {unknown} [data] - data to send with the event.
 	 * @return {void}
 	 */
-	public emitToPrivateSocket(socket: Socket, dstId: string, event: string, data?: unknown): void {
-		socket.to(dstId).emit(event, data);
+	public emitToPrivateSocket(dstId: string, event: string, data: unknown): void {
+		this.handleInvalidSid(dstId);
+		this.io.to(dstId).emit(event, data);
 	}
 
 	/**
@@ -44,8 +52,16 @@ export default class SocketService {
 	 * @param {unknown} data - The data to send with the event.
 	 * @return {void} This function does not return a value.
 	 */
+	public brdcstRoomButSender(socket: Socket, room: string, event: string, data: unknown): void {
+		// broadcast to all clients in room except sender
+		this.handleInvalidSid(socket.id);
+		this.handleInvalidPublicRoom(room);
+		socket.to(room).emit(event, data);
+	}
+
 	public broadcastToRoom(room: string, event: string, data: unknown): void {
-		this.io.to(room).emit(event, data);
+		this.handleInvalidPublicRoom(room);
+		this.io.in(room).emit(event, data);
 	}
 
 	/**
@@ -59,6 +75,11 @@ export default class SocketService {
 		this.io.emit(event, data);
 	}
 
+	public broadcastAllExceptSender(socket: Socket, event: string, data: unknown): void {
+		this.handleInvalidSid(socket.id);
+		socket.broadcast.emit(event, data);
+	}
+
 	/**
 	 * Disconnects the given socket.
 	 *
@@ -66,6 +87,7 @@ export default class SocketService {
 	 * @return {void} This function does not return a value.
 	 */
 	public disconnectSocket(socket: Socket): void {
+		this.handleInvalidSid(socket.id);
 		socket.disconnect();
 	}
 
@@ -76,6 +98,7 @@ export default class SocketService {
 	 * @return {void} This function does not return a value.
 	 */
 	public createRoom(roomName: string): void {
+		this.handleInvalidNewRoom(roomName);
 		this.io.sockets.adapter.rooms.set(roomName, new Set());
 	}
 
@@ -87,6 +110,8 @@ export default class SocketService {
 	 * @return {void} This function does not return a value.
 	 */
 	public joinRoom(socket: Socket, roomName: string): void {
+		this.handleInvalidSid(socket.id);
+		this.handleInvalidPublicRoom(roomName);
 		socket.join(roomName);
 	}
 
@@ -98,6 +123,8 @@ export default class SocketService {
 	 * @return {void} This function does not return a value.
 	 */
 	public leaveRoom(socket: Socket, roomName: string): void {
+		this.handleInvalidSid(socket.id);
+		this.handleInvalidPublicRoom(roomName);
 		socket.leave(roomName);
 	}
 
@@ -120,6 +147,49 @@ export default class SocketService {
 	 */
 	public get sids(): Map<string, Set<string>> {
 		return this.io.sockets.adapter.sids;
+	}
+
+	private isSid(id: string): boolean {
+		return this.sids.has(id);
+	}
+
+	public isRoom(room: string): boolean {
+		return this.rooms.has(room);
+	}
+
+	private isPublicRoom(room: string): boolean {
+		return this.isRoom(room) && !this.isSid(room);
+	}
+
+	private throwInvalid(reason: string): never {
+		throw new Error(`${reason}`);
+	}
+
+	private handleInvalidPublicRoom(room: string): void {
+		if (!this.isPublicRoom(room)) {
+			this.throwInvalid(`Invalid public room ${room}`);
+		}
+	}
+
+	private handleInvalidSid(id: string): void {
+		if (!this.isSid(id)) {
+			this.throwInvalid(`Invalid socket id ${id}`);
+		}
+	}
+
+	private handleInvalidNewRoom(room: string): void {
+		if (this.isSid(room)) {
+			this.throwInvalid(`Invalid new room ${room}: private room`);
+		}
+		if (this.isRoom(room)) {
+			this.throwInvalid(`Invalid new room ${room}: already in use`);
+		}
+		if (room.length < 3) {
+			this.throwInvalid(`Invalid new room ${room}: name must be at least 3 characters long`);
+		}
+		if (room.length > 256) {
+			this.throwInvalid(`Invalid new room ${room}: name must be at most 256 characters long`);
+		}
 	}
 
 	/**

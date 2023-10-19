@@ -219,15 +219,6 @@ export default class MermaidDocumentation {
 	}
 
 	/**
-	 * Returns the `IPrivateMessage` class UML as a string.
-	 *
-	 * @return {string} The class UML as a string.
-	 */
-	private get docIPrivateMessage(): string {
-		return `${this.getClassUml('IPrivateMessage')}`;
-	}
-
-	/**
 	 * Returns the docISocketEvent.
 	 *
 	 * @return {string} The docISocketEvent as a string.
@@ -289,7 +280,6 @@ export default class MermaidDocumentation {
 				SocketController "1" ..> "*" Player
 				SocketController "1" ..> "1" IUserData
 				SocketController "1" ..> "*" ISocketEvent
-				SocketController "1" ..> "*" IPrivateMessage
 				SocketController "1" ..> "*" PlayerActions
 				SocketController "1" ..> "*" IRoomAction
 				SocketController "1" ..> "*" IProcessPlayerActionParams
@@ -414,7 +404,6 @@ export default class MermaidDocumentation {
 				${this.docSocketService}
 				${this.docSocketEventController}
 
-				${this.docIPrivateMessage}
 				${this.docISocketEvent}
 				${this.docIUserData}
 				${this.docIProcessPlayerActionParams}

@@ -113,7 +113,7 @@ class HttpServer {
 			 * @returns {void}
 			 */
 			origin: (orig, cb): void => {
-				if ((orig && this.whiteList.includes(orig)) || !orig) {
+				if (this.whiteList.includes(orig || '') || !orig) {
 					cb(null, true);
 				} else {
 					cb(new Error(`${orig} not allowed by CORS`));
