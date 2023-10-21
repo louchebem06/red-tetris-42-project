@@ -18,39 +18,21 @@ export default class RoomController {
 	}
 
 	/**
-	 * Creates a room with the given name.
-	 *
-	 * @param {string} roomName - The name of the room to be created.
-	 * @return {void} This function does not return a value.
-	 */
-	public handleCreateRoom(roomName: string, player: Player): void {
-		this.createRoom(roomName, player);
-	}
-
-	/**
-	 * Check if there is room with a given name in the array of rooms.
-	 *
-	 * @param {string} roomName - The name of the room to check for.
-	 * @return {boolean} Returns true if a room with the given name
-	 * is found in the array, otherwise returns false.
-	 */
-	private hasRoomInArray(roomName: string): boolean {
-		return this._rooms.some((room) => {
-			return room.name === roomName;
-		});
-	}
-
-	/**
 	 * Retrieves a room object from the array of rooms based on the provided room name.
 	 *
 	 * @param {string} roomName - The name of the room to search for.
 	 * @return {Room} The room object matching the provided room name,
 	 * or undefined if no match is found.
 	 */
-	private getRoomInArray(roomName: string): Room {
-		return this._rooms.filter((room) => {
+	private getRoom(roomName: string): Room {
+		const room = this._rooms.find((room) => {
 			return room.name === roomName;
-		})[0];
+		});
+
+		if (!room) {
+			throw new Error(`Room ${roomName} not found`);
+		}
+		return room;
 	}
 
 	/**
@@ -60,17 +42,12 @@ export default class RoomController {
 	 * @param {Player} player - The player object to add to the room.
 	 * @return {void} This function does not return a value.
 	 */
-	private createRoom(roomName: string, player: Player): void {
-		if (this.isAvailable(roomName)) {
-			if (roomName.length < 3) {
-				throw new Error(`Room name must be at least 3 characters long`);
-			}
-			const room = new Room(roomName, player);
+	public handleCreateRoom(roomName: string, player: Player): void {
+		try {
+			const room = new Room(roomName, player, this.roomService);
 			this._rooms.push(room);
-			this.roomService.createRoom(room.name);
-			// console.log(`la room a creer existe?`, room, this._rooms);
-		} else {
-			throw new Error(`You cannot create ${roomName}: this room already exists`);
+		} catch (e) {
+			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
@@ -82,18 +59,10 @@ export default class RoomController {
 	 */
 	public handleJoinRoom(socket: Socket, roomName: string, player: Player): void {
 		try {
-			if (this.hasRoom(roomName) && this.hasRoomInArray(roomName)) {
-				const room = this.getRoomInArray(roomName);
-				if (!room.hasPlayer(player)) {
-					room.addPlayer(player);
-					this.roomService.joinRoom(socket, roomName);
-					// console.log(`la room a join existe?`, room, this._rooms);
-				} else {
-					throw new Error(`player ${player.username} already in room ${room.name}`);
-				}
-			}
+			const room = this.getRoom(roomName);
+			room.addPlayer(socket, player);
 		} catch (e) {
-			throw new Error(`RoomController: join room: ${e instanceof Error && e.message}`);
+			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
@@ -105,31 +74,10 @@ export default class RoomController {
 	 */
 	public handleLeaveRoom(socket: Socket, roomName: string, player: Player): void {
 		try {
-			if (this.hasRoom(roomName) && this.hasRoomInArray(roomName)) {
-				const room = this.getRoomInArray(roomName);
-				if (room.hasPlayer(player)) {
-					room.removePlayer(player);
-					this.roomService.leaveRoom(socket, roomName);
-					// ? Comment on transmet le winner
-					if (room.winner) {
-						console.log(`Le winner du game est ${room.winner.username}`);
-					}
-					if (room.totalPlayers === 0) {
-						// this.roomService.deleteRoom(room.name);
-						this._rooms.splice(this._rooms.indexOf(room), 1);
-					}
-					// console.log(`la room a leave existe?`, room, this._rooms);
-					// est ce qu'on remove la room ou on la met dans un historique?
-					// de toute facon faudra recup les stats du game et les enregistrer
-					// et ce sera ici qu'il faudra le faire
-				} else {
-					throw new Error(`player ${player.username} not in room ${room.name}`);
-				}
-			} else {
-				throw new Error(`room ${roomName} not found`);
-			}
+			const room = this.getRoom(roomName);
+			room.removePlayer(socket, player);
 		} catch (e) {
-			throw new Error(`RoomController: ${e instanceof Error && e.message}`);
+			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
@@ -158,30 +106,6 @@ export default class RoomController {
 	 */
 	public getPrivateRooms(): string[] {
 		return [...this.roomService.getPrivateRooms()];
-	}
-
-	/**
-	 * Determines whether a room is private or not.
-	 *
-	 * @param {string} roomName - The name of the room.
-	 * @return {boolean} True if the room is private, false otherwise.
-	 */
-	public isPrivate(roomName: string): boolean {
-		return this.roomService.isPrivateRooms(roomName);
-	}
-
-	/**
-	 * Checks if a room is available.
-	 *
-	 * @param {string} roomName - The name of the room.
-	 * @return {boolean} Returns true if the room is available, false otherwise.
-	 */
-	public isAvailable(roomName: string): boolean {
-		return !this.roomService.hasRoom(roomName);
-	}
-
-	public hasRoom(roomName: string): boolean {
-		return this.roomService.hasRoom(roomName);
 	}
 
 	/**

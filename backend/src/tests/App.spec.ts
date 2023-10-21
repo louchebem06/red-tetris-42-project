@@ -4,7 +4,6 @@ import App from '../model/App';
 import SocketClient from './SocketClient';
 import usersMocked from './usersDatasMocked';
 import Player from 'model/Player';
-import IPrivateMessage from 'interface/IPrivateMessage';
 
 let socketClt: SocketClient;
 
@@ -199,7 +198,7 @@ describe('Inexistant event', () => {
 	test('Inexistant Event', async () => {
 		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
 		const response1 = await socketClt.sendInexistantEvent();
-		expect(response1).toBe('SocketEventController: Unhandled socket event inexistantEvent');
+		expect(response1).toBe('Unhandled socket event inexistantEvent');
 	}, 5000);
 });
 
@@ -214,8 +213,18 @@ describe('Unexpected room payload', () => {
 describe('Unexpected room name length', () => {
 	test('Room name must be at least 3 characters long', async () => {
 		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const response1 = await socketClt.sendUnvalidRoomNameLength();
-		expect(response1).toBe(`Room name must be at least 3 characters long`);
+		const response1 = await socketClt.sendUnvalidRoomNameLength(`ii`);
+		expect(response1).toBe(`Invalid new room ii: name must be at least 3 characters long`);
+	}, 5000);
+});
+
+describe('Unexpected room name length', () => {
+	test('Room name must be at least 3 characters long', async () => {
+		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
+		const name = 'a'.repeat(4242);
+		const response1 = await socketClt.sendUnvalidRoomNameLength(name);
+		const msg = `Invalid new room ${name}: name must be at most 256 characters long`;
+		expect(response1).toBe(msg);
 	}, 5000);
 });
 
@@ -223,7 +232,7 @@ describe('Unvalid room creation', () => {
 	test('Send twice the same create room event', async () => {
 		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
 		const response1 = await socketClt.unvalidCreateRoom();
-		expect(response1).toBe(`You cannot create valid: this room already exists`);
+		expect(response1).toBe(`Invalid new room valid: already in use`);
 	}, 5000);
 });
 
@@ -234,42 +243,20 @@ describe('Unvalid room join', () => {
 		const { player } = await socketClt.createRoom(room);
 		const username = player.username;
 		const response1 = await socketClt.unvalidJoinRoom(room);
-		const msg = `RoomController: join room: player ${username} already in room ${room}`;
+		const msg = `player ${username} already exists in this room`;
 		expect(response1).toBe(`${msg}`);
 	}, 5000);
 });
 
 describe('Unvalid room leave', () => {
 	test('Send twice the same leave room event', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
+		const { player } = await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
 		const room = 'Gloubiboulga';
 		await socketClt.createRoom(room);
 		const response1 = await socketClt.unvalidLeaveRoom(room);
-		const msg = `RoomController: room ${room} not found`;
+		const msg = `Cannot leave room: player ${player.username} not found`;
 		expect(response1).toBe(`${msg}`);
 		const rooms = await socketClt.getRooms();
 		expect(rooms).toHaveLength(1);
 	}, 5000);
-});
-
-describe('Unvalid first join', () => {
-	test('Unvalid first join', async () => {
-		const response1 = await socketClt.unvalidFirstJoin({ username: 'Blibli', id: '' });
-		expect(response1).toBe('SocketController: player Blibli#24 already joined');
-	}, 5000);
-});
-
-describe.skip('Send Private Room', () => {
-	test('Send Private Message', async () => {
-		const clt1 = new SocketClient(`${protocol}://${host}:${serverPort}`);
-		await clt1.connect();
-		const msg = 'App.spec.ts: Send Private Message';
-		const privateMessage: IPrivateMessage = {
-			dstId: clt1.id,
-			message: msg,
-		};
-		const response1 = await clt1.sendPrivateMessage(privateMessage);
-		console.log('response1', response1);
-		await clt1.disconnect();
-	});
 });

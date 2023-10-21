@@ -1,5 +1,7 @@
 import Game from './Game';
 import Player from './Player';
+import { Socket } from 'socket.io';
+import RoomService from '../service/RoomService';
 
 export default class Room {
 	private _players: Player[] = [];
@@ -14,11 +16,21 @@ export default class Room {
 	 * @param {string} name - The name of the constructor.
 	 * @param {Player} leader - The leader of the constructor.
 	 */
-	public constructor(name: string, leader: Player) {
-		this._name = name;
-		this._leader = leader; // TODO a repercuter dans le player correspondant
-		this._game = new Game(this._name);
-		// console.log('Room:', this);
+	public constructor(
+		name: string,
+		leader: Player,
+		private _rs: RoomService,
+	) {
+		try {
+			this._name = name;
+			this._leader = leader; // TODO a repercuter dans le player correspondant
+			this._game = new Game(this._name);
+			this._rs.createRoom(this.name);
+			this._rs.alertAll('room opened', { room: this.toJSON() });
+			this.alertLeaderChange();
+		} catch (e) {
+			throw new Error(`${e instanceof Error && e.message}`);
+		}
 	}
 
 	/**
@@ -27,12 +39,38 @@ export default class Room {
 	 * @param {Player} player - The player to be added.
 	 * @return {void} This function does not return anything.
 	 */
-	public addPlayer(player: Player): void {
-		if (!this._players.includes(player)) {
+	public addPlayer(socket: Socket, player: Player): void {
+		try {
+			if (this.hasPlayer(player)) {
+				throw new Error(`player ${player.username} already exists in this room`);
+			}
 			this._players.push(player);
-		} else {
-			throw new Error('Room: Player already exists in this room');
+			this._rs.joinRoom(socket, this.name);
+			this.alertRoom('player incoming', player);
+		} catch (e) {
+			throw new Error(`${e instanceof Error && e.message}`);
 		}
+	}
+
+	private alertLeaderChange(): void {
+		const message = `You are the new leader of ${this.name}`;
+		const socket = this._rs.getPlayerSocket(this.leader.socketId);
+		// TODO A repercuter dans le player correspondant (ajoute de la room ou jsp encore)
+		this._rs.alertPlayer(socket, 'leader change', { message });
+	}
+
+	private alertAll(event: string): void {
+		const payload = { room: this.toJSON() };
+		this._rs.alertAll(event, payload);
+	}
+
+	private alertRoom(event: string, player: Player): void {
+		const payload = {
+			reason: event,
+			room: this.toJSON(),
+			player: player.toJSON(),
+		};
+		this._rs.alertRoom(this.name, 'room change', payload);
 	}
 
 	/**
@@ -41,22 +79,37 @@ export default class Room {
 	 * @param {Player} player - The player to be removed.
 	 * @return {void}
 	 */
-	public removePlayer(player: Player): void {
-		const idx = this._players.indexOf(player);
-		if (idx > -1) {
+	public removePlayer(socket: Socket, player: Player): void {
+		try {
+			const idx = this._players.indexOf(player);
+			if (idx === -1) {
+				const msg = `Cannot leave room: player ${player.username} not found`;
+				throw new Error(msg);
+			}
 			this._players.splice(idx, 1);
-			const nbPlayers = this.totalPlayers;
-			if (nbPlayers > 0 && player === this.leader) {
+			const nbRemainingPlayers = this.totalPlayers;
+			if (nbRemainingPlayers > 0 && this.isLeader(player)) {
 				this.leader = this._players[0];
+				this.alertRoom('new leader', this.leader);
+				this.alertLeaderChange();
 			}
 
-			if (nbPlayers <= 1) {
+			if (nbRemainingPlayers === 1) {
 				this.winner = this.leader;
 			}
 
-			if (nbPlayers === 0) {
+			if (nbRemainingPlayers === 0) {
 				this._game.stop();
+				this.alertAll('room closed');
+				const message = `You win the game ${this.name}`;
+				const id = this.winner?.socketId || this.leader.socketId;
+				const socket = this._rs.getPlayerSocket(id);
+				this._rs.alertPlayer(socket, 'winner', { message });
 			}
+			this.alertRoom('player outgoing', player);
+			this._rs.leaveRoom(socket, this.name);
+		} catch (e) {
+			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
@@ -170,5 +223,17 @@ export default class Room {
 	 */
 	public get totalPlayers(): number {
 		return this._players.length;
+	}
+
+	public toJSON(): object {
+		return {
+			name: this.name,
+			dateCreated: this._dateCreated,
+			leader: this.leader,
+			gameState: this.gameState,
+			winner: this.winner,
+			players: this._players,
+			totalPlayers: this.totalPlayers,
+		};
 	}
 }

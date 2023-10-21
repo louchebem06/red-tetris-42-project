@@ -34,7 +34,7 @@ export default class SocketEventController {
 		if (handler) {
 			handler(data);
 		} else {
-			throw new Error(`SocketEventController: Unhandled socket event ${eventName}`);
+			throw new Error(`Unhandled socket event ${eventName}`);
 		}
 	}
 }

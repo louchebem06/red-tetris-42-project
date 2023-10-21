@@ -67,7 +67,7 @@ export default class AsyncAPICustomDocumentation {
 			.filter((c, i, arr) => i < arr.length - 2)
 			.map((c) => Object.values(c));
 
-		//console.log(channels, channels.length)
+		console.log(channels, channels.length, _channels, _channels.length);
 		const payloads = _channels
 			.map((p) => Object.values(p))
 			.flat()
@@ -76,7 +76,7 @@ export default class AsyncAPICustomDocumentation {
 			.flat()
 			.map((p) => Object.values(p as object))
 			.flat();
-		//console.log(payloads, payloads.length)
+		// console.log(payloads, payloads.length)
 
 		return payloads;
 	}
@@ -169,10 +169,10 @@ export default class AsyncAPICustomDocumentation {
 		if (allChannels) {
 			const payloads = this.getPayloads(allChannels);
 			this._html += `<h2>Payloads</h2><ul>`;
-			//console.log('h2 payload: ', payloads)
+			// console.log('h2 payload: ', payloads);
 			for (const p of payloads) {
 				if (p && typeof p === 'object') {
-					//console.log('payload: ', p)
+					// console.log('payload: ', p)
 					const operation = this.getOperation(p);
 					if (operation) {
 						const { name, description, payload } = operation;
@@ -202,12 +202,12 @@ export default class AsyncAPICustomDocumentation {
 			for (const i in keys) {
 				if (typeValues[i] && typeof typeValues[i] === 'object') {
 					const typeObjectProp = Object.values(typeValues[i] as object)[0];
-					//console.log("typeObjectProp", typeObjectProp)
+					// console.log('typeObjectProp', typeObjectProp);
 					const span = this.getHTMLSpan(typeObjectProp, 'keywordsType');
 					this._html += `
 			${keys[i]}: ${span}`;
 					this.setPunctuation(keys.length, parseInt(i), ',');
-					//console.log("keys ", keys, keys.length, i, parseInt(i))
+					// console.log('keys ', keys, keys.length, i, parseInt(i));
 				}
 			}
 			this._html += `
@@ -279,7 +279,7 @@ export default class AsyncAPICustomDocumentation {
 						case 'array':
 							const type = `${typesProp[i][2].type} ${typeProp}`;
 							this._html += `${this.getHTMLSpan(type, 'keywordsType')}: []`;
-							//console.log("typeProp", typesProp, typeProp, type)
+							// console.log("typeProp", typesProp, typeProp, type)
 							break;
 					}
 					this.setComment(propDescription);
@@ -301,9 +301,9 @@ payload: <span class="keywordsType">${payload[0]}</span> ${payloadDescription}
 
 ${_examples}
 			</pre>`;
-			//console.log(payload, type, _examples)
+			// console.log(payload, type, _examples);
 		} else if (type === 'array') {
-			//console.log(payload, type)
+			// console.log(payload, type);
 			const _type = Object.values(payload[2] as object)[0];
 			this._html += `<pre>
 payload: <span class="keywordsType">${_type} ${type}</span> [] ${payloadDescription}

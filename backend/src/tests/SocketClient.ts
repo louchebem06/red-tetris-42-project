@@ -2,7 +2,6 @@ import io, { Socket as SocketClt } from 'socket.io-client';
 import socketEvents from './socketEvents';
 import Player from '../model/Player';
 import IUserData from '../interface/IUserData';
-import IPrivateMessage from 'interface/IPrivateMessage';
 
 type DataPlayer = {
 	player: Player;
@@ -163,20 +162,6 @@ class SocketClient {
 		});
 	}
 
-	public sendPrivateMessage(message: IPrivateMessage): Promise<IPrivateMessage> {
-		return new Promise<IPrivateMessage>((resolve, reject) => {
-			if (this.socket) {
-				this.socket?.emit(socketEvents.sendPrivateMessage, message);
-				this.socket?.on(socketEvents.sendPrivateMessage, (data: IPrivateMessage) => {
-					console.log('client sendPrivateMessage', data);
-					resolve(data);
-				});
-			} else {
-				reject(new Error('Socket error while client try to send private message'));
-			}
-		});
-	}
-
 	public sendInexistantEvent(): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			if (this.socket) {
@@ -214,10 +199,10 @@ class SocketClient {
 			}
 		});
 	}
-	public sendUnvalidRoomNameLength(): Promise<string> {
+	public sendUnvalidRoomNameLength(room: string): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			if (this.socket) {
-				this.socket.emit('create room', 'in');
+				this.socket.emit('create room', room);
 				this.socket.on(socketEvents.error, (msg) => {
 					resolve(msg);
 				});
@@ -273,22 +258,6 @@ class SocketClient {
 				});
 			} else {
 				reject(new Error('Socket error while client try to leave unvalid room'));
-			}
-		});
-	}
-
-	public unvalidFirstJoin(userData: IUserData): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
-			if (this.socket) {
-				this.socket.emit('first join', userData);
-				this.socket.on(socketEvents.firstJoin, () => {
-					this.socket?.emit('first join', userData);
-					this.socket?.on(socketEvents.error, (msg) => {
-						resolve(msg);
-					});
-				});
-			} else {
-				reject(new Error('Socket error while client try to join unvalid room'));
 			}
 		});
 	}

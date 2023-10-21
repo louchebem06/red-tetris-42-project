@@ -67,18 +67,47 @@ channels:
         subscribe: # events clt should listen
             message:
                 $ref: '#/components/messages/GetRoomsOnClt'
-    sendPrivateMessage: # join rooms
-        publish: # events clt could emit
-            message:
-                $ref: '#/components/messages/SendPrivateMessageEmitClt'
+    newRoom: # when a room is created
         subscribe: # events clt should listen
             message:
-                $ref: '#/components/messages/SendPrivateMessageOnClt'
+                $ref: '#/components/messages/NewRoomOnClt'
+    endRoom: # when a room is closed
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/EndRoomOnClt'
+    changeRoom: # when a room is changed
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/ChangeRoomOnClt'
+    winner: # when a winner wins the game
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/WinnerOnClt'
+    changeLeader: # when a leader changes
+        subscribe: # events clt should listen
+            message:
+                $ref: '#/components/messages/ChangeLeaderOnClt'
 
 components:
+    schemas:
+        Player:
+            type: object
+            properties:
+                socketId:
+                    type: string
+                username:
+                    type: string
+                active:
+                    type: boolean
+                    default: false
+                dateCreated:
+                    type: string
+                games:
+                    type: array
+                    description: array de Game
     messages:
         JoinEmitClt:
-            name: first join
+            name: join
             description: 'When client is emitting a join event'
             payload:
                 type: object
@@ -93,31 +122,14 @@ components:
                         maxLength: 20
 
         JoinOnClt: # Response from server after clt emits join event
-            name: first join
+            name: join
             description: 'When client is listening on the join event. A Player is returned if all is ok'
             payload:
                 type: object
                 description: The object returned contain all the datas of the new Player and the names of all available rooms
                 properties:
                     player:
-                        type: object
-                        description: This object contains all the datas relative to the player
-                        properties:
-                            Player:
-                                type: object
-                                properties:
-                                    socketId:
-                                        type: string
-                                    username:
-                                        type: string
-                                    active:
-                                        type: boolean
-                                        default: false
-                                    dateCreated:
-                                        type: string
-                                    games:
-                                        type: array
-                                        description: array de Game
+                        $ref: '#/components/schemas/Player'
                     rooms:
                         type: array
                         description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
@@ -167,24 +179,25 @@ components:
                 description: The object returned contain all the datas of the new Player and the names of all available rooms
                 properties:
                     player:
-                        type: object
-                        description: This object contains all the datas relative to the player
-                        properties:
-                            Player:
-                                type: object
-                                properties:
-                                    socketId:
-                                        type: string
-                                    username:
-                                        type: string
-                                    active:
-                                        type: boolean
-                                        default: false
-                                    dateCreated:
-                                        type: string
-                                    games:
-                                        type: array
-                                        description: array de Gam
+                        $ref: '#/components/schemas/Player'
+                        # type: object
+                        # description: This object contains all the datas relative to the player
+                        # properties:
+                        #     Player:
+                        #         type: object
+                        #         properties:
+                        #             socketId:
+                        #                 type: string
+                        #             username:
+                        #                 type: string
+                        #             active:
+                        #                 type: boolean
+                        #                 default: false
+                        #             dateCreated:
+                        #                 type: string
+                        #             games:
+                        #                 type: array
+                        #                 description: array de Gam
                     rooms:
                         type: array
                         description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
@@ -211,21 +224,22 @@ components:
                         type: object
                         description: This object contains all the datas relative to the player
                         properties:
-                            Player:
-                                type: object
-                                properties:
-                                    socketId:
-                                        type: string
-                                    username:
-                                        type: string
-                                    active:
-                                        type: boolean
-                                        default: false
-                                    dateCreated:
-                                        type: string
-                                    games:
-                                        type: array
-                                        description: array de Gam
+                            player:
+                                $ref: '#/components/schemas/Player'
+                                # type: object
+                                # properties:
+                                #     socketId:
+                                #         type: string
+                                #     username:
+                                #         type: string
+                                #     active:
+                                #         type: boolean
+                                #         default: false
+                                #     dateCreated:
+                                #         type: string
+                                #     games:
+                                #         type: array
+                                #         description: array de Gam
                     rooms:
                         type: array
                         description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
@@ -251,21 +265,22 @@ components:
                         type: object
                         description: This object contains all the datas relative to the player
                         properties:
-                            Player:
-                                type: object
-                                properties:
-                                    socketId:
-                                        type: string
-                                    username:
-                                        type: string
-                                    active:
-                                        type: boolean
-                                        default: false
-                                    dateCreated:
-                                        type: string
-                                    games:
-                                        type: array
-                                        description: array de Gam
+                            player:
+                                $ref: '#/components/schemas/Player'
+                                # type: object
+                                # properties:
+                                #     socketId:
+                                #         type: string
+                                #     username:
+                                #         type: string
+                                #     active:
+                                #         type: boolean
+                                #         default: false
+                                #     dateCreated:
+                                #         type: string
+                                #     games:
+                                #         type: array
+                                #         description: array de Gam
                     rooms:
                         type: array
                         description: The list of the room available. The player's socket is included inside these rooms, because this is the way for sending private messages
@@ -294,27 +309,333 @@ components:
             payload:
                 type: 'null'
 
-        SendPrivateMessageOnClt:
-            name: private message
-            description: '[WIP] When client is listening on private message event'
+        NewRoomOnClt:
+            name: room opened
+            description: 'When a new room is created - Broadcasted to all the players listening the event'
+            payload:
+                type: object
+                description: The new room is returned
+                properties:
+                    room:
+                        type: object
+                        description: The new room
+                        properties:
+                            name:
+                                description: The name of the room
+                                type: string
+                            dateCreated:
+                                description: The date of the room creation
+                                type: string
+                            leader:
+                                description: 'The player leader of the room'
+                                # type: object
+                                # properties:
+                                $ref:
+                                    '#/components/schemas/Player'
+                                    # socketId:
+                                    #     type: string
+                                    # username:
+                                    #     type: string
+                                    # active:
+                                    #     type: boolean
+                                    #     default: false
+                                    # dateCreated:
+                                    #     type: string
+                                    # games:
+                                    #     type: array
+                                    #     description: array de Game
+                            gameState:
+                                type: boolean
+                                default: false
+                            winner:
+                                description: 'The player winner of the room'
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Game
+                                default: null
+                            players:
+                                description: The list of the players into the room
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        socketId:
+                                            type: string
+                                        username:
+                                            type: string
+                                        active:
+                                            type: boolean
+                                            default: false
+                                        dateCreated:
+                                            type: string
+                                        games:
+                                            type: array
+                                            description: array de Game
+                            totalPlayers:
+                                type: number
+
+        EndRoomOnClt:
+            name: room closed
+            description: 'When a new room is created - Broadcast to all the players'
+            payload:
+                type: object
+                description: The new room is returned
+                properties:
+                    room:
+                        type: object
+                        description: The new room
+                        properties:
+                            name:
+                                description: The name of the room
+                                type: string
+                            dateCreated:
+                                description: The date of the room creation
+                                type: string
+                            leader:
+                                description: 'The player leader of the room'
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Game
+                            gameState:
+                                type: boolean
+                                default: false
+                            winner:
+                                description: 'The player winner of the room'
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Game
+                                default: null
+                            players:
+                                description: The list of the players into the room
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        socketId:
+                                            type: string
+                                        username:
+                                            type: string
+                                        active:
+                                            type: boolean
+                                            default: false
+                                        dateCreated:
+                                            type: string
+                                        games:
+                                            type: array
+                                            description: array de Game
+                            totalPlayers:
+                                type: number
+
+        ChangeLeaderOnClt:
+            name: leader change
+            description: 'Notify the new leader of a room, listening this event, that is the new leader of this rooms'
+            payload:
+                type: string
+
+        WinnerOnClt:
+            name: winner
+            description: 'Notify the winner of a game, listening this event that he wins the game'
+            payload:
+                type: string
+
+        ChangeRoomOnClt:
+            name: room change
+            description: 'When a room is changed - Broadcasted to the Room'
             payload:
                 type: object
                 properties:
-                    dstId:
+                    reason:
                         type: string
-                        description: 'The socket id of the dest of the message'
-                    message:
-                        type: string
-                        description: 'The message'
-        SendPrivateMessageEmitClt:
-            name: private message
-            description: '[WIP] When client is emitting a private message event'
-            payload:
-                type: object
-                properties:
-                    dstId:
-                        type: string
-                        description: 'The socket id of the dest of the message'
-                    message:
-                        type: string
-                        description: 'The message'
+                        description: 'The reason of the change'
+                    room:
+                        type: object
+                        description: The new room
+                        properties:
+                            name:
+                                description: The name of the room
+                                type: string
+                            dateCreated:
+                                description: The date of the room creation
+                                type: string
+                            leader:
+                                description: 'The player leader of the room'
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Game
+                            gameState:
+                                type: boolean
+                                default: false
+                            winner:
+                                description: 'The player winner of the room'
+                                type: object
+                                properties:
+                                    socketId:
+                                        type: string
+                                    username:
+                                        type: string
+                                    active:
+                                        type: boolean
+                                        default: false
+                                    dateCreated:
+                                        type: string
+                                    games:
+                                        type: array
+                                        description: array de Game
+                                default: null
+                            players:
+                                description: The list of the players into the room
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        socketId:
+                                            type: string
+                                        username:
+                                            type: string
+                                        active:
+                                            type: boolean
+                                            default: false
+                                        dateCreated:
+                                            type: string
+                                        games:
+                                            type: array
+                                            description: array de Game
+                            totalPlayers:
+                                type: number
+        #         room:
+        #             type: object
+        #             description: The new room
+        #             properties:
+        #                 _players:
+        #                     description: The list of the players into the room
+        #                     type: array
+        #                     items:
+        #                         type: object
+        #                         properties:
+        #                             socketId:
+        #                                 type: string
+        #                             username:
+        #                                 type: string
+        #                             active:
+        #                                 type: boolean
+        #                                 default: false
+        #                             dateCreated:
+        #                                 type: string
+        #                             games:
+        #                                 type: array
+        #                                 description: array de Game
+        #                 dateCreated:
+        #                     description: The date of the room creation
+        #                     type: string
+        #                 name:
+        #                     description: The name of the room
+        #                     type: string
+        #                 leader:
+        #                     description: 'The player leader of the room'
+        #                     type: object
+        #                     properties:
+        #                         socketId:
+        #                             type: string
+        #                         username:
+        #                             type: string
+        #                         active:
+        #                             type: boolean
+        #                             default: false
+        #                         dateCreated:
+        #                             type: string
+        #                         games:
+        #                             type: array
+        #                             description: array de Game
+        #                 game:
+        #                     description: The game bound to the Room
+        #                     type: object
+        #                     properties:
+        #                         _id:
+        #                             type: string
+        #                         _started:
+        #                             type: boolean
+        #                             default: false
+        #                         _dateCreated:
+        #                             type: string
+        #                         _dateStarted:
+        #                             type: string
+        #                             default: null
+        #                         _dateStopped:
+        #                             type: string
+        #                             default: null
+        #                         winner:
+        #                             type: object
+        #                             properties:
+        #                                 socketId:
+        #                                     type: string
+        #                                 username:
+        #                                     type: string
+        #                                 active:
+        #                                     type: boolean
+        #                                     default: false
+        #                                 dateCreated:
+        #                                     type: string
+        #                                 games:
+        #                                     type: array
+        #                                     description: array de Game
+        #                             default: null
+        #         player:
+        #             description: 'The player that introduces the change'
+        #             type: object
+        #             properties:
+        #                 socketId:
+        #                     type: string
+        #                 username:
+        #                     type: string
+        #                 active:
+        #                     type: boolean
+        #                     default: false
+        #                 dateCreated:
+        #                     type: string
+        #                 games:
+        #                     type: array
+        #                     description: array de Game
