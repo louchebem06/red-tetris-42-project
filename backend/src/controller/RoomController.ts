@@ -1,120 +1,188 @@
-import { Socket, Server } from 'socket.io';
-import RoomService from '../service/RoomService';
+import { Socket } from 'socket.io';
 import Player from '../model/Player';
 import Room from '../model/Room';
+import ServerService from '../service/ServerService';
+import RoomStore from '../store/RoomStore';
+import { Payload } from '../interface/ISrvToCltEvts';
+import IRoomJSON from '../interface/IRoomJSON';
+import IPlayerJSON from '../interface/IPlayerJSON';
+import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 
 // TODO Repercuter les updates sur les players dans le controller principal (dans le serveur http)
 export default class RoomController {
-	private roomService: RoomService;
-	private _rooms: Room[] = [];
+	private _ss: ServerService;
+	private roomStore: RoomStore = new RoomStore();
 
-	/**
-	 * Creates a new instance of the class.
-	 * @constructor
-	 * @param {Server} io - The server object used for socket.io functionality.
-	 */
-	public constructor(io: Server) {
-		this.roomService = new RoomService(io);
+	public constructor(serverService: ServerService) {
+		this._ss = serverService;
+		this.log = this.log.bind(this);
+		this.catchState = this.catchState.bind(this);
 	}
 
-	/**
-	 * Retrieves a room object from the array of rooms based on the provided room name.
-	 *
-	 * @param {string} roomName - The name of the room to search for.
-	 * @return {Room} The room object matching the provided room name,
-	 * or undefined if no match is found.
-	 */
-	private getRoom(roomName: string): Room {
-		const room = this._rooms.find((room) => {
-			return room.name === roomName;
+	private getRoom(roomName: string): Room | undefined {
+		return this.roomStore.get(roomName);
+	}
+
+	public getRoomsNames(): string[] {
+		return this.roomStore.all.map((room: Room) => room.name);
+	}
+
+	public sendRoomsNames(sid: string): void {
+		this._ss.emit(sid, 'getRooms', this.getRoomsNames());
+	}
+
+	public get rooms(): Room[] {
+		return [...this.roomStore.all];
+	}
+
+	public get players(): Player[] {
+		const rooms = this.rooms;
+		const players = rooms.reduce((acc: Player[], room: Room) => {
+			room.players.forEach((player: Player) => {
+				acc.push(player);
+			});
+			return acc;
+		}, []);
+		return players;
+	}
+
+	private broadcast(format: IBrodacastFormat): void {
+		this._ss.broadcast(format);
+	}
+
+	private broadcastAll(event: string, data: Payload): void {
+		this.broadcast({ event, data });
+	}
+	private broadcastRoom(data: Payload, name: string, sid?: string): void {
+		this.broadcast({
+			event: 'roomChange',
+			data,
+			sid,
+			room: name,
 		});
-
-		if (!room) {
-			throw new Error(`Room ${roomName} not found`);
-		}
-		return room;
 	}
 
-	/**
-	 * Creates a new room with the given name and player.
-	 *
-	 * @param {string} roomName - The name of the room to create.
-	 * @param {Player} player - The player object to add to the room.
-	 * @return {void} This function does not return a value.
-	 */
-	public handleCreateRoom(roomName: string, player: Player): void {
+	public inform(id: string, event: string, info: string): void {
+		this._ss.emit(id, event, info);
+	}
+
+	private informLeader(id: string, room: string): void {
+		const message = `You are the new leader of ${room}`;
+		this.inform(id, 'leaderChange', message);
+	}
+	private informWinner(id: string, room: string): void {
+		const message = `You are the winner of ${room}`;
+		this.inform(id, 'winner', message);
+	}
+
+	private informPlayer(reason: string, player: Player, room: Room): void {
+		this._ss.emit(player.sessionID, 'roomChange', {
+			reason: reason,
+			room: room.toJSON() as IRoomJSON,
+			player: player.toJSON() as IPlayerJSON,
+		});
+	}
+
+	public create(name: string, player: Player): void {
 		try {
-			const room = new Room(roomName, player, this.roomService);
-			this._rooms.push(room);
+			this._ss.createRoom(name);
+
+			const room = new Room(name, player);
+			this.roomStore.save(name, room);
+
+			this.broadcastAll('roomOpened', room.toJSON() as IRoomJSON);
+			this.informPlayer('room created', player, room);
+			this.informLeader(player.sessionID, room.name);
 		} catch (e) {
 			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
-	/**
-	 * Handles joining a room.
-	 *
-	 * @param {string} roomName - The name of the room to join.
-	 * @return {void} This function does not return anything.
-	 */
-	public handleJoinRoom(socket: Socket, roomName: string, player: Player): void {
+	public join(name: string, player: Player): void {
 		try {
-			const room = this.getRoom(roomName);
-			room.addPlayer(socket, player);
+			const room = this.getRoom(name);
+			if (room) {
+				room.addPlayer(player);
+				this.roomStore.save(name, room);
+
+				this._ss.changeRoom(player.sessionID, name, 'join');
+				this.broadcastRoom(
+					{
+						reason: 'player incoming',
+						room: room.toJSON() as IRoomJSON,
+						player: player.toJSON() as IPlayerJSON,
+					},
+					room.name,
+				);
+			}
 		} catch (e) {
 			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
-	/**
-	 * Handles the event of leaving a room.
-	 *
-	 * @param {string} roomName - The name of the room to leave.
-	 * @return {void} This function does not return anything.
-	 */
-	public handleLeaveRoom(socket: Socket, roomName: string, player: Player): void {
+	public leave(name: string, player: Player): void {
 		try {
-			const room = this.getRoom(roomName);
-			room.removePlayer(socket, player);
+			const room = this.getRoom(name);
+			if (!room) {
+				throw new Error(`room ${name} does not exist`);
+			}
+			const leader = room.leader;
+			room.removePlayer(player);
+			this.roomStore.save(name, room);
+			this._ss.changeRoom(player.sessionID, name, 'leave');
+			if (room.totalPlayers > 0) {
+				this.broadcastRoom(
+					{
+						reason: 'player outgoing',
+						room: room.toJSON() as IRoomJSON,
+						player: player.toJSON() as IPlayerJSON,
+					},
+					room.name,
+				);
+
+				if (!room.isLeader(leader)) {
+					this.informLeader(room.leader.sessionID, room.name);
+				}
+			} else {
+				const id = player.sessionID;
+				this.informWinner(id, room.name);
+
+				this.roomStore.delete(name);
+				this.informPlayer('room closed', player, room);
+				this.broadcastAll('roomClosed', room.toJSON() as IRoomJSON);
+			}
 		} catch (e) {
 			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
-	/**
-	 * Retrieves the list of rooms.
-	 *
-	 * @return {string[]} The array of room names.
-	 */
-	public getRooms(): string[] {
-		return this.roomService.getRooms();
+	public catchState(socket: Socket, next: (err?: Error) => void): void {
+		socket.data.roomController = this;
+		next();
 	}
 
-	/**
-	 * Retrieves an array of all rooms.
-	 *
-	 * @return {string[]} An array of all rooms.
-	 */
-	public getAllRooms(): string[] {
-		return [...this.roomService.getAllRooms()];
-	}
+	public log(socket: Socket, next: (err?: Error) => void): void {
+		const total = this.roomStore.total;
+		const rooms = this.roomStore.all;
+		const s = total > 1 ? 's' : '';
 
-	/**
-	 * Retrieves an array of private rooms.
-	 *
-	 * @return {string[]} An array of private room names.
-	 */
-	public getPrivateRooms(): string[] {
-		return [...this.roomService.getPrivateRooms()];
-	}
+		const log = `\n\x1b[33m[${total} room${s}]\x1b[0m`;
+		console.log(log);
+		rooms.forEach((room) => {
+			console.log(`\n ** \x1b[4m${room.name}\x1b[0m:\n`);
+			const players = room.players;
+			const leadColor = `\x1b[35m`;
+			players.forEach((player) => {
+				let stateCol = '';
 
-	/**
-	 * Prune the room service.
-	 *
-	 * @param {void} - This function does not take any parameters.
-	 * @return {void} - This function does not return a value.
-	 */
-	public prune(): void {
-		this._rooms = [];
+				if (player === room.leader) {
+					stateCol = leadColor;
+				}
+				player.log(stateCol);
+			});
+			console.log(`\n\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n`);
+		});
+		console.log(`\x1b[34m============================================================\x1b[0m`);
+		next();
 	}
 }

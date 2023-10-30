@@ -1,14 +1,16 @@
 import { Server as ServerHttp } from 'http';
 import { Server as ServerIO } from 'socket.io';
 import HttpServer from './HttpServer';
-import ServerSocket from './ServerSocket';
-import PlayerController from '../controller/PlayerController';
+import ServerController from '../controller/ServerController';
+import ISrvToCltEvts from '../interface/ISrvToCltEvts';
+import ICltToSrvEvts from '../interface/ICltToSrvEvts';
+import IInterSrvEvts from '../interface/IInterSrvEvts';
+import ISocketData from '../interface/ISocketData';
 
 class App {
 	private httpServer: HttpServer;
 	private io: ServerIO;
-	private socketServer: ServerSocket;
-	private playerController: PlayerController;
+	private serverController: ServerController;
 
 	/**
 	 * Constructor for the class.
@@ -22,14 +24,12 @@ class App {
 
 		const base = this.httpServer.getHttpServer();
 		const corsOpt = this.httpServer.getCorsOpts();
-		this.io = new ServerIO(base, {
+		this.io = new ServerIO<ICltToSrvEvts, ISrvToCltEvts, IInterSrvEvts, ISocketData>(base, {
 			cors: {
 				origin: corsOpt.origin,
 			},
 		});
-
-		this.playerController = new PlayerController();
-		this.socketServer = new ServerSocket(this.io, this.playerController);
+		this.serverController = new ServerController(this.io);
 	}
 
 	/**
@@ -50,15 +50,6 @@ class App {
 	 */
 	public getIoServer(): ServerIO {
 		return this.io;
-	}
-
-	/**
-	 * Returns the `ServerSocket` instance of the current object.
-	 *
-	 * @return {ServerSocket} The `ServerSocket` instance.
-	 */
-	public getSocketServer(): ServerSocket {
-		return this.socketServer;
 	}
 
 	/**

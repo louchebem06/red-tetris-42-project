@@ -1,89 +1,98 @@
 import { Socket } from 'socket.io';
-import PlayerManager from '../service/PlayerManager';
+import { v4 as uuidv4 } from 'uuid';
+import PlayerStore from '../store/PlayerStore';
 import Player from '../model/Player';
-import IUserData from '../interface/IUserData';
+import ServerService from '../service/ServerService';
+import RoomController from './RoomController';
+import Room from '../model/Room';
 
 class PlayerController {
-	private playerManager: PlayerManager = new PlayerManager();
+	private playerStore: PlayerStore = new PlayerStore();
+	private _ss: ServerService;
 
-	/**
-	 * Creates a new player using the provided socket and user data.
-	 *
-	 * @param {Socket} socket - The socket object representing the connection.
-	 * @param {IUserData} userData - The user data object containing the username and id.
-	 * @returns {Promise<Player>} A promise that resolves to the created player object.
-	 */
-	public async createPlayer(socket: Socket, userData: IUserData): Promise<Player> {
-		return await new Promise((resolve, reject) => {
-			const { username, id } = userData;
-			if (id && socket.id !== id) {
-				reject(new Error(`${id} is not valid.`));
-			} else if (username && username.indexOf('#') !== -1) {
-				reject(new Error(`${username} is not valid.`));
-			} else {
-				const player = this.playerManager.generatePlayer(socket.id, username || 'anon');
-				player && resolve(player);
-			}
+	public constructor(serverService: ServerService) {
+		this._ss = serverService;
+
+		this.catchSessionDatas = this.catchSessionDatas.bind(this);
+		this.getPlayerById = this.getPlayerById.bind(this);
+		this.all = this.all.bind(this);
+		this.savePlayer = this.savePlayer.bind(this);
+		this.startSession = this.startSession.bind(this);
+		this.log = this.log.bind(this);
+	}
+
+	public startSession(socket: Socket, sessionID: string): void {
+		this._ss.startSession(socket, sessionID);
+		this.savePlayer(sessionID, socket.data.player);
+	}
+
+	public log(socket: Socket, next: (err?: Error) => void): void {
+		const total = this.playerStore.total;
+		const current = this.playerStore.get(socket.data.player?.sessionID);
+		const s = total > 1 ? 's' : '';
+		let username = current?.username || `NEW ${socket.handshake.auth.username}`;
+		username += ` - Socket communication`;
+		const log = `\n\x1b[34m[${username}]\x1b[0m
+\x1b[4m(currently registered: ${total} player${s})\x1b[0m\n`;
+		console.log(log);
+		this.all().forEach((player) => {
+			player.log();
+		});
+		console.log(`\x1b[34m============================================================\x1b[0m`);
+
+		next();
+	}
+
+	public catchRoomControllerState(roomController: RoomController): void {
+		roomController.players.forEach((player) => {
+			this.savePlayer(player.sessionID, player);
 		});
 	}
 
-	/**
-	 * Updates a player's data.
-	 *
-	 * @param {string} id - The ID of the player.
-	 * @param {object} datas - The new data for the player.
-	 * @return {void|string[]} - Returns void or an array of strings.
-	 */
-	public update(id: string, datas: object): void | string[] {
-		return this.playerManager.updatePlayer(id, datas);
+	public catchSessionDatas(socket: Socket, next: (err?: Error) => void): void {
+		this.getPlayerById(socket.handshake.auth.sessionID)
+			.then((session) => {
+				console.log('[SESSION]', session);
+				this.catchRoomControllerState(socket.data.roomController);
+				socket.data.playerController = this;
+				session.connected = true;
+				socket.data.player = session;
+
+				socket.data.roomController.rooms.forEach((room: Room) => {
+					if (room.players.includes(session)) {
+						socket.join(room.name);
+					}
+				});
+				return next();
+			})
+			.catch((err) => {
+				console.log('[NO SESSION]', err.message);
+
+				const username = socket.handshake.auth.username;
+				if (!username) {
+					return next(new Error('invalid username'));
+				}
+				// create new session
+				socket.data.player = new Player(username, uuidv4());
+				next();
+			});
 	}
 
-	/**
-	 * Delete a player with the given id.
-	 *
-	 * @param {string} id - The id of the player to delete.
-	 * @return {void}
-	 */
-	public deletePlayer(id: string): void {
-		this.playerManager.deletePlayer(id);
+	public all(): Player[] {
+		return this.playerStore.all;
 	}
 
-	/**
-	 * Retrieves a player by their ID.
-	 *
-	 * @param {string} id - The ID of the player.
-	 * @return {Promise<Player>} A promise that
-	 * resolves with the player if found, or rejects with an error if not found.
-	 */
-	public getPlayerById(id: string): Promise<Player> {
+	public getPlayerById(sessionID: string): Promise<Player> {
 		return new Promise<Player>((resolve, reject) => {
-			const player = this.playerManager.getPlayerById(id);
+			const player = this.playerStore.get(sessionID);
 			if (player) {
 				resolve(player);
-			} else {
-				reject(new Error(`PlayerController: Player ${id} not found`));
 			}
+			reject(new Error(`Player ${sessionID} not found`));
 		});
 	}
-
-	/**
-	 * Check if a player with the given ID exists.
-	 *
-	 * @param {string} id - The ID of the player to check.
-	 * @return {boolean} Returns true if a player with the given ID exists, otherwise false.
-	 */
-	public hasPlayer(id: string): boolean {
-		return this.playerManager.hasPlayer(id);
-	}
-
-	/**
-	 * Prunes the player manager.
-	 *
-	 * @param {void} - No parameters.
-	 * @return {void} - No return value.
-	 */
-	public prune(): void {
-		this.playerManager.prune();
+	public savePlayer(sessionID: string, player: Player): void {
+		this.playerStore.save(sessionID, player);
 	}
 }
 

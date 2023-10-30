@@ -1,6 +1,5 @@
 import { Server as ServerHttp } from 'http';
 import { Server as ServerIO } from 'socket.io';
-import ServerSocket from '../model/ServerSocket';
 import App from '../model/App';
 
 const app: App = new App();
@@ -14,10 +13,7 @@ describe('App Basic on / off', () => {
 		expect(app.getIoServer()).toBeInstanceOf(ServerIO);
 		done();
 	});
-	test('getSocketServer', (done) => {
-		expect(app.getSocketServer()).toBeInstanceOf(ServerSocket);
-		done();
-	});
+
 	test('getHttServer', (done) => {
 		expect(app.getHttpServer()).toBeInstanceOf(ServerHttp);
 		done();
