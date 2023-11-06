@@ -1,79 +1,17 @@
 class Player {
-	private _username: string;
-	private _socketId: string;
-	private _active: boolean;
 	private _dateCreated: Date = new Date();
+
 	// TODO definir autrement la partie object de ce Map
 	// qui est cense contenir toutes les datas des games
 	private _games: Map<string, object> = new Map<string, object>();
+	private _leads: string[] = [];
+	private _wins: string[] = [];
+	public connected: boolean = true;
 
-	/**
-	 * Creates a new instance of the Player class.
-	 *
-	 * @param {string} socketId - The socket ID of the player.
-	 * @param {string} [username='anon'] - The username of the player. Defaults to 'anon'.
-	 * @param {boolean} [active=false] - Indicates whether the player is active. Defaults to false.
-	 * @throws {Error} If socketId is not provided or if its length is not 20 characters.
-	 */
-	public constructor(socketId: string, username: string = 'anon', active: boolean = false) {
-		if (!socketId) throw new Error('Player: id socket is mandatory');
-		if (socketId.length != 20) throw new Error('Player: format socket is invalid');
-		this._socketId = socketId;
-		this._active = active;
-		this._username = !username ? 'anon' : username;
-	}
-
-	/**
-	 * Returns the socket ID associated with this instance.
-	 *
-	 * @return {string} The socket ID.
-	 */
-	public get socketId(): string {
-		return this._socketId;
-	}
-
-	/**
-	 * Sets the socket ID for the object.
-	 *
-	 * @param {string} id - The ID of the socket.
-	 */
-	public set socketId(id: string) {
-		this._socketId = id;
-	}
-
-	/**
-	 * Get the username.
-	 *
-	 * @return {string} The username.
-	 */
-	public get username(): string {
-		return this._username;
-	}
-	/**
-	 * Sets the username.
-	 *
-	 * @param {string} username - The new username.
-	 */
-	public set username(username: string) {
-		this._username = username;
-	}
-
-	/**
-	 * Returns the value of the 'active' property.
-	 *
-	 * @return {boolean} The value of the 'active' property.
-	 */
-	public get active(): boolean {
-		return this._active;
-	}
-	/**
-	 * Sets the active state of the function.
-	 *
-	 * @param {boolean} state - The new active state.
-	 */
-	public set active(state: boolean) {
-		this._active = state;
-	}
+	public constructor(
+		public username: string,
+		public sessionID: string,
+	) {}
 
 	/**
 	 * Returns the date the object was created.
@@ -93,6 +31,26 @@ class Player {
 		return [...this._games.values()];
 	}
 
+	public get leads(): string[] {
+		return this._leads;
+	}
+
+	public set leads(value: string) {
+		if (typeof value === 'string' && !this.leads.includes(value)) {
+			this.leads.push(value);
+		}
+	}
+
+	public get wins(): string[] {
+		return this._wins;
+	}
+
+	public set wins(value: string) {
+		if (typeof value === 'string' && !this.wins.includes(value)) {
+			this.wins.push(value);
+		}
+	}
+
 	/**
 	 * Adds a game to the collection.
 	 *
@@ -109,18 +67,43 @@ class Player {
 	 *
 	 * @return {object} The JSON representation of the object.
 	 */
-	// Qd un obj est serialisé, il est converti en string
-	// et il perd toutes ses fonctionnalités!, il ne garde que ses propriétés
-	// donc pour acceder aux accesseurs et mutateurs,
-	// (ici c'est la socket client qui essaye d'acceder a ses props), on retourne au travers
-	// d'une methode toJSON() les datas qu'on souhaite rendre public
+
+	public log(stateColor: string = '\x1b[0m'): void {
+		const coCol = this.connected ? `\x1b[32m` : `\x1b[31m`;
+		let log = `[${stateColor}${this.username}\x1b[0m`;
+		log += ` - ${coCol}${this.sessionID}\x1b[0m]\n`;
+		log += `\t+ \x1b[4mcreated:\x1b[0m \x1b[3m${this.dateCreated}\x1b[0m\n`;
+		if (this.leads.length > 0) {
+			log += `\t\t....................................\n`;
+		}
+		this.leads.forEach((lead) => {
+			log += `\t+ \x1b[4mleads\x1b[0m: \x1b[35m${lead}\x1b[0m\n`;
+		});
+		if (this.wins.length > 0) {
+			log += `\t\t....................................\n`;
+		}
+		this.wins.forEach((win) => {
+			log += `\t+ \x1b[4mwins\x1b[0m: \x1b[36m${win}\x1b[0m\n`;
+		});
+		if (this.games.length > 0) {
+			log += `\t\t....................................\n`;
+		}
+		this.games.forEach((game) => {
+			log += `\t+ \x1b[4mplays\x1b[0m: \x1b[36m${game}\x1b[0m\n`;
+		});
+		log += `------------------------------------------------------------`;
+		console.log(log);
+	}
+
 	public toJSON(): object {
 		return {
 			username: this.username,
-			socketId: this.socketId,
-			active: this.active,
-			dateCreated: this._dateCreated,
-			games: [...this._games.values()],
+			sessionID: this.sessionID,
+			dateCreated: this.dateCreated,
+			connected: this.connected,
+			leads: this.leads,
+			wins: this.wins,
+			games: this.games,
 		};
 	}
 }

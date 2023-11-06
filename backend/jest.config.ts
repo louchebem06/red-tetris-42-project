@@ -21,15 +21,11 @@ const config: Config = {
 			statements: 80,
 		},
 	},
-	/*fakeTimers: {
-		enableGlobally: true,
-	},*/
 	reporters: ['default', ['github-actions', { silent: false }], 'summary'],
 	displayName: {
 		name: 'RED-TETRIS Backend',
 		color: 'cyan',
 	},
-	//slowTestThreshold: 5,
 	testTimeout: 1000,
 	roots: ['<rootDir>/src/'],
 };

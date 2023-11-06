@@ -2,8 +2,10 @@ import request from 'supertest';
 import app from '../app';
 import App from '../model/App';
 import SocketClient from './SocketClient';
-import usersMocked from './usersDatasMocked';
-import Player from 'model/Player';
+import IPlayerJSON from '../interface/IPlayerJSON';
+import IRoomJSON from '../interface/IRoomJSON';
+import { Socket, io } from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
 
 let socketClt: SocketClient;
 
@@ -11,26 +13,129 @@ const protocol = process.env.PROTOCOL || 'ws';
 const host = process.env.HOST || 'localhost';
 const serverPort = process.env.PORT || '8080';
 
+const players = ['Minnie', 'Daisy', 'Donald', 'Riri', 'Fifi', 'Loulou', 'Mickey', 'Picsou'];
+let indexPlayer = 0;
+
+const rooms = ['Donaldville', 'Loulouville', 'Mickeyville', 'Pikachuville'];
+let indexRoom = 0;
+
+type Session = {
+	username: string;
+	id: string;
+};
+const sessions: Session[] = [];
+
+const checkProperties = (socketClt: SocketClient): void => {
+	expect(socketClt).toHaveProperty('player');
+	expect(socketClt).toHaveProperty('rooms');
+	expect(socketClt).toHaveProperty('roomNames');
+	expect(socketClt).toHaveProperty('rooms');
+	expect(socketClt).toHaveProperty('messages');
+	expect(socketClt).toHaveProperty('errors');
+};
+
+const checkRoomProperties = (room: IRoomJSON, name: string, t: number, l: IPlayerJSON): void => {
+	expect(room).toHaveProperty('name');
+	expect(room).toHaveProperty('dateCreated');
+	expect(room).toHaveProperty('leader');
+	expect(room).toHaveProperty('gameState');
+	expect(room).toHaveProperty('players');
+	expect(room).toHaveProperty('totalPlayers');
+
+	expect(room.name).toBeDefined();
+	expect(room.dateCreated).toBeDefined();
+	expect(room.leader).toBeDefined();
+	expect(room.gameState).toBeDefined();
+	expect(room.players).toBeDefined();
+	expect(room.totalPlayers).toBeDefined();
+
+	if (name) {
+		expect(room.name).toBe(name);
+	}
+	if (t) {
+		expect(room.totalPlayers).toBe(t);
+		expect(room.players.length).toBe(t);
+		if (t === 0) {
+			expect(room.winner).toBeNull();
+			expect(room.gameState).toBeFalsy();
+		}
+		if (t > 0) {
+			expect(room.players).toContainEqual(room.leader);
+			expect(room.players).toContainEqual(l);
+		}
+	}
+	if (l) {
+		expect(room.leader.username).toBe(l.username);
+		expect(room.leader.sessionID).toBe(l.sessionID);
+		expect(room.leader.dateCreated).toBe(l.dateCreated);
+		expect(room.leader.connected).toBe(l.connected);
+		expect(room.leader.wins).toStrictEqual(l.wins);
+		expect(room.leader.games).toStrictEqual(l.games);
+		expect(room.leader.leads).toStrictEqual(l.leads);
+		expect(room.leader.connected).toBeTruthy();
+	}
+};
+
+const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: string): void => {
+	expect(player).toHaveProperty('username');
+	expect(player).toHaveProperty('sessionID');
+	expect(player).toHaveProperty('dateCreated');
+	expect(player).toHaveProperty('wins');
+	expect(player).toHaveProperty('games');
+	expect(player).toHaveProperty('leads');
+	expect(player).toHaveProperty('connected');
+
+	expect(player.username).toBeDefined();
+	expect(player.sessionID).toBeDefined();
+	expect(player.dateCreated).toBeDefined();
+	expect(player.connected).toBeDefined();
+	expect(player.wins).toBeDefined();
+	expect(player.leads).toBeDefined();
+	expect(player.games).toBeDefined();
+
+	expect(player.connected).toBeTruthy();
+	if (u) {
+		expect(player.username).toBe(u);
+	}
+	if (i) {
+		expect(player.sessionID).toBe(i);
+	}
+	if (r) {
+		expect(player.leads).toContainEqual(r);
+	}
+};
+
+let flagHttpTest = false;
 beforeAll(async () => {
 	await new Promise<App>((resolve) => {
-		//console.log(`SERVER CONNECTED`);
+		console.log(`SERVER CONNECTED`);
+		flagHttpTest = true;
 		resolve(app);
 	});
 });
 
 afterAll((done) => {
 	app.stop();
-	//console.log(`SERVER DISCONNECTED`);
+	console.log(`SERVER DISCONNECTED`);
 	done();
 });
 
 beforeEach(async () => {
-	socketClt = new SocketClient(`${protocol}://${host}:${serverPort}`);
-	await socketClt.connect();
+	if (!flagHttpTest) {
+		socketClt = new SocketClient(`${protocol}://${host}:${serverPort}`);
+		socketClt = await socketClt.connect(players[indexPlayer]);
+		if (socketClt.player) {
+			sessions.push({ username: socketClt.player.username, id: socketClt.player.sessionID });
+		}
+	}
 });
 
 afterEach(async () => {
-	await socketClt.disconnect();
+	if (!flagHttpTest) {
+		indexPlayer = ++indexPlayer % players.length;
+		indexRoom = ++indexRoom % rooms.length;
+		await socketClt.disconnect();
+	}
 });
 
 describe('Home page', () => {
@@ -50,213 +155,493 @@ describe('Home page', () => {
 		expect(rejectPromise).not.toBeCalled();
 		expect(rejectPromise).not.toHaveBeenCalled();
 		done();
-	});
-	afterEach(() => {});
-});
-
-describe('Socket.io Simulate Echo', () => {
-	test('server and client should communicate on echo event once', async () => {
-		await socketClt.simulateEcho().then((message: string) => {
-			expect(message).toBe('Hello World!');
-		});
-	});
-});
-
-describe('Socket.io Simulate Successful Connection', () => {
-	test('ACK on join event', async () => {
-		const user = {
-			username: 'Bliblii-546',
-			id: '',
-		};
-		const { player } = await socketClt.simulateACKJoin(user);
-		expect(player).toBeDefined();
-		expect(player.socketId).toBe(socketClt.id);
-		expect(player.username).toBe(user.username);
-		expect(player.active).toBeFalsy;
 	}, 1500);
-});
-
-describe('Socket.io Simulate Same Client Several Successful Connection', () => {
-	test.each(usersMocked)(
-		'Checking of usernames and id handling',
-		async (user) => {
-			try {
-				const response = await socketClt.simulateACKJoin(user);
-				expect(response).toHaveProperty('player');
-				expect(response).toHaveProperty('rooms');
-				const { username, socketId, active } = response.player;
-				expect(username).toBe(!user.username ? 'anon' : user.username);
-				expect(socketId).toBe(socketClt.id);
-				expect(active).toBeFalsy;
-			} catch (e) {
-				if (!user.id && user.username && user.username.includes('#')) {
-					expect(e).toBe(`${user.username} is not valid.`);
-				}
-				if (user.id && user.id !== socketClt.id) {
-					expect(e).toBe(`${user.id} is not valid.`);
-				}
-			}
-		},
-		1500,
-	);
-});
-
-describe('Socket.io Simulate Several Clients on One Successful Connection', () => {
-	const socketClts: SocketClient[] = [];
-	let socket: SocketClient;
-	beforeEach(async () => {
-		socket = new SocketClient(`${protocol}://${host}:${serverPort}`);
-		await socket.connect();
-		socketClts.push(socket);
-	});
-	test.each(usersMocked)(
-		'Checking of usernames and id handling',
-		async (user) => {
-			try {
-				const response = await socket.simulateACKJoin(user);
-				// console.log('ACK SERVEUR', response, user);
-				expect(response).toHaveProperty('player');
-				expect(response).toHaveProperty('rooms');
-				const { username, socketId, active } = response.player;
-				expect(username).toBe(!user.username ? 'anon' : user.username);
-				expect(socketId).toBe(socketClt.id);
-				expect(active).toBeFalsy;
-				console.log(response, response.rooms);
-			} catch (e) {
-				if (!user.id && user.username && user.username.includes('#')) {
-					expect(e).toBe(`${user.username} is not valid.`);
-				}
-				if (user.id && user.id !== socketClt.id) {
-					expect(e).toBe(`${user.id} is not valid.`);
-				}
-			}
-		},
-		1500,
-	);
-
-	afterAll(async () => {
-		for (const socket of socketClts) await socket.disconnect();
+	afterAll((done) => {
+		flagHttpTest = false;
+		done();
 	});
 });
 
-let clt1, clt2;
-describe('Try to join a room', () => {
-	test('2 players entering same room', async () => {
-		clt1 = new SocketClient(`${protocol}://${host}:${serverPort}`);
-		clt2 = new SocketClient(`${protocol}://${host}:${serverPort}`);
-		await clt1.connect();
-		await clt2.connect();
-		const user = {
-			username: 'Blibli',
-			id: '',
-		};
-		type PayloadPlayer = {
-			player: Player;
-			rooms: string[];
-		};
+describe(`App`, () => {
+	beforeAll((done) => {
+		indexPlayer = indexRoom = 0;
+		done();
+	});
+	test('Basic successful create - join - leave room', async () => {
+		try {
+			socketClt = await socketClt.createRoom(rooms[indexRoom]);
+			checkProperties(socketClt);
 
-		let payload1: PayloadPlayer = await clt1.simulateACKJoin(user);
-		let payload2: PayloadPlayer = await clt2.simulateACKJoin(user);
+			let player = socketClt.player;
+			let args = [players[indexPlayer], rooms[indexRoom]];
+			if (player) {
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
 
-		expect(payload1.player).not.toBe(payload2.player);
-		expect(payload1.rooms).toHaveLength(0);
-		expect(payload2.rooms).toHaveLength(0);
+				const msgs = socketClt.messages;
+				expect(msgs).toHaveLength(2);
+				const msg = `You are the new leader of ${rooms[indexRoom]}`;
+				expect(msgs).toContainEqual(msg);
+				expect(socketClt?.errors).toHaveLength(0);
+			}
 
-		payload1 = await clt1.createRoom('first room');
-		expect(payload1.player).not.toBe(payload2.player);
-		payload1 = await clt1.joinRoom('first room');
-		payload2 = await clt2.joinRoom('first room');
-		expect(payload1.rooms).toHaveLength(1);
-		expect(payload2.rooms).toHaveLength(1);
+			let roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(indexRoom + 1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 0, player);
+					}
+				});
+			}
 
-		let activeRoomsP1 = await clt1.getRooms();
-		expect(activeRoomsP1).toStrictEqual(['first room']);
+			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
+			player = socketClt.player;
+			if (player) {
+				args = [players[indexPlayer], rooms[indexRoom]];
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+			}
+			roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(indexRoom + 1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 1, player);
+					}
+				});
+			}
 
-		payload1 = await clt1.leaveRoom('first room');
-		activeRoomsP1 = await clt1.getRooms();
-		expect(activeRoomsP1).toStrictEqual(['first room']);
-		payload2 = await clt2.leaveRoom('first room');
-		const activeRoomsP2 = await clt2.getRooms();
-		expect(activeRoomsP2).toStrictEqual([]);
+			socketClt = await socketClt.getRooms();
+			expect(socketClt?.roomNames).toContainEqual(rooms[indexRoom]);
 
-		await clt1.disconnect();
-		await clt2.disconnect();
-	}, 15000);
-});
+			socketClt = await socketClt.leaveRoom(rooms[indexRoom]);
+			player = socketClt.player;
+			if (player) {
+				args = [players[indexPlayer], rooms[indexRoom]];
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+				const msgs = socketClt.messages;
+				expect(msgs).toHaveLength(5);
+				const msg = `You are the new leader of ${rooms[indexRoom]}`;
+				const win = `You are the winner of ${rooms[indexRoom]}`;
+				expect(msgs).toContainEqual(msg);
+				expect(msgs).toContainEqual(win);
+			}
+			roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(0);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 0, player);
+					}
+				});
+			}
+			socketClt = await socketClt.getRooms();
+			expect(socketClt?.roomNames).not.toContainEqual(rooms[indexRoom]);
+			expect(socketClt?.roomNames).toHaveLength(indexRoom);
 
-describe('Send Error', () => {
-	test('Send Error', async () => {
-		const msg = 'App.spec.ts: Send Error';
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const response1 = await socketClt.sendErrorPayload(msg);
-		expect(response1).toBe(`${msg}`);
-		await socketClt.disconnect();
+			expect(socketClt?.errors).toHaveLength(0);
+		} catch (e) {
+			console.log(e);
+		}
+	}, 5000);
+
+	test('Unsuccessful create room', async () => {
+		try {
+			socketClt = await socketClt.createRoom(rooms[indexRoom]);
+			checkProperties(socketClt);
+
+			const player = socketClt.player;
+			let args = [players[indexPlayer], rooms[indexRoom]];
+			if (player) {
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+
+				const msgs = socketClt.messages;
+				expect(msgs).toHaveLength(2);
+				const msg = `You are the new leader of ${rooms[indexRoom]}`;
+				expect(msgs).toContainEqual(msg);
+				socketClt = await socketClt.createRoom(player?.sessionID);
+			}
+
+			const roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 0, player);
+					}
+				});
+			}
+			socketClt = await socketClt.createRoom(rooms[indexRoom]);
+			const sid = socketClt?.getSocket()?.id;
+			if (sid) {
+				socketClt = await socketClt.createRoom(sid);
+			}
+			socketClt = await socketClt.createRoom('a');
+			socketClt = await socketClt.createRoom('a'.repeat(500));
+			expect(socketClt?.errors).toHaveLength(5);
+		} catch (e) {
+			console.log(e);
+		}
+	}, 5000);
+
+	test('Unsuccessful join room', async () => {
+		try {
+			socketClt = await socketClt.createRoom(rooms[indexRoom]);
+			checkProperties(socketClt);
+
+			let player = socketClt.player;
+			let args = [players[indexPlayer], rooms[indexRoom]];
+			if (player) {
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+
+				const msgs = socketClt.messages;
+				expect(msgs).toHaveLength(2);
+				const msg = `You are the new leader of ${rooms[indexRoom]}`;
+				expect(msgs).toContainEqual(msg);
+				expect(socketClt?.errors).toHaveLength(0);
+				socketClt = await socketClt.joinRoom(player?.sessionID);
+			}
+
+			let roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 0, player);
+					}
+				});
+			}
+
+			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
+			player = socketClt.player;
+			if (player) {
+				args = [players[indexPlayer], rooms[indexRoom]];
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+			}
+			roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 1, player);
+					}
+				});
+			}
+			const sid = socketClt?.getSocket()?.id;
+			if (sid) {
+				socketClt = await socketClt.joinRoom(sid);
+			}
+			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
+			socketClt = await socketClt.joinRoom("Cette room n'existe pas");
+			expect(socketClt?.errors?.length).toBeGreaterThanOrEqual(1);
+		} catch (e) {
+			console.log(e);
+		}
+	}, 5000);
+
+	test('Unsuccessful leave room', async () => {
+		try {
+			socketClt = await socketClt.createRoom(rooms[indexRoom]);
+			checkProperties(socketClt);
+
+			let player = socketClt.player;
+			let args = [players[indexPlayer], rooms[indexRoom]];
+			if (player) {
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+
+				const msgs = socketClt.messages;
+				expect(msgs).toHaveLength(2);
+				const msg = `You are the new leader of ${rooms[indexRoom]}`;
+				expect(msgs).toContainEqual(msg);
+				expect(socketClt?.errors).toHaveLength(0);
+			}
+
+			let roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 0, player);
+					}
+				});
+			}
+
+			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
+			player = socketClt.player;
+			if (player) {
+				args = [players[indexPlayer], rooms[indexRoom]];
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+			}
+			roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(1);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 1, player);
+					}
+				});
+			}
+
+			socketClt = await socketClt.leaveRoom(rooms[indexRoom]);
+			player = socketClt.player;
+			if (player) {
+				args = [players[indexPlayer], rooms[indexRoom]];
+				args.push(sessions[indexPlayer].id);
+				checkPlayerProperties(player, args[0], args[1], args[2]);
+				const msgs = socketClt.messages;
+				expect(msgs).toHaveLength(5);
+				const msg = `You are the new leader of ${rooms[indexRoom]}`;
+				const win = `You are the winner of ${rooms[indexRoom]}`;
+				expect(msgs).toContainEqual(msg);
+				expect(msgs).toContainEqual(win);
+				socketClt = await socketClt.leaveRoom(player?.sessionID);
+			}
+			roomsJSON = socketClt?.rooms;
+			if (roomsJSON) {
+				expect(roomsJSON).toHaveLength(0);
+				roomsJSON.forEach((room) => {
+					args = [room.name];
+					if (player) {
+						checkRoomProperties(room, room.name, 0, player);
+					}
+				});
+			}
+			const sid = socketClt?.getSocket()?.id;
+			if (sid) {
+				socketClt = await socketClt.leaveRoom(sid);
+			}
+			socketClt = await socketClt.leaveRoom(rooms[indexRoom]);
+			socketClt = await socketClt.leaveRoom(rooms[indexRoom - 1]);
+			socketClt = await socketClt.leaveRoom(rooms[indexRoom - 2]);
+			expect(socketClt?.errors?.length).toBeGreaterThanOrEqual(1);
+		} catch (e) {
+			console.log(e);
+		}
 	}, 5000);
 });
 
-describe('Inexistant event', () => {
-	test('Inexistant Event', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const response1 = await socketClt.sendInexistantEvent();
-		expect(response1).toBe('Unhandled socket event inexistantEvent');
+describe('Reconnect', () => {
+	let recoSocket: Socket;
+	beforeEach((done) => {
+		recoSocket = io(`${protocol}://${host}:${serverPort}`, {
+			auth: {
+				username: sessions[0].username,
+				sessionID: sessions[0].id,
+			},
+			reconnection: true,
+			autoConnect: false,
+		});
+		recoSocket.connect();
+		done();
+	});
+
+	test('Succesfully reconnect', (done) => {
+		try {
+			recoSocket.emit('joinRoom', 'Loulouville');
+
+			recoSocket.once('roomChange', () => {
+				recoSocket.disconnect();
+			});
+			recoSocket.once('disconnect', () => {
+				recoSocket.off('roomChange');
+				recoSocket.connect();
+				setTimeout(() => {
+					done();
+				}, 1000);
+			});
+		} catch (e) {
+			console.log(e);
+		}
+	}, 2500);
+
+	test('Unhandled Event', (done) => {
+		try {
+			recoSocket.emit("Cet event n'existe pas", 'payload inutile');
+			recoSocket.on('error', (data) => {
+				const msg = `[EVENT NOT HANDLED]: Cet event n'existe pas payload inutile`;
+				expect(data).toBe(msg);
+				done();
+			});
+			setTimeout(() => {
+				done();
+			}, 4000);
+		} catch (e) {
+			console.log(e);
+		}
 	}, 5000);
+
+	afterEach((done) => {
+		recoSocket.disconnect();
+		done();
+	});
 });
 
-describe('Unexpected room payload', () => {
-	test('Send unvalid payload create room', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const response1 = await socketClt.sendUnexpectedPayload();
-		expect(response1).toBe('{"room":"inexistant"} is not a valid name');
-	}, 5000);
+describe('Failed Connection', () => {
+	let recoSocket: Socket;
+	beforeAll((done) => {
+		recoSocket = io(`${protocol}://${host}:${serverPort}`);
+		recoSocket.on('connect_error', () => {
+			console.log('reco connect_error');
+			recoSocket.close();
+			done();
+		});
+		recoSocket.on('disconnect', () => {
+			console.log('reco disconnect');
+			recoSocket.close();
+			done();
+		});
+		done();
+	});
+
+	test('should fail', (done) => {
+		try {
+			recoSocket.emit('joinRoom', 'Loulouville');
+			recoSocket.onAny((event, data) => {
+				console.log('on joinRoom -> this msg should not be logged', event, data);
+			});
+			done();
+		} catch (e) {
+			console.log(e);
+		}
+	});
+
+	afterAll((done) => {
+		if (recoSocket.connected) {
+			recoSocket.disconnect();
+		}
+		done();
+	});
 });
 
-describe('Unexpected room name length', () => {
-	test('Room name must be at least 3 characters long', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const response1 = await socketClt.sendUnvalidRoomNameLength(`ii`);
-		expect(response1).toBe(`Invalid new room ii: name must be at least 3 characters long`);
-	}, 5000);
+describe('App - Multiple Clients', () => {
+	let socket: Socket;
+	const sockets: Socket[] = [];
+	let room: IRoomJSON;
+
+	beforeAll((done) => {
+		sessions.forEach((session) => {
+			socket = io(`${protocol}://${host}:${serverPort}`, {
+				auth: {
+					username: session.username,
+					sessionID: session.id,
+				},
+				reconnection: true,
+				autoConnect: false,
+			});
+			sockets.push(socket);
+			socket.connect();
+		});
+
+		setTimeout(() => {
+			sockets[0].emit('createRoom', 'EuroDisney');
+			sockets[0].on('roomChange', (data) => {
+				room = JSON.parse(JSON.stringify(data));
+				setTimeout(() => {
+					done();
+				}, 500);
+			});
+		}, 1000);
+	}, 2000);
+
+	test('Joining and leaving room', (done) => {
+		const players: IPlayerJSON[] = [];
+		sockets.forEach((s, i) => {
+			s.emit('joinRoom', 'EuroDisney');
+			s.on('roomChange', (data) => {
+				if (data.reason === 'player incoming') {
+					if (!players.find((player) => player.sessionID === data.player.sessionID)) {
+						players.push(data.player);
+					}
+				}
+				if (data.reason === 'player outgoing') {
+					room = JSON.parse(JSON.stringify(data.room));
+				}
+			});
+			if (!(i % 2)) {
+				setTimeout(() => {
+					s.emit('leaveRoom', 'EuroDisney');
+				}, 200);
+			}
+			setTimeout(() => {}, 5000);
+		});
+		setTimeout(() => {
+			sockets.forEach((s) => {
+				s.emit('leaveRoom', 'EuroDisney');
+			});
+		}, 2000);
+		setTimeout(() => {
+			if (room.winner) {
+				expect(room.winner.sessionID).toBe(players[5].sessionID);
+				expect(room.leader.sessionID).toBe(players[5].sessionID);
+			}
+			done();
+		}, 20000);
+	}, 50000);
+
+	afterAll((done) => {
+		sockets.forEach((socket) => {
+			socket.close();
+		});
+		done();
+	}, 2000);
 });
 
-describe('Unexpected room name length', () => {
-	test('Room name must be at least 3 characters long', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const name = 'a'.repeat(4242);
-		const response1 = await socketClt.sendUnvalidRoomNameLength(name);
-		const msg = `Invalid new room ${name}: name must be at most 256 characters long`;
-		expect(response1).toBe(msg);
-	}, 5000);
-});
+describe('Forgery uuid', () => {
+	let socket: Socket;
+	beforeAll((done) => {
+		const uuid = uuidv4();
+		socket = io(`${protocol}://${host}:${serverPort}`, {
+			auth: {
+				username: 'Je suis un vilain usurpateur',
+				sessionID: uuid,
+			},
+			reconnection: true,
+			autoConnect: false,
+		});
+		socket.connect();
+		socket.on('join', (data) => {
+			console.log('connect forgery uuid', uuid, data);
+			expect(data.sessionID).not.toBe(uuid);
+			setTimeout(() => {
+				done();
+			}, 1000);
+		});
+		setTimeout(() => {
+			done();
+		}, 1000);
+	}, 3000);
 
-describe('Unvalid room creation', () => {
-	test('Send twice the same create room event', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const response1 = await socketClt.unvalidCreateRoom();
-		expect(response1).toBe(`Invalid new room valid: already in use`);
+	test('Should generate a new internal uuid and set it as a new player', (done) => {
+		try {
+			socket.emit('joinRoom', 'Loulouville');
+			socket.onAny((event, data) => {
+				console.log('on joinRoom -> this msg should never be logged', event, data);
+			});
+			done();
+		} catch (e) {
+			console.log(e);
+		}
 	}, 5000);
-});
 
-describe('Unvalid room join', () => {
-	test('Send twice the same join room event', async () => {
-		await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const room = 'Nananere';
-		const { player } = await socketClt.createRoom(room);
-		const username = player.username;
-		const response1 = await socketClt.unvalidJoinRoom(room);
-		const msg = `player ${username} already exists in this room`;
-		expect(response1).toBe(`${msg}`);
-	}, 5000);
-});
-
-describe('Unvalid room leave', () => {
-	test('Send twice the same leave room event', async () => {
-		const { player } = await socketClt.simulateACKJoin({ username: 'Blibli', id: '' });
-		const room = 'Gloubiboulga';
-		await socketClt.createRoom(room);
-		const response1 = await socketClt.unvalidLeaveRoom(room);
-		const msg = `Cannot leave room: player ${player.username} not found`;
-		expect(response1).toBe(`${msg}`);
-		const rooms = await socketClt.getRooms();
-		expect(rooms).toHaveLength(1);
-	}, 5000);
+	afterAll((done) => {
+		if (socket.connected) {
+			socket.disconnect();
+			done();
+		}
+	});
 });

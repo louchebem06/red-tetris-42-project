@@ -1,10 +1,10 @@
 import Game from './Game';
 import Player from './Player';
-import { Socket } from 'socket.io';
-import RoomService from '../service/RoomService';
+import PlayerStore from '../store/PlayerStore';
+import IPlayerJSON from '../interface/IPlayerJSON';
 
 export default class Room {
-	private _players: Player[] = [];
+	private _players: PlayerStore = new PlayerStore();
 	private _name: string;
 	private _leader: Player;
 	private _game: Game;
@@ -16,21 +16,11 @@ export default class Room {
 	 * @param {string} name - The name of the constructor.
 	 * @param {Player} leader - The leader of the constructor.
 	 */
-	public constructor(
-		name: string,
-		leader: Player,
-		private _rs: RoomService,
-	) {
-		try {
-			this._name = name;
-			this._leader = leader; // TODO a repercuter dans le player correspondant
-			this._game = new Game(this._name);
-			this._rs.createRoom(this.name);
-			this._rs.alertAll('room opened', { room: this.toJSON() });
-			this.alertLeaderChange();
-		} catch (e) {
-			throw new Error(`${e instanceof Error && e.message}`);
-		}
+	public constructor(name: string, leader: Player) {
+		this._name = name;
+		leader.leads = this.name;
+		this._leader = leader; // TODO a repercuter dans le player correspondant
+		this._game = new Game(this._name);
 	}
 
 	/**
@@ -39,38 +29,10 @@ export default class Room {
 	 * @param {Player} player - The player to be added.
 	 * @return {void} This function does not return anything.
 	 */
-	public addPlayer(socket: Socket, player: Player): void {
-		try {
-			if (this.hasPlayer(player)) {
-				throw new Error(`player ${player.username} already exists in this room`);
-			}
-			this._players.push(player);
-			this._rs.joinRoom(socket, this.name);
-			this.alertRoom('player incoming', player);
-		} catch (e) {
-			throw new Error(`${e instanceof Error && e.message}`);
+	public addPlayer(player: Player): void {
+		if (!this.hasPlayer(player)) {
+			this._players.save(player.sessionID, player);
 		}
-	}
-
-	private alertLeaderChange(): void {
-		const message = `You are the new leader of ${this.name}`;
-		const socket = this._rs.getPlayerSocket(this.leader.socketId);
-		// TODO A repercuter dans le player correspondant (ajoute de la room ou jsp encore)
-		this._rs.alertPlayer(socket, 'leader change', { message });
-	}
-
-	private alertAll(event: string): void {
-		const payload = { room: this.toJSON() };
-		this._rs.alertAll(event, payload);
-	}
-
-	private alertRoom(event: string, player: Player): void {
-		const payload = {
-			reason: event,
-			room: this.toJSON(),
-			player: player.toJSON(),
-		};
-		this._rs.alertRoom(this.name, 'room change', payload);
 	}
 
 	/**
@@ -79,37 +41,24 @@ export default class Room {
 	 * @param {Player} player - The player to be removed.
 	 * @return {void}
 	 */
-	public removePlayer(socket: Socket, player: Player): void {
-		try {
-			const idx = this._players.indexOf(player);
-			if (idx === -1) {
-				const msg = `Cannot leave room: player ${player.username} not found`;
-				throw new Error(msg);
-			}
-			this._players.splice(idx, 1);
-			const nbRemainingPlayers = this.totalPlayers;
-			if (nbRemainingPlayers > 0 && this.isLeader(player)) {
-				this.leader = this._players[0];
-				this.alertRoom('new leader', this.leader);
-				this.alertLeaderChange();
+	public removePlayer(player: Player): void {
+		if (this.hasPlayer(player)) {
+			this._players.delete(player.sessionID);
+			if (this.isLeader(player)) {
+				player.leads.splice(player.leads.indexOf(this.name), 1);
+				if (this.players[0]) {
+					this.leader = this.players[0];
+				}
+				this.leader.leads = this.name;
+
+				if (this.totalPlayers < 2) {
+					this.winner = this.leader;
+				}
 			}
 
-			if (nbRemainingPlayers === 1) {
-				this.winner = this.leader;
+			if (this.totalPlayers === 0 && this._game.isStarted()) {
+				this.stopGame(player);
 			}
-
-			if (nbRemainingPlayers === 0) {
-				this._game.stop();
-				this.alertAll('room closed');
-				const message = `You win the game ${this.name}`;
-				const id = this.winner?.socketId || this.leader.socketId;
-				const socket = this._rs.getPlayerSocket(id);
-				this._rs.alertPlayer(socket, 'winner', { message });
-			}
-			this.alertRoom('player outgoing', player);
-			this._rs.leaveRoom(socket, this.name);
-		} catch (e) {
-			throw new Error(`${e instanceof Error && e.message}`);
 		}
 	}
 
@@ -136,8 +85,13 @@ export default class Room {
 	 *
 	 * @param {Player} player - The player to set as the leader.
 	 */
-	private set leader(player: Player) {
+	public set leader(player: Player) {
 		this._leader = player;
+	}
+
+	private set winner(player: Player) {
+		player.wins = this.name;
+		this._game.winner = player;
 	}
 
 	/**
@@ -158,7 +112,7 @@ export default class Room {
 	 * is in the list of players, otherwise returns false.
 	 */
 	public hasPlayer(player: Player): boolean {
-		return this._players.includes(player);
+		return this._players.get(player.sessionID) !== undefined;
 	}
 
 	/**
@@ -170,7 +124,7 @@ export default class Room {
 	public startGame(player: Player): void {
 		if (!this.gameState && this.isLeader(player) && this.hasPlayer(player)) {
 			this._game.start();
-			this._players.forEach((p) => {
+			this.players.forEach((p) => {
 				p.addGame(this._name, this._game);
 			});
 		}
@@ -208,31 +162,30 @@ export default class Room {
 	}
 
 	/**
-	 * Sets the winner of the game.
-	 *
-	 * @param {Player | null} player - The player who won the game or null if it's a tie.
-	 */
-	private set winner(player: Player | null) {
-		this._game.winner = player;
-	}
-
-	/**
 	 * Returns the total number of players.
 	 *
 	 * @return {number} The total number of players.
 	 */
 	public get totalPlayers(): number {
-		return this._players.length;
+		return this._players.total;
+	}
+
+	public get players(): Player[] {
+		return this._players.all;
+	}
+
+	public get playersJSON(): IPlayerJSON[] {
+		return [...this.players.map((p: Player) => p.toJSON() as IPlayerJSON)];
 	}
 
 	public toJSON(): object {
 		return {
 			name: this.name,
 			dateCreated: this._dateCreated,
-			leader: this.leader,
+			leader: this.leader.toJSON() as IPlayerJSON,
 			gameState: this.gameState,
-			winner: this.winner,
-			players: this._players,
+			winner: this.winner?.toJSON() as IPlayerJSON,
+			players: this.playersJSON,
 			totalPlayers: this.totalPlayers,
 		};
 	}

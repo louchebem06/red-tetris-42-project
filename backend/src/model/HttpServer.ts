@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import http, { Server as ServerHttp } from 'http';
 import 'dotenv/config';
@@ -11,7 +11,7 @@ class HttpServer {
 	private app: Express;
 	private server: ServerHttp;
 	private whiteList: string[] = [];
-	private port: number = parseInt(process.env.PORT || '') || 8080;
+	private port: number = parseInt(process.env.PORT || '8080', 10);
 	private corsOpt: CorsOptions = {};
 
 	/**
@@ -138,6 +138,24 @@ class HttpServer {
 	 * @return {void} - This function does not return any value.
 	 */
 	private setupHttpRoutes(): void {
+		// TODO log error?
+		this.app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+			const html = `<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Error</title>
+	</head>
+	<body>
+		<h1>Oops!</h1>
+		<p>It seems that something went wrong!</p>
+		<p>Contact your administrator if it is not expected.</p>
+	</body>
+</html>`;
+			res.status(403).send(html);
+			next();
+		});
+
 		this.app.get('/', (req: Request, res: Response) => {
 			res.json({ message: 'Hello World!' });
 		});
@@ -156,7 +174,18 @@ class HttpServer {
 		this.app.get('/leaderboard', (req: Request, res: Response) => {
 			res.json({ message: 'Leaderboard coming soon' });
 		});
+
+		// this.testSocketClt();
 	}
+
+	// TODO: testSocketClt = route pour debug - utile pr simuler deco/reco
+	// a delete en fin de dev
+	// public testSocketClt(): void {
+	// 	this.app.get('/test', (req: Request, res: Response) => {
+	// 		const htmlPath = path.resolve(__dirname + `/../docs/test/index.html`);
+	// 		res.sendFile(htmlPath);
+	// 	});
+	// }
 
 	/**
 	 * Retrieves the HTTP server.

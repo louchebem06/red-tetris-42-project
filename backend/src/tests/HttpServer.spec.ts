@@ -47,7 +47,7 @@ describe('HttpServer Basic Connection Home Page port 4242', () => {
 		done();
 	});
 });
-// TODO inserer le vrai port par default (process.env.PORT)
+
 describe('HttpServer Basic Connection Home Page default port', () => {
 	let server: HttpServer;
 	beforeAll((done) => {
@@ -108,5 +108,65 @@ describe('HttpServer Basic Connection Home Page default port', () => {
 		server.stop();
 		expect(server.getHttpServer().listening).toBeFalsy();
 		done();
+	});
+});
+
+describe('HttpServer process.env.PORT', () => {
+	let server: HttpServer;
+	const oldPort = process.env.PORT;
+	beforeAll((done) => {
+		delete process.env.PORT;
+		server = new HttpServer();
+		server.start();
+		done();
+	});
+	afterAll((done) => {
+		process.env.PORT = oldPort;
+		server.stop();
+		done();
+	});
+	test('Unset process.env.PORT', (done) => {
+		console.log('Should be 8080');
+		expect(getServerPort(server)).toBe(8080);
+		done();
+	});
+});
+
+describe('HttpServer ERROR', () => {
+	let server: HttpServer;
+	const oldPort = process.env.PORT;
+	beforeAll((done) => {
+		delete process.env.PORT;
+		server = new HttpServer();
+		server.start();
+		done();
+	});
+	afterAll((done) => {
+		process.env.PORT = oldPort;
+		server.stop();
+		done();
+	});
+
+	test('Not allowed by cors', (done) => {
+		request(server.getHttpServer())
+			.get('/')
+			.set('Origin', 'http://localhost:4242')
+			.then((response) => {
+				console.log('then not allowed by cors?', response);
+				expect(response.statusCode).toBe(403);
+				expect(response.text).toBe(`<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Error</title>
+	</head>
+	<body>
+		<h1>Oops!</h1>
+		<p>It seems that something went wrong!</p>
+		<p>Contact your administrator if it is not expected.</p>
+	</body>
+</html>`);
+				done();
+			});
 	});
 });
