@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { username } from '../../store';
-	import { io } from '$lib/socket';
-	import { onDestroy, onMount } from 'svelte';
 
 	let error = false;
 	let errorMsg: string = '';
@@ -17,28 +15,6 @@
 			valueForm = '';
 		}
 	};
-
-	onMount(() => {
-		io.on('connect', () => {
-			console.log('Connected to socket');
-		});
-		io.on('disconnect', () => {
-			console.log('Disconect to socket');
-		});
-		io.on('connect_error', () => {
-			console.log('Error connection socket');
-		});
-		io.on('reconnecting', () => {
-			console.log('Reconnecting to socket');
-		});
-		io.on('reconnect', () => {
-			console.log('reconnect to socket');
-		});
-	});
-
-	onDestroy(() => {
-		io.close();
-	});
 
 	$: if (valueForm?.length == 0) error = false;
 </script>

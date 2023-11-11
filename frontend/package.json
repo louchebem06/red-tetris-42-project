@@ -7,30 +7,24 @@
 	],
 	"private": true,
 	"scripts": {
-		"dev": "npm run build:svelteconfig && vite dev",
+		"install:back": "npm install -C ../backend",
+		"dev": "concurrently \"npm run start -C ../backend\" \"npm run dev:frontend\"",
+		"dev:frontend": "npm run build:svelteconfig && vite dev",
 		"build": "npm run build:svelteconfig && vite build",
 		"build:svelteconfig": "esbuild svelte.config.ts --outfile=svelte.config.js",
 		"preview": "vite preview",
-		"test:playwright": "playwright test",
-		"test:vitest": "vitest run",
-		"check": "npm run build:svelteconfig && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "npm run build:svelteconfig && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"check": "npm run build:svelteconfig && npm run check:lint",
+		"check:lint": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "npm run build:svelteconfig && npm run check:lint --watch"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.39.0",
-		"@sveltejs/adapter-auto": "^2.1.1",
 		"@sveltejs/adapter-static": "^2.0.3",
 		"@sveltejs/kit": "^1.27.5",
-		"@testing-library/dom": "^9.3.3",
-		"@testing-library/jest-dom": "^6.1.4",
-		"@testing-library/svelte": "^4.0.5",
-		"@testing-library/user-event": "^14.5.1",
-		"@types/testing-library__jest-dom": "^6.0.0",
 		"@typescript-eslint/eslint-plugin": "^6.11.0",
 		"@typescript-eslint/parser": "^6.11.0",
-		"@vitest/coverage-c8": "^0.33.0",
+		"concurrently": "^8.2.2",
 		"eslint": "^8.53.0",
 		"eslint-config-prettier": "^9.0.0",
 		"eslint-plugin-prefer-arrow-functions": "^3.2.4",
@@ -43,12 +37,11 @@
 		"svelte-check": "^3.6.0",
 		"tslib": "^2.4.1",
 		"typescript": "^5.2.2",
-		"vite": "^4.5.0",
-		"vitest": "^0.34.6"
+		"vite": "^4.5.0"
 	},
 	"type": "module",
 	"dependencies": {
-		"playwright": "^1.38.1",
-		"socket.io-client": "^4.7.2"
+		"socket.io-client": "^4.7.2",
+		"svelte-notifications": "^0.9.98"
 	}
 }

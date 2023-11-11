@@ -221,7 +221,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: 0.2s width, 0.2s height, 0.2s top, 0.2s right;
+		transition:
+			0.2s width,
+			0.2s height,
+			0.2s top,
+			0.2s right;
 		z-index: 2;
 
 		.material-symbols-outlined {
@@ -234,7 +238,11 @@
 			height: 45px;
 			top: 12.5px;
 			right: 12.5px;
-			transition: 0.2s width, 0.2s height, 0.2s top, 0.2s right;
+			transition:
+				0.2s width,
+				0.2s height,
+				0.2s top,
+				0.2s right;
 
 			.material-symbols-outlined {
 				font-size: 35px;

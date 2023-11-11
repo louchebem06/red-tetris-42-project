@@ -1,5 +1,8 @@
 <script lang="ts">
 	import '$lib/scss/app.scss';
+	import Notifications from 'svelte-notifications';
 </script>
 
-<slot />
+<Notifications zIndex="100">
+	<slot />
+</Notifications>

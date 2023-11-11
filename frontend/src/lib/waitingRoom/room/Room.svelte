@@ -1,33 +1,15 @@
 <script lang="ts">
 	import User from '$lib/componante/User.svelte';
-	import { io } from '$lib/socket';
-	import { onDestroy, onMount } from 'svelte';
+	import type Player from '$lib/interfaces/Player.interface';
 
-	onMount(() => {
-		io.on('connect', () => {
-			console.log('Connected to socket');
-		});
-		io.on('disconnect', () => {
-			console.log('Disconect to socket');
-		});
-		io.on('connect_error', () => {
-			console.log('Error connection socket');
-		});
-		io.on('reconnecting', () => {
-			console.log('Reconnecting to socket');
-		});
-		io.on('reconnect', () => {
-			console.log('reconnect to socket');
-		});
-	});
-
-	onDestroy(() => {
-		io.close();
-	});
+	export let players: Player[];
+	export let master: Player;
 </script>
 
 <div class="users">
-	<User username="Testos" master />
+	{#each players as player}
+		<User user={player} master={master?.sessionID == player?.sessionID} />
+	{/each}
 </div>
 
 <style lang="scss">
