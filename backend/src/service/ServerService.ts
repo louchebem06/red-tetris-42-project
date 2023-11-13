@@ -12,10 +12,16 @@ export default class ServerService {
 		this.io = io;
 	}
 
-	public startSession(socket: Socket, sessionID: string): void {
+	public setSession(socket: Socket, sessionID: string): void {
 		this.sessions.set(sessionID, socket);
-		// this.io.socketsJoin(sessionID);
-		// socket.join(sessionID);
+	}
+
+	public updateSession(socket: Socket, sessionID: string): void {
+		if (this.sessions.has(sessionID)) {
+			this.sessions.set(sessionID, socket);
+		} else {
+			this.throwError(`Session ${sessionID} not found`);
+		}
 	}
 
 	public get sessions(): Map<string, Socket> {

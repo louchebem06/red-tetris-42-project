@@ -35,6 +35,12 @@ export default class Room {
 		}
 	}
 
+	public updatePlayer(player: Player): void {
+		if (this.hasPlayer(player)) {
+			this._players.save(player.sessionID, player);
+		}
+	}
+
 	/**
 	 * Removes a player from the game.
 	 *

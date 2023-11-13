@@ -13,7 +13,7 @@ const socketClient: Socket<ISrvToCltEvts, ICltToSrvEvts> = io('ws://localhost:80
     autoConnect: false,
     auth: {
         username: string // A faire saisir par user et recuperer
-        sessionID: string // null a la 1ere connexion, puis retourné par le serveur
+        sessionID?: string // null a la 1ere connexion, puis retourné par le serveur
     }
 });
 socketClient.connect() // -> Le serveur attend une connexion et repond en émettant un event **join**
@@ -68,7 +68,20 @@ socketClient.emit('leaveRoom', roomName);
 */
 ```
 
+### getRoom
+
+```js
+socketClient.emit('getRoom', roomName);
+
+/*
+    -> reponse attendue du serveur:
+        * roomInfo                                      PLAYER
+*/
+```
+
 ### getRooms
+
+Toutes les rooms existantes sur le serveur:
 
 ```js
 socketClient.emit('getRooms');
@@ -79,13 +92,31 @@ socketClient.emit('getRooms');
 */
 ```
 
+### getRoomsPlayer
+
+Toutes les rooms dans lesquelles le joueur se trouve:
+
+```js
+socketClient.emit('getRoomsPlayer');
+```
+
+### changeUsername
+
+```js
+socketClient.emit('changeUsername', username);
+
+/*
+    -> reponse attendue du serveur:
+        * playerChange                                      PLAYER
+*/
+```
+
 ## on (Server -> Client)
 
 ### join
 
 ```js
 // Reponse à une demande de connexion client
-{
     player: {
         username: string, // username
         sessionId: string, // uuid
@@ -95,8 +126,6 @@ socketClient.emit('getRooms');
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
     },
-    roomNames: string[]
-}
 ```
 
 ### getRooms
@@ -104,8 +133,156 @@ socketClient.emit('getRooms');
 ```js
 // Reponse à l'event getRooms
 [
-	'room1',
-	'room2',
+	{
+    	name: string,
+    	dateCreated: string,
+    	leader: {
+    	    username: string, // username
+    	    sessionId: string, // uuid
+    	    dateCreated: string,
+    	    connected: boolean, // connecté ou non
+    	    leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
+    	    wins: string[] // nom des rooms gagnées
+    	    games: object[] // Non defini encore
+    	}, // le player qui cree une room en devient le leader
+    	gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
+    	winner: {
+    	    username: string, // username
+    	    sessionId: string, // uuid
+    	    dateCreated: string,
+    	    connected: boolean, // connecté ou non
+    	    leads: string[] // nom des rooms que le joueurr lead
+    	    wins: string[] // nom des rooms gagnées
+    	    games: object[] // Non defini encore
+    	}, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
+    	players: [
+    	    {
+    	        username: string, // username
+    	        sessionId: string, // uuid
+    	        dateCreated: string,
+    	        connected: boolean, // connecté ou non
+    	        leads: string[] // nom des rooms que le joueurr lead
+    	        wins: string[] // nom des rooms gagnées
+    	        games: object[] // Non defini encore
+    	    },
+    	], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
+    	totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+	}, // room 1
+	{
+    name: string,
+    dateCreated: string,
+    leader: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // le player qui cree une room en devient le leader
+    gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
+    winner: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueurr lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
+    players: [
+        {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueurr lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        },
+    ], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
+    totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+},
+	//etc... peut aussi etre vide
+];
+```
+
+### getRoomsPlayer
+
+```js
+
+// Reponse à l'event getRoomsPlayer: retourne les rooms dans lesquelles le player est
+[
+	{
+    	name: string,
+    	dateCreated: string,
+    	leader: {
+    	    username: string, // username
+    	    sessionId: string, // uuid
+    	    dateCreated: string,
+    	    connected: boolean, // connecté ou non
+    	    leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
+    	    wins: string[] // nom des rooms gagnées
+    	    games: object[] // Non defini encore
+    	}, // le player qui cree une room en devient le leader
+    	gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
+    	winner: {
+    	    username: string, // username
+    	    sessionId: string, // uuid
+    	    dateCreated: string,
+    	    connected: boolean, // connecté ou non
+    	    leads: string[] // nom des rooms que le joueurr lead
+    	    wins: string[] // nom des rooms gagnées
+    	    games: object[] // Non defini encore
+    	}, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
+    	players: [
+    	    {
+    	        username: string, // username
+    	        sessionId: string, // uuid
+    	        dateCreated: string,
+    	        connected: boolean, // connecté ou non
+    	        leads: string[] // nom des rooms que le joueurr lead
+    	        wins: string[] // nom des rooms gagnées
+    	        games: object[] // Non defini encore
+    	    },
+    	], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
+    	totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+	}, // room 1
+	{
+    name: string,
+    dateCreated: string,
+    leader: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // le player qui cree une room en devient le leader
+    gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
+    winner: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueurr lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
+    players: [
+        {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueurr lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        },
+    ], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
+    totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+},
 	//etc... peut aussi etre vide
 ];
 ```
@@ -117,6 +294,49 @@ socketClient.emit('getRooms');
 ```
 
 ### roomOpened
+
+```js
+{
+    name: string,
+    dateCreated: string,
+    leader: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // le player qui cree une room en devient le leader
+    gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
+    winner: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueurr lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
+    players: [
+        {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueurr lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        },
+    ], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
+    totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+}
+```
+
+### roomInfo
+
+Réponse émise par le serveur au retour de l'event client `getRoom, roomName`
+La Room retournée est celle indiquée dans le payload d'origine, ou bien une erreur est générée si la room n'existe pas.
 
 ```js
 {
@@ -267,48 +487,11 @@ Des qu'un changement intervient dans la room
 }
 ```
 
-### roomChange
-
-Des qu'un changement intervient dans la room
+### playerChange
 
 ```js
-{
-    reason: string, // room created, player incoming, player outgoing, room closed
-    room: {
-        name: string,
-        dateCreated: string,
-        leader: {
-            username: string, // username
-            sessionId: string, // uuid
-            dateCreated: string,
-            connected: boolean, // connecté ou non
-            leads: string[] // nom des rooms que le joueurr lead
-            wins: string[] // nom des rooms gagnées
-            games: object[] // Non defini encore
-        },
-        gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
-        winner: {
-            username: string, // username
-            sessionId: string, // uuid
-            dateCreated: string,
-            connected: boolean, // connecté ou non
-            leads: string[] // nom des rooms que le joueurr lead
-            wins: string[] // nom des rooms gagnées
-            games: object[] // Non defini encore
-        }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
-        players: [
-            {
-                username: string, // username
-                sessionId: string, // uuid
-                dateCreated: string,
-                connected: boolean, // connecté ou non
-                leads: string[] // nom des rooms que le joueurr lead
-                wins: string[] // nom des rooms gagnées
-                games: object[] // Non defini encore
-            },
-        ], // Devrait etre vide a la fermeture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
-        totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
-    },
+// Reponse à une demande de changement sur le player (event changeUsername)
+// le player updated est retourné par le serveur
     player: {
         username: string, // username
         sessionId: string, // uuid
@@ -318,5 +501,4 @@ Des qu'un changement intervient dans la room
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
     },
-}
 ```

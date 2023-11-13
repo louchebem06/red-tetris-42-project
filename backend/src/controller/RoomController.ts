@@ -23,12 +23,21 @@ export default class RoomController {
 		return this.roomStore.get(roomName);
 	}
 
-	public getRoomsNames(): string[] {
-		return this.roomStore.all.map((room: Room) => room.name);
+	public get roomsJSON(): IRoomJSON[] {
+		return this.roomStore.all.map((room: Room) => room.toJSON() as IRoomJSON);
 	}
 
-	public sendRoomsNames(sid: string): void {
-		this._ss.emit(sid, 'getRooms', this.getRoomsNames());
+	public sendRooms(sid: string): void {
+		this._ss.emit(sid, 'getRooms', this.roomsJSON);
+	}
+
+	public sendRoom(name: string, sid: string): void {
+		try {
+			const room = this.getRoom(name);
+			this._ss.emit(sid, 'roomInfo', room?.toJSON() as IRoomJSON);
+		} catch (e) {
+			throw new Error(`${(<Error>e).message}`);
+		}
 	}
 
 	public get rooms(): Room[] {
@@ -44,6 +53,25 @@ export default class RoomController {
 			return acc;
 		}, []);
 		return players;
+	}
+
+	public getRoomsWithPlayer(player: Player): Room[] {
+		const rooms: Room[] = [];
+		this.rooms.forEach((room: Room) => {
+			if (room.players.includes(player)) {
+				rooms.push(room);
+			}
+		});
+		return rooms;
+	}
+
+	public updateRoomsWithPlayer(player: Player): void {
+		this.rooms.forEach((room: Room) => {
+			if (room.players.includes(player)) {
+				room.updatePlayer(player);
+				this.roomStore.save(room.name, room);
+			}
+		});
 	}
 
 	private broadcast(format: IBrodacastFormat): void {
@@ -94,7 +122,7 @@ export default class RoomController {
 			this.informPlayer('room created', player, room);
 			this.informLeader(player.sessionID, room.name);
 		} catch (e) {
-			throw new Error(`${e instanceof Error && e.message}`);
+			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 
@@ -116,7 +144,7 @@ export default class RoomController {
 				);
 			}
 		} catch (e) {
-			throw new Error(`${e instanceof Error && e.message}`);
+			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 
@@ -152,7 +180,7 @@ export default class RoomController {
 				this.broadcastAll('roomClosed', room.toJSON() as IRoomJSON);
 			}
 		} catch (e) {
-			throw new Error(`${e instanceof Error && e.message}`);
+			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 
