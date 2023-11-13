@@ -18,7 +18,7 @@
 		"@playwright/test": "^1.39.0",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/adapter-static": "^2.0.3",
-		"@sveltejs/kit": "^1.27.2",
+		"@sveltejs/kit": "^1.27.5",
 		"@testing-library/dom": "^9.3.3",
 		"@testing-library/jest-dom": "^6.1.4",
 		"@testing-library/svelte": "^4.0.5",
