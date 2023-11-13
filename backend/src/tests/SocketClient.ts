@@ -11,7 +11,7 @@ class SocketClient {
 	private socket: SocketClt<ISrvToCltEvts, ICltToSrvEvts> | null = null;
 
 	public player: IPlayerJSON | null = null;
-	public roomNames: string[] = [];
+	public roomsIn: IRoomJSON[] = [];
 	public rooms: IRoomJSON[] = [];
 	public messages: string[] = [];
 	public errors: string[] = [];
@@ -35,11 +35,10 @@ class SocketClient {
 				console.log(`CLIENT SOCKET CONNECTED`);
 			});
 
-			this.socket.once('join', (data) => {
+			this.socket.once('join', (player) => {
 				if (this.socket) {
-					console.log(`CLIENT SOCKET JOIN`, data.player, data.player.sessionID);
-					this.player = data.player as IPlayerJSON;
-					this.roomNames = data.rooms;
+					console.log(`CLIENT SOCKET JOIN`, player, player.sessionID);
+					this.player = player as IPlayerJSON;
 					this.socket.auth = { username, sessionID: this.player.sessionID };
 					resolve(this);
 				}
@@ -103,7 +102,7 @@ class SocketClient {
 			if (this.socket?.connected) {
 				this.socket.emit('getRooms');
 				this.socket.once('getRooms', (data) => {
-					this.roomNames = data;
+					this.rooms = data;
 					console.log(`CLIENT SOCKET ROOMS`);
 					this.resolve(resolve);
 				});

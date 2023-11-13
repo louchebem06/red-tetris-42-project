@@ -18,6 +18,7 @@ export default class ServerController {
 		this._rc = new RoomController(this._ss);
 
 		this.updateInternals = this.updateInternals.bind(this);
+		this.sendRooms = this.sendRooms.bind(this);
 
 		this.use(this._rc.catchState);
 		this.use(this._pc.catchSessionDatas);
@@ -30,7 +31,7 @@ export default class ServerController {
 
 			this._pc.startSession(socket, sessionID);
 			this._ss.log();
-			socket.emit('join', { player, rooms: this._rc.getRoomsNames() });
+			socket.emit('join', player.toJSON());
 
 			socket.onAny((event, ...args) => {
 				console.log('EVENT', event);
@@ -49,7 +50,19 @@ export default class ServerController {
 						break;
 
 					case 'getRooms':
-						this.sendRoomsNames(socket.data.player?.sessionID);
+						this.sendRooms(socket);
+						break;
+
+					case 'getRoom':
+						this.sendRoom(args[0], socket);
+						break;
+
+					case 'getRoomsPlayer':
+						this.getRoomsPlayer(socket);
+						break;
+
+					case 'changeUsername':
+						this.changeUsername(args[0], socket);
 						break;
 
 					default:
@@ -104,8 +117,40 @@ export default class ServerController {
 		this._ss.emit(sid, 'error', message);
 	}
 
-	public sendRoomsNames(sid: string): void {
-		this._rc.sendRoomsNames(sid);
+	public sendRooms(socket: Socket): void {
+		const player = socket.data.player;
+		const sid = player?.sessionID;
+		try {
+			this._rc.sendRooms(sid);
+		} catch (e) {
+			this.sendError(sid, `${(<Error>e).message}`);
+		}
+	}
+
+	public sendRoom(name: string, socket: Socket): void {
+		const player = socket.data.player;
+		const sid = player?.sessionID;
+		try {
+			this._rc.sendRoom(name, sid);
+		} catch (e) {
+			this.sendError(sid, `${(<Error>e).message}`);
+		}
+	}
+
+	public getRoomsPlayer(socket: Socket): void {
+		try {
+			this._pc.sendRoomsPlayer(socket);
+		} catch (e) {
+			this.sendError(socket.data.player?.sessionID, `${(<Error>e).message}`);
+		}
+	}
+
+	public changeUsername(username: string, socket: Socket): void {
+		try {
+			this._pc.changeUsername(username, socket);
+		} catch (e) {
+			this.sendError(socket.data.player?.sessionID, `${(<Error>e).message}`);
+		}
 	}
 
 	public createRoom(name: string, socket: Socket): void {
@@ -115,7 +160,7 @@ export default class ServerController {
 			this._rc.create(name, player);
 			this._pc.catchRoomControllerState(this._rc);
 		} catch (e) {
-			this.sendError(sessionID, `${e instanceof Error && e.message}`);
+			this.sendError(sessionID, `${(<Error>e).message}`);
 		}
 	}
 
@@ -126,7 +171,7 @@ export default class ServerController {
 			this._rc.join(name, player);
 			this._pc.catchRoomControllerState(this._rc);
 		} catch (e) {
-			this.sendError(sessionID, `${e instanceof Error && e.message}`);
+			this.sendError(sessionID, `${(<Error>e).message}`);
 		}
 	}
 
@@ -137,7 +182,7 @@ export default class ServerController {
 			this._rc.leave(name, player);
 			this._pc.catchRoomControllerState(this._rc);
 		} catch (e) {
-			this.sendError(sessionID, `${e instanceof Error && e.message}`);
+			this.sendError(sessionID, `${(<Error>e).message}`);
 		}
 	}
 }

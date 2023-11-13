@@ -5,6 +5,7 @@ import Player from '../model/Player';
 import ServerService from '../service/ServerService';
 import RoomController from './RoomController';
 import Room from '../model/Room';
+import IRoomJSON from 'interface/IRoomJSON';
 
 class PlayerController {
 	private playerStore: PlayerStore = new PlayerStore();
@@ -22,8 +23,45 @@ class PlayerController {
 	}
 
 	public startSession(socket: Socket, sessionID: string): void {
-		this._ss.startSession(socket, sessionID);
+		this._ss.setSession(socket, sessionID);
 		this.savePlayer(sessionID, socket.data.player);
+	}
+
+	public updateSession(socket: Socket, sid: string): void {
+		try {
+			this._ss.updateSession(socket, sid);
+		} catch (e) {
+			throw new Error(`${(<Error>e).message}`);
+		}
+	}
+
+	public changeUsername(username: string, socket: Socket): void {
+		const player = socket.data.player;
+		const sid = player?.sessionID;
+		try {
+			if (player.username !== username) {
+				player.username = username;
+				this.savePlayer(sid, player);
+				this.updateSession(socket, sid);
+				socket.data.roomController.updateRoomsWithPlayer(player);
+				this._ss.emit(sid, 'playerChange', player.toJSON());
+			}
+		} catch (e) {
+			throw new Error(`${(<Error>e).message}`);
+		}
+	}
+
+	public sendRoomsPlayer(socket: Socket): void {
+		const player = socket.data.player;
+		const sid = player?.sessionID;
+		const rc = socket.data.roomController;
+		try {
+			const rooms = rc.getRoomsWithPlayer(player);
+			const roomsJSON: IRoomJSON[] = rooms.map((room: Room) => room.toJSON());
+			this._ss.emit(sid, 'getRoomsPlayer', roomsJSON);
+		} catch (e) {
+			throw new Error(`${(<Error>e).message}`);
+		}
 	}
 
 	public log(socket: Socket, next: (err?: Error) => void): void {
@@ -50,6 +88,7 @@ class PlayerController {
 	}
 
 	public catchSessionDatas(socket: Socket, next: (err?: Error) => void): void {
+		console.log('[SESSION DATA] - handshake', socket.handshake);
 		this.getPlayerById(socket.handshake.auth.sessionID)
 			.then((session) => {
 				console.log('[SESSION]', session);
