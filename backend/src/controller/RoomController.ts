@@ -7,6 +7,7 @@ import { Payload } from '../interface/ISrvToCltEvts';
 import IRoomJSON from '../interface/IRoomJSON';
 import IPlayerJSON from '../interface/IPlayerJSON';
 import { IBrodacastFormat } from '../interface/IBrodacastFormat';
+import { logger } from './LogController';
 
 // TODO Repercuter les updates sur les players dans le controller principal (dans le serveur http)
 export default class RoomController {
@@ -94,23 +95,6 @@ export default class RoomController {
 		this._ss.emit(id, event, info);
 	}
 
-	private informLeader(id: string, room: string): void {
-		const message = `You are the new leader of ${room}`;
-		this.inform(id, 'leaderChange', message);
-	}
-	private informWinner(id: string, room: string): void {
-		const message = `You are the winner of ${room}`;
-		this.inform(id, 'winner', message);
-	}
-
-	private informPlayer(reason: string, player: Player, room: Room): void {
-		this._ss.emit(player.sessionID, 'roomChange', {
-			reason: reason,
-			room: room.toJSON() as IRoomJSON,
-			player: player.toJSON() as IPlayerJSON,
-		});
-	}
-
 	public create(name: string, player: Player): void {
 		try {
 			this._ss.createRoom(name);
@@ -118,9 +102,15 @@ export default class RoomController {
 			const room = new Room(name, player);
 			this.roomStore.save(name, room);
 
-			this.broadcastAll('roomOpened', room.toJSON() as IRoomJSON);
-			this.informPlayer('room created', player, room);
-			this.informLeader(player.sessionID, room.name);
+			this.broadcastAll('roomOpened', {
+				room: room.toJSON() as IRoomJSON,
+				player: player.toJSON() as IPlayerJSON,
+			});
+			this.broadcastAll('roomChange', {
+				reason: 'new leader',
+				room: room.toJSON() as IRoomJSON,
+				player: player.toJSON() as IPlayerJSON,
+			});
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
@@ -134,14 +124,11 @@ export default class RoomController {
 				this.roomStore.save(name, room);
 
 				this._ss.changeRoom(player.sessionID, name, 'join');
-				this.broadcastRoom(
-					{
-						reason: 'player incoming',
-						room: room.toJSON() as IRoomJSON,
-						player: player.toJSON() as IPlayerJSON,
-					},
-					room.name,
-				);
+				this.broadcastAll('roomChange', {
+					reason: 'player incoming',
+					room: room.toJSON() as IRoomJSON,
+					player: player.toJSON() as IPlayerJSON,
+				});
 			}
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
@@ -159,25 +146,31 @@ export default class RoomController {
 			this.roomStore.save(name, room);
 			this._ss.changeRoom(player.sessionID, name, 'leave');
 			if (room.totalPlayers > 0) {
-				this.broadcastRoom(
-					{
-						reason: 'player outgoing',
-						room: room.toJSON() as IRoomJSON,
-						player: player.toJSON() as IPlayerJSON,
-					},
-					room.name,
-				);
+				this.broadcastAll('roomChange', {
+					reason: 'player outgoing',
+					room: room.toJSON() as IRoomJSON,
+					player: player.toJSON() as IPlayerJSON,
+				});
 
 				if (!room.isLeader(leader)) {
-					this.informLeader(room.leader.sessionID, room.name);
+					this.broadcastAll('roomChange', {
+						reason: 'new leader',
+						room: room.toJSON() as IRoomJSON,
+						player: player.toJSON() as IPlayerJSON,
+					});
 				}
 			} else {
-				const id = player.sessionID;
-				this.informWinner(id, room.name);
+				this.broadcastAll('roomChange', {
+					reason: 'new winner',
+					room: room.toJSON() as IRoomJSON,
+					player: player.toJSON() as IPlayerJSON,
+				});
 
 				this.roomStore.delete(name);
-				this.informPlayer('room closed', player, room);
-				this.broadcastAll('roomClosed', room.toJSON() as IRoomJSON);
+				this.broadcastAll('roomClosed', {
+					room: room.toJSON() as IRoomJSON,
+					player: player.toJSON() as IPlayerJSON,
+				});
 			}
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
@@ -195,8 +188,10 @@ export default class RoomController {
 		const s = total > 1 ? 's' : '';
 
 		const log = `\n\x1b[33m[${total} room${s}]\x1b[0m`;
+		logger.log(`\n[${total} room${s}]`);
 		console.log(log);
 		rooms.forEach((room) => {
+			logger.log(`\n ** ${room.name}:\n`);
 			console.log(`\n ** \x1b[4m${room.name}\x1b[0m:\n`);
 			const players = room.players;
 			const leadColor = `\x1b[35m`;
@@ -208,8 +203,10 @@ export default class RoomController {
 				}
 				player.log(stateCol);
 			});
+			logger.log(`\n\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n`);
 			console.log(`\n\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n`);
 		});
+		logger.log(`============================================================`);
 		console.log(`\x1b[34m============================================================\x1b[0m`);
 		next();
 	}

@@ -3,28 +3,50 @@ import { Server, Socket } from 'socket.io';
 import { Payload } from '../interface/ISrvToCltEvts';
 import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 
+import { logger } from '../controller/LogController';
+
 export type ChangeRoom = 'join' | 'leave';
 
 export default class ServerService {
 	private io: Server;
-	private _sessions: Map<string, Socket> = new Map();
+
+	private _sessions: Set<string> = new Set();
+
 	public constructor(io: Server) {
 		this.io = io;
 	}
 
 	public setSession(socket: Socket, sessionID: string): void {
-		this.sessions.set(sessionID, socket);
+		this.sessions.add(sessionID);
+		socket.join(sessionID);
 	}
 
 	public updateSession(socket: Socket, sessionID: string): void {
 		if (this.sessions.has(sessionID)) {
-			this.sessions.set(sessionID, socket);
 		} else {
 			this.throwError(`Session ${sessionID} not found`);
 		}
 	}
 
-	public get sessions(): Map<string, Socket> {
+	public deleteSession(sid: string): Promise<boolean> {
+		return new Promise(async (resolve): Promise<void> => {
+			const sockets = await this.io.to(sid).fetchSockets();
+
+			if (sockets.length > 0) {
+				this.io.to(sid).socketsLeave(sid);
+				for (const socket of sockets) {
+					socket.disconnect();
+				}
+				this.sessions.delete(sid);
+				resolve(false);
+			} else {
+				this.sessions.delete(sid);
+				resolve(true);
+			}
+		});
+	}
+
+	public get sessions(): Set<string> {
 		return this._sessions;
 	}
 
@@ -56,26 +78,11 @@ export default class ServerService {
 		throw new Error(message);
 	}
 
-	private getSocket(sessionID: string): Socket {
-		// console.log('sessionID', sessionID, this.sessions.entries());
-		const session = this.sessions.get(sessionID);
-		if (!session) {
-			this.throwError(`Session ${sessionID} not found`);
-		}
-		const socket = this.io.sockets.sockets.get(session.id);
-		if (!socket) {
-			this.throwError(`Socket ${session.id} not found`);
-		}
-		return socket;
-	}
-
 	public emit(sid: string, event: string, data: Payload): void {
-		try {
-			const socket = this.getSocket(sid);
-			socket.emit(event, data);
-		} catch (e) {
-			this.throwError(`${e instanceof Error && e.message}`);
+		if (!this.isSession(sid)) {
+			this.throwError(`Session ${sid} not found`);
 		}
+		this.io.to(sid).emit(event, data);
 	}
 
 	public broadcast(datas: IBrodacastFormat): void {
@@ -89,8 +96,18 @@ export default class ServerService {
 				}
 				if (sid) {
 					// send to all but self
-					const socket = this.getSocket(sid);
-					socket.broadcast.to(room).emit(event, data);
+
+					const except = this.io.sockets.adapter.rooms.get(sid);
+
+					if (except) {
+						const self = [...except.values()];
+
+						if (self) {
+							this.io.except(sid).except(self).to(room).emit(event, data);
+						}
+					} else {
+						this.throwError(`Room ${sid} not found`);
+					}
 				} else {
 					// send to all
 					this.io.in(room).emit(event, data);
@@ -99,8 +116,16 @@ export default class ServerService {
 				// broadcast to all
 				if (sid) {
 					// send to all but self
-					const socket = this.getSocket(sid);
-					socket.broadcast.emit(event, data);
+					const except = this.io.sockets.adapter.rooms.get(sid);
+					if (except) {
+						const self = [...except.values()];
+
+						if (self) {
+							this.io.except(sid).emit(event, data);
+						}
+					} else {
+						this.throwError(`Room ${sid} not found`);
+					}
 				} else {
 					// send to all
 					this.io.emit(event, data);
@@ -119,17 +144,25 @@ export default class ServerService {
 		// console.log('createRoom', this.io.sockets.adapter.rooms);
 	}
 
-	public changeRoom(sessionID: string, room: string, change: ChangeRoom): void {
+	public async changeRoom(sessionID: string, room: string, change: ChangeRoom): Promise<void> {
 		if (!this.isPublicRoom(room)) {
 			this.throwError(`Invalid public room ${room}`);
 		}
-		const socket = this.getSocket(sessionID);
-		const rooms = socket.rooms;
+
+		const sockets = await this.io.to(sessionID).fetchSockets();
+		const rooms = new Set();
+		sockets.forEach((s) => {
+			s.rooms.forEach((r) => {
+				if (r !== s.id) {
+					rooms.add(r);
+				}
+			});
+		});
 		try {
 			switch (change) {
 				case 'leave':
 					if (rooms.has(room)) {
-						socket.leave(room);
+						this.io.in(sessionID).socketsLeave(room);
 					} else {
 						this.throwError(`Cannot leave room: you are not in ${room}`);
 					}
@@ -137,7 +170,7 @@ export default class ServerService {
 
 				case 'join':
 					if (!rooms.has(room)) {
-						socket.join(room);
+						this.io.in(sessionID).socketsJoin(room);
 					} else {
 						this.throwError(`Cannot join room: you are already in ${room}`);
 					}
@@ -150,23 +183,34 @@ export default class ServerService {
 
 	public log(): void {
 		let log = `${this.sessions.size} session(s) registered:`;
+		let llog = `${this.sessions.size} session(s) registered:`;
 		this.sessions.forEach((session, sid) => {
-			log += `\n ** \x1b[4m ${session.id} - ${sid}\x1b[0m:`;
+			log += `\n ** \x1b[4m ${session} - ${sid}\x1b[0m:`;
+			llog += `\n ** ${session} - ${sid}:`;
 		});
 		log += `\n\n${this.rooms.size} rooms(s) registered`;
+		llog += `\n\n${this.rooms.size} rooms(s) registered`;
 		this.rooms.forEach((room, sid) => {
 			log += `\n ** \x1b[4m${sid}\x1b[0m contains:`;
+			llog += `\n ** ${sid} contains:`;
 			[...room.values()].forEach((r) => {
 				log += `\n       \x1b[3m ->    ${r}\x1b[0m`;
+				llog += `\n        ->    ${r}`;
 			});
 		});
 		log += `\n\n${this.sids.size} sid(s) registered`;
+		llog += `\n\n${this.sids.size} sid(s) registered`;
 		this.sids.forEach((sid, room) => {
 			log += `\n ** \x1b[4m${room}\x1b[0m is in:`;
+			llog += `\n ** ${room} is in:`;
 			[...sid.values()].forEach((sid) => {
 				log += `\n       \x1b[3m ->    ${sid}\x1b[0m`;
+				llog += `\n        ->    ${sid}`;
 			});
 		});
+		logger.log(`ServerService::log:185`);
+		logger.log(llog);
+		logger.log(`============================================================`);
 		console.log(log);
 		console.log(`\x1b[34m============================================================\x1b[0m`);
 	}

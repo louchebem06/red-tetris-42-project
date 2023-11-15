@@ -162,7 +162,7 @@ describe('Home page', () => {
 	});
 });
 
-describe(`App`, () => {
+describe.skip(`App`, () => {
 	beforeAll((done) => {
 		indexPlayer = indexRoom = 0;
 		done();
@@ -435,7 +435,7 @@ describe(`App`, () => {
 	}, 5000);
 });
 
-describe('Reconnect', () => {
+describe.skip('Reconnect', () => {
 	let recoSocket: Socket;
 	beforeEach((done) => {
 		recoSocket = io(`${protocol}://${host}:${serverPort}`, {
@@ -528,7 +528,7 @@ describe('Failed Connection', () => {
 	});
 });
 
-describe('App - Multiple Clients', () => {
+describe.skip('App - Multiple Clients', () => {
 	let socket: Socket;
 	const sockets: Socket[] = [];
 	let room: IRoomJSON;

@@ -3,6 +3,8 @@ import PlayerController from '../controller/PlayerController';
 import RoomController from '../controller/RoomController';
 import ServerService from '../service/ServerService';
 import Player from '../model/Player';
+import { logger } from './LogController';
+import { Payload } from '../interface/ISrvToCltEvts';
 
 export default class ServerController {
 	private _pc: PlayerController;
@@ -25,50 +27,66 @@ export default class ServerController {
 		this.use(this._pc.log);
 		this.use(this._rc.log);
 		this._io.on('connection', (socket: Socket) => {
+			logger.logSocketIO(socket);
 			const player = socket.data.player;
 			const sessionID = player?.sessionID;
 			player.connected = true;
 
-			this._pc.startSession(socket, sessionID);
+			const playerState = this._pc.startSession(socket, sessionID);
 			this._ss.log();
 			socket.emit('join', player.toJSON());
+			this._ss.broadcast({
+				event: 'playerChange',
+				data: {
+					reason: `${playerState} player`,
+					player: player.toJSON(),
+				},
+				sid: sessionID,
+			});
 
 			socket.onAny((event, ...args) => {
+				logger.log(`EVENT: ${event} ${JSON.stringify(args)} * ${socket.id}`);
 				console.log('EVENT', event);
 				this.updateInternals(socket);
-				switch (event) {
-					case 'createRoom':
-						this.createRoom(args[0], socket);
-						break;
+				try {
+					switch (event) {
+						case 'createRoom':
+							this.createRoom(args[0], socket);
+							break;
 
-					case 'joinRoom':
-						this.joinRoom(args[0], socket);
-						break;
+						case 'joinRoom':
+							this.joinRoom(args[0], socket);
+							break;
 
-					case 'leaveRoom':
-						this.leaveRoom(args[0], socket);
-						break;
+						case 'leaveRoom':
+							this.leaveRoom(args[0], socket);
+							break;
 
-					case 'getRooms':
-						this.sendRooms(socket);
-						break;
+						case 'getRooms':
+							this.sendRooms(socket);
+							break;
 
-					case 'getRoom':
-						this.sendRoom(args[0], socket);
-						break;
+						case 'getRoom':
+							this.sendRoom(args[0], socket);
+							break;
 
-					case 'getRoomsPlayer':
-						this.getRoomsPlayer(socket);
-						break;
+						case 'getRoomsPlayer':
+							this.getRoomsPlayer(socket);
+							break;
 
-					case 'changeUsername':
-						this.changeUsername(args[0], socket);
-						break;
+						case 'changeUsername':
+							this.changeUsername(args[0], socket);
+							break;
 
-					default:
-						this.sendError(sessionID, `[EVENT NOT HANDLED]: ${event} ${args}`);
-						console.log('[EVENT NOT HANDLED]:', event, args);
-						break;
+						default:
+							const _args = `${JSON.stringify(args)} * ${socket.id}`;
+							logger.log(`[EVENT NOT HANDLED]: ${event} ${_args}`);
+							this.sendError(sessionID, `[EVENT NOT HANDLED]: ${event} ${args}`);
+							console.log('[EVENT NOT HANDLED]:', event, args);
+							break;
+					}
+				} catch (e) {
+					this.sendError(sessionID, `${(<Error>e).message}`);
 				}
 				this.updateSocketData(socket, player);
 				this._ss.log();
@@ -76,16 +94,41 @@ export default class ServerController {
 				this._rc.log(socket, () => {});
 			});
 
-			socket.on('disconnect', () => {
+			socket.on('disconnecting', () => {
+				logger.logSocketIO(socket);
+			});
+
+			socket.on('disconnect', async (reason) => {
 				this.updateInternals(socket);
-				this._pc.getPlayerById(sessionID).then((player: Player) => {
+
+				const player = await this._pc.getPlayerById(sessionID);
+				let _reason = '';
+				if (player) {
 					player.connected = false;
-					this._pc.savePlayer(sessionID, player);
-					this._pc.log(socket, () => {});
-					this._rc.log(socket, () => {});
-					this._ss.log();
-					console.log(`[DISCONNECTED] - ${player.username} ${sessionID}`);
-				});
+					if (reason.includes(`transport`) || reason.includes(`ping timeout`)) {
+						_reason = `disconnected`;
+						this._pc.savePlayer(sessionID, player);
+					} else if (reason.includes('server') || reason.includes('client')) {
+						_reason = `disconnected`;
+						this._pc.savePlayer(sessionID, player);
+						// _reason = `leaving server`;
+						// this._pc.deletePlayer(sessionID);
+					}
+					this._ss.broadcast({
+						event: 'playerChange',
+						data: {
+							reason: `${_reason} player`,
+							player: player.toJSON(),
+						} as Payload,
+					});
+				}
+				this._pc.log(socket, () => {});
+				this._rc.log(socket, () => {});
+				this._ss.log();
+				let msg = `[DISCONNECTED] - (${reason}) ${player.username}`;
+				msg += ` * ${sessionID} * ${socket.id}`;
+				logger.log(msg);
+				console.log(msg);
 			});
 		});
 	}

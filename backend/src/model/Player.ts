@@ -1,3 +1,4 @@
+import { logger } from '../controller/LogController';
 class Player {
 	private _dateCreated: Date = new Date();
 
@@ -71,28 +72,38 @@ class Player {
 	public log(stateColor: string = '\x1b[0m'): void {
 		const coCol = this.connected ? `\x1b[32m` : `\x1b[31m`;
 		let log = `[${stateColor}${this.username}\x1b[0m`;
+		let llog = `[${this.username} (${!this.connected ? 'not ' : ''}connected)`;
+		llog += ` - ${this.sessionID}]\n`;
+		llog += `\t+ created: ${this.dateCreated}\n`;
 		log += ` - ${coCol}${this.sessionID}\x1b[0m]\n`;
 		log += `\t+ \x1b[4mcreated:\x1b[0m \x1b[3m${this.dateCreated}\x1b[0m\n`;
 		if (this.leads.length > 0) {
 			log += `\t\t....................................\n`;
+			llog += `\t\t....................................\n`;
 		}
 		this.leads.forEach((lead) => {
 			log += `\t+ \x1b[4mleads\x1b[0m: \x1b[35m${lead}\x1b[0m\n`;
+			llog += `\t+ leads: ${JSON.stringify(lead)}\n`;
 		});
 		if (this.wins.length > 0) {
 			log += `\t\t....................................\n`;
+			llog += `\t\t....................................\n`;
 		}
 		this.wins.forEach((win) => {
 			log += `\t+ \x1b[4mwins\x1b[0m: \x1b[36m${win}\x1b[0m\n`;
+			llog += `\t+ wins: ${JSON.stringify(win)}\n`;
 		});
 		if (this.games.length > 0) {
 			log += `\t\t....................................\n`;
 		}
 		this.games.forEach((game) => {
 			log += `\t+ \x1b[4mplays\x1b[0m: \x1b[36m${game}\x1b[0m\n`;
+			llog += `\t\t....................................\n`;
 		});
 		log += `------------------------------------------------------------`;
+		llog += `------------------------------------------------------------`;
 		console.log(log);
+		logger.log(llog);
 	}
 
 	public toJSON(): object {
