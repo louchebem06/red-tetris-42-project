@@ -1,7 +1,10 @@
 {
-	"name": "backend",
+	"name": "red-tetris-backend",
 	"version": "1.0.0",
-	"description": "",
+	"authors": [
+		"Aude Laëtitia Lellouche <alellouc@student.42nice.fr>",
+		"Bryan Ledda <bledda@student.42nice.fr>"
+	],
 	"main": "app.js",
 	"scripts": {
 		"test": "npm run env && jest --detectOpenHandles --no-cache --forceExit > src/tests/output.txt && npm run env-rm",
@@ -19,8 +22,6 @@
 		"env": "npx ts-node configSetup.ts",
 		"env-rm": "rm -rf .env"
 	},
-	"keywords": [],
-	"author": "",
 	"license": "ISC",
 	"devDependencies": {
 		"@babel/preset-env": "^7.22.15",
