@@ -1,6 +1,10 @@
 {
 	"name": "red-tetris-frontend",
 	"version": "1.0.0",
+	"authors": [
+		"Bryan Ledda <bledda@student.42nice.fr>",
+		"Aude Laëtitia Lellouche <alellouc@student.42nice.fr>"
+	],
 	"private": true,
 	"scripts": {
 		"dev": "npm run build:svelteconfig && vite dev",
