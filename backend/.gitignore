@@ -14,3 +14,5 @@ src/docs/test/*
 ws-docs/
 ws-docs/*
 asyncapi-v1-socketio.yaml
+logs/*
+!logs/.gitkeep

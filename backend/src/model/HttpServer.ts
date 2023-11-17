@@ -5,6 +5,7 @@ import 'dotenv/config';
 import cors, { CorsOptions } from 'cors';
 import AsyncAPICustomDocumentation from '../docs/AsyncAPIDocumentation';
 import MermaidDocumentation from '../docs/MermaidDocumentation';
+// import path from 'path';
 
 // TODO inserer le vrai port par default (process.env.PORT)
 class HttpServer {

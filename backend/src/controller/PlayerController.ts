@@ -6,7 +6,9 @@ import ServerService from '../service/ServerService';
 import RoomController from './RoomController';
 import Room from '../model/Room';
 import IRoomJSON from 'interface/IRoomJSON';
+import { logger } from './LogController';
 
+export type State = 'new' | 'reconnected' | 'disconnected';
 class PlayerController {
 	private playerStore: PlayerStore = new PlayerStore();
 	private _ss: ServerService;
@@ -22,9 +24,14 @@ class PlayerController {
 		this.log = this.log.bind(this);
 	}
 
-	public startSession(socket: Socket, sessionID: string): void {
+	public startSession(socket: Socket, sessionID: string): State {
+		let state: State = 'new';
+		if (this._ss.sessions.has(sessionID)) {
+			state = 'reconnected';
+		}
 		this._ss.setSession(socket, sessionID);
 		this.savePlayer(sessionID, socket.data.player);
+		return state;
 	}
 
 	public updateSession(socket: Socket, sid: string): void {
@@ -44,7 +51,11 @@ class PlayerController {
 				this.savePlayer(sid, player);
 				this.updateSession(socket, sid);
 				socket.data.roomController.updateRoomsWithPlayer(player);
-				this._ss.emit(sid, 'playerChange', player.toJSON());
+				this._ss.emit(sid, 'playerChange', {
+					reason: 'change username',
+					player: player.toJSON(),
+				});
+				// this._ss.emit(sid, 'playerChange', player.toJSON());
 			}
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
@@ -70,12 +81,16 @@ class PlayerController {
 		const s = total > 1 ? 's' : '';
 		let username = current?.username || `NEW ${socket.handshake.auth.username}`;
 		username += ` - Socket communication`;
+		const llog = `\n[${username}]
+(currently registered: ${total} player${s})\n`;
 		const log = `\n\x1b[34m[${username}]\x1b[0m
 \x1b[4m(currently registered: ${total} player${s})\x1b[0m\n`;
 		console.log(log);
+		logger.log(llog);
 		this.all().forEach((player) => {
 			player.log();
 		});
+		logger.log(`============================================================`);
 		console.log(`\x1b[34m============================================================\x1b[0m`);
 
 		next();
@@ -88,9 +103,11 @@ class PlayerController {
 	}
 
 	public catchSessionDatas(socket: Socket, next: (err?: Error) => void): void {
+		logger.logSocketIO(socket);
 		console.log('[SESSION DATA] - handshake', socket.handshake);
 		this.getPlayerById(socket.handshake.auth.sessionID)
 			.then((session) => {
+				logger.log(`[SESSION] - ${JSON.stringify(session)}`);
 				console.log('[SESSION]', session);
 				this.catchRoomControllerState(socket.data.roomController);
 				socket.data.playerController = this;
@@ -105,14 +122,25 @@ class PlayerController {
 				return next();
 			})
 			.catch((err) => {
+				logger.log(`[NO SESSION] - ${JSON.stringify(err)}`);
 				console.log('[NO SESSION]', err.message);
 
 				const username = socket.handshake.auth.username;
 				if (!username) {
 					return next(new Error('invalid username'));
 				}
+
+				// const pls = this.getPlayersByUsernames(username);
+				// const player = pls?.find((p) => p.sessionID.includes(`FREE - ${p.username}`));
+				// if (player) {
+				// 	this.playerStore.delete(player.sessionID);
+				// 	player.username = username;
+				// 	player.sessionID = uuidv4();
+				// 	socket.data.player = player;
+				// } else {
 				// create new session
 				socket.data.player = new Player(username, uuidv4());
+				// }
 				next();
 			});
 	}
@@ -130,8 +158,24 @@ class PlayerController {
 			reject(new Error(`Player ${sessionID} not found`));
 		});
 	}
+
+	public getPlayersByUsernames(username: string): Player[] {
+		return this.playerStore.all.filter((p) => p.username.includes(username));
+	}
+
 	public savePlayer(sessionID: string, player: Player): void {
 		this.playerStore.save(sessionID, player);
+	}
+
+	public deletePlayer(sessionID: string): void {
+		this._ss.deleteSession(sessionID).then(() => {
+			const pl = this.playerStore.get(sessionID);
+			if (pl) {
+				pl.sessionID = `FREE-${pl.username}-${sessionID}`;
+				this.savePlayer(pl.sessionID, pl);
+				this.playerStore.delete(sessionID);
+			}
+		});
 	}
 }
 

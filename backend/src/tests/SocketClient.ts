@@ -5,7 +5,7 @@ import IPlayerJSON from '../interface/IPlayerJSON';
 import IRoomJSON from '../interface/IRoomJSON';
 import IRoomPayload from 'interface/IRoomPayload';
 
-type SocketClientLike = SocketClient | PromiseLike<SocketClient>;
+// type SocketClientLike = SocketClient | PromiseLike<SocketClient>;
 
 class SocketClient {
 	private socket: SocketClt<ISrvToCltEvts, ICltToSrvEvts> | null = null;
@@ -55,15 +55,15 @@ class SocketClient {
 		return await new Promise<SocketClient>((resolve, reject) => {
 			if (this.socket?.connected) {
 				this.socket.emit('createRoom', name);
-				this.socket.once('roomOpened', (data) => {
-					console.log(`CLIENT SOCKET OPENED ROOM`);
-					const room = this.rooms.find((room) => room.name === data.name);
-					if (!room) {
-						this.rooms.push(data);
-					}
-					this.onRoomChange(resolve);
-					this.onError(resolve);
-				});
+				// this.socket.once('roomOpened', (data) => {
+				// 	console.log(`CLIENT SOCKET OPENED ROOM`);
+				// 	const room = this.rooms.find((room) => room.name === data.name);
+				// 	if (!room) {
+				// 		this.rooms.push(data);
+				// 	}
+				// 	this.onRoomChange(resolve);
+				// 	this.onError(resolve);
+				// });
 				this.onError(resolve);
 			} else {
 				reject(new Error('Socket not connected'));
@@ -89,9 +89,7 @@ class SocketClient {
 			this.socket?.off('error');
 			this.socket?.off('roomChange');
 			this.socket?.off('roomOpened');
-			this.socket?.off('winner');
 			this.socket?.off('roomClosed');
-			this.socket?.off('leaderChange');
 			this.socket?.off('getRooms');
 			resolve(this);
 		}, 500);
@@ -119,7 +117,7 @@ class SocketClient {
 				this.socket?.emit('leaveRoom', name);
 
 				if (room?.totalPlayers === 1) {
-					this.onWinner(resolve);
+					// this.onWinner(resolve);
 					this.onError(resolve);
 				} else {
 					this.onRoomChange(resolve);
@@ -131,47 +129,47 @@ class SocketClient {
 		});
 	}
 
-	private onWinner(resolve: (value: SocketClient | PromiseLike<SocketClient>) => void): void {
-		this.socket?.once('winner', (data) => {
-			const player = this.player;
-			console.log(`PLAYER: [${player?.username}]\tCLIENT - WINNER`, data);
-			this.messages.push(data);
-			this.onRoomChange(resolve);
-		});
-	}
+	// private onWinner(resolve: (value: SocketClient | PromiseLike<SocketClient>) => void): void {
+	// 	this.socket?.once('winner', (data) => {
+	// 		const player = this.player;
+	// 		console.log(`PLAYER: [${player?.username}]\tCLIENT - WINNER`, data);
+	// 		this.messages.push(data);
+	// 		this.onRoomChange(resolve);
+	// 	});
+	// }
 
-	private onLeaderChange(resolve: (value: SocketClientLike) => SocketClientLike | void): void {
-		this.socket?.once('leaderChange', (data) => {
-			if (this.socket) {
-				const player = this.player;
-				console.log(`PLAYER: [${player?.username}]\tCLIENT - CHANGE LEADER`, data);
-				this.messages.push(data);
+	// private onLeaderChange(resolve: (value: SocketClientLike) => SocketClientLike | void): void {
+	// 	this.socket?.once('leaderChange', (data) => {
+	// 		if (this.socket) {
+	// 			const player = this.player;
+	// 			console.log(`PLAYER: [${player?.username}]\tCLIENT - CHANGE LEADER`, data);
+	// 			this.messages.push(data);
 
-				this.socket.off('error');
-				this.socket.off('roomChange');
-				this.socket.off('roomOpened');
-				this.socket.off('roomClosed');
-				this.socket.off('leaderChange');
-				this.socket.off('winner');
-				resolve(this);
-			}
-		});
-	}
+	// 			this.socket.off('error');
+	// 			this.socket.off('roomChange');
+	// 			this.socket.off('roomOpened');
+	// 			this.socket.off('roomClosed');
+	// 			this.socket.off('leaderChange');
+	// 			this.socket.off('winner');
+	// 			resolve(this);
+	// 		}
+	// 	});
+	// }
 
 	private onRoomClosed(resolve: (value: SocketClient | PromiseLike<SocketClient>) => void): void {
-		this.socket?.once('roomClosed', (data) => {
-			this.socket?.off('error');
-			this.socket?.off('roomChange');
-			this.socket?.off('roomClosed');
-			this.socket?.off('roomOpened');
-			this.socket?.off('winner');
-			this.socket?.off('leaderChange');
+		// this.socket?.once('roomClosed', (data) => {
+		// 	this.socket?.off('error');
+		// 	this.socket?.off('roomChange');
+		// 	this.socket?.off('roomClosed');
+		// 	this.socket?.off('roomOpened');
+		// 	// this.socket?.off('winner');
+		// 	// this.socket?.off('leaderChange');
 
-			this.rooms = this.rooms.filter((room) => room.name !== data.name);
-			const player = this.player;
-			console.log(`PLAYER: [${player?.username}]\tCLIENT - ROOM CLOSED`, data);
-			resolve(this);
-		});
+		// 	this.rooms = this.rooms.filter((room) => room.name !== data.name);
+		// 	const player = this.player;
+		// 	console.log(`PLAYER: [${player?.username}]\tCLIENT - ROOM CLOSED`, data);
+		resolve(this);
+		// });
 	}
 
 	private onRoomChange(resolve: (value: SocketClient | PromiseLike<SocketClient>) => void): void {
@@ -179,7 +177,7 @@ class SocketClient {
 			const player = this.player;
 			console.log(`PLAYER: [${player?.username}]\tCLIENT - CHANGE ROOM`, data);
 			this.updateDatasOnRoomChange(data);
-			this.onLeaderChange(resolve);
+			// this.onLeaderChange(resolve);
 			this.onRoomClosed(resolve);
 			this.onError(resolve);
 			resolve(this);
@@ -193,9 +191,9 @@ class SocketClient {
 			this.socket?.off('error');
 			this.socket?.off('roomChange');
 			this.socket?.off('roomOpened');
-			this.socket?.off('winner');
+			// this.socket?.off('winner');
 			this.socket?.off('roomClosed');
-			this.socket?.off('leaderChange');
+			// this.socket?.off('leaderChange');
 			this.errors.push(data);
 			resolve(this);
 		});

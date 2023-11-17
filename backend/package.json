@@ -13,6 +13,8 @@
 		"build": "npx tsc --build",
 		"start": "npm run env && npm run build && TZ='UTC' node dist/app.js",
 		"dev": "TZ='UTC' nodemon src/app.ts",
+		"install:frontend": "npm install -C ../frontend",
+		"dev:frontend": "concurrently \"npm run dev\" \"npm run install:frontend && npm run build -C ../frontend && npm run preview -C ../frontend\" \"sleep 17 && open http://localhost:4173/\" ",
 		"lint": "prettier . --check . && eslint .",
 		"lint:fix": "prettier --check . && eslint . --fix",
 		"format": "prettier --write .",
@@ -20,7 +22,8 @@
 		"ibt": "npm run indent && npm run build && npm run test",
 		"wsdoc": "open http://localhost:8080/ws-docs",
 		"env": "npx ts-node configSetup.ts",
-		"env-rm": "rm -rf .env"
+		"env-rm": "rm -rf .env",
+		"log": "rm -rf ./logs/*.txt"
 	},
 	"license": "ISC",
 	"devDependencies": {

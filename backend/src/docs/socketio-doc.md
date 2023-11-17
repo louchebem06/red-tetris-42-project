@@ -42,7 +42,7 @@ socketClient.emit('joinRoom', roomName);
 
 /*
     -> Si room OK:
-        * roomChange (reason: player incoming)          BROADCAST ALL IN ROOM
+        * roomChange (reason: player incoming)          BROADCAST ALL IN ROOM EXCEPT SELF
     -> Si room KO:
         * error                                         PLAYER
 */
@@ -297,39 +297,50 @@ socketClient.emit('changeUsername', username);
 
 ```js
 {
-    name: string,
-    dateCreated: string,
-    leader: {
-        username: string, // username
-        sessionId: string, // uuid
+    room: {
+        name: string,
         dateCreated: string,
-        connected: boolean, // connecté ou non
-        leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
-        wins: string[] // nom des rooms gagnées
-        games: object[] // Non defini encore
-    }, // le player qui cree une room en devient le leader
-    gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
-    winner: {
-        username: string, // username
-        sessionId: string, // uuid
-        dateCreated: string,
-        connected: boolean, // connecté ou non
-        leads: string[] // nom des rooms que le joueurr lead
-        wins: string[] // nom des rooms gagnées
-        games: object[] // Non defini encore
-    }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
-    players: [
-        {
+        leader: {
             username: string, // username
             sessionId: string, // uuid
             dateCreated: string,
             connected: boolean, // connecté ou non
-            leads: string[] // nom des rooms que le joueurr lead
+            leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
-        },
-    ], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
-    totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+        }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
+        gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
+        winner: {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueur lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
+        players: [
+            {
+                username: string, // username
+                sessionId: string, // uuid
+                dateCreated: string,
+                connected: boolean, // connecté ou non
+                leads: string[] // nom des rooms que le joueur lead
+                wins: string[] // nom des rooms gagnées
+                games: object[] // Non defini encore
+            },
+        ], // liste des joueurs etant dans la room
+        totalPlayer: number // Nombre de player de la room
+    },
+    player: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueur lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // joueur concerné par le changement
 }
 ```
 
@@ -380,10 +391,10 @@ La Room retournée est celle indiquée dans le payload d'origine, ou bien une er
 
 Des qu'un changement intervient dans la room
 
--   room created
--   player incoming
--   player outgoing
--   room closed
+-   Changement de leader: `new leader`
+-   Arrivée d'un joueur dans une room: `player incoming`
+-   Départ d'un joueur d'une room: `player outgoing`
+-   Designation d'un vainqueur: `new winner`
 
 ```js
 {
@@ -435,63 +446,70 @@ Des qu'un changement intervient dans la room
 }
 ```
 
-### leaderChange
-
-```js
-'You are the new leader of (roomname)';
-```
-
-### winner
-
-```js
-'You are the winner of (roomname)';
-```
-
 ### roomClosed
 
 ```js
 {
-    name: string,
-    dateCreated: string,
-    leader: {
-        username: string, // username
-        sessionId: string, // uuid
+    room: {
+        name: string,
         dateCreated: string,
-        connected: boolean, // connecté ou non
-        leads: string[] // nom des rooms que le joueur lead, la room doit y etre
-        wins: string[] // nom des rooms gagnées
-        games: object[] // Non defini encore
-    }, // leader de la room
-    gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
-    winner: {
-        username: string, // username
-        sessionId: string, // uuid
-        dateCreated: string,
-        connected: boolean, // connecté ou non
-        leads: string[] // nom des rooms que le joueur lead, la room doit apparaitre
-        wins: string[] // nom des rooms gagnées, la room doit apparaitre
-        games: object[] // Non defini encore
-    }, // Un winner est désigné lorsque le dernier joueur quitte la room
-    players: [
-        {
+        leader: {
             username: string, // username
             sessionId: string, // uuid
             dateCreated: string,
             connected: boolean, // connecté ou non
-            leads: string[] // nom des rooms que le joueurr lead
+            leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
-        },
-    ], // doit etre vide a la fermeture de la room
-    totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
+        }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
+        gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
+        winner: {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueur lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
+        players: [
+            {
+                username: string, // username
+                sessionId: string, // uuid
+                dateCreated: string,
+                connected: boolean, // connecté ou non
+                leads: string[] // nom des rooms que le joueur lead
+                wins: string[] // nom des rooms gagnées
+                games: object[] // Non defini encore
+            },
+        ], // liste des joueurs etant dans la room
+        totalPlayer: number // Nombre de player de la room
+    },
+    player: {
+        username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueur lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+    }, // joueur concerné par le changement
 }
 ```
 
 ### playerChange
 
+Les différents motifs possibles implémentés sont:
+
+-   Arrivée d'un joueur sur le serveur `new player`
+-   Changement de nom d'utilisateur `change username`
+-   Deconnection d'un joueur `player disconnected`
+
 ```js
 // Reponse à une demande de changement sur le player (event changeUsername)
 // le player updated est retourné par le serveur
+{
+	reason: string, // 'new player', 'change username', 'player disconnected'
     player: {
         username: string, // username
         sessionId: string, // uuid
@@ -501,4 +519,5 @@ Des qu'un changement intervient dans la room
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
     },
+}
 ```
