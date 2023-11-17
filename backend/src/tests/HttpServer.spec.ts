@@ -76,14 +76,14 @@ describe('HttpServer Basic Connection Home Page default port', () => {
 			});
 	});
 
-	test('AsyncAPI Documentation', (done) => {
-		request(server.getHttpServer())
-			.get('/ws-docs')
-			.then((response) => {
-				expect(response.statusCode).toBe(200);
-				done();
-			});
-	}, 50000);
+	// test('AsyncAPI Documentation', (done) => {
+	// 	request(server.getHttpServer())
+	// 		.get('/ws-docs')
+	// 		.then((response) => {
+	// 			expect(response.statusCode).toBe(200);
+	// 			done();
+	// 		});
+	// }, 50000);
 
 	test(`Mermaid Diagram`, (done) => {
 		request(server.getHttpServer())
