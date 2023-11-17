@@ -31,3 +31,10 @@ jobs:
     - name: Run build
       working-directory: frontend/
       run: npm run build
+
+    - name: Install playright
+      run: npx playwright install
+
+    - name: Run run test playwright
+      working-directory: frontend/
+      run: npm run test
