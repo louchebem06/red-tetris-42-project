@@ -10,6 +10,15 @@ username.subscribe((value: string) => {
 	}
 });
 
+const persitedSessionID: string = browser ? localStorage.getItem('sessionID') ?? '' : '';
+export const sessionID: Writable<string> = writable(persitedSessionID);
+
+sessionID.subscribe((value: string) => {
+	if (browser) {
+		window.localStorage.setItem('sessionID', value);
+	}
+});
+
 const persitedMusic: string = browser ? localStorage.getItem('music') ?? 'song BR' : 'song BR';
 export const music: Writable<string> = writable(persitedMusic);
 

@@ -1,47 +1,139 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { username } from '../../store';
+	import { username, sessionID } from '../../store';
 	import { io } from '$lib/socket';
+	import Modal from '$lib/componante/Modal.svelte';
+	import Room from './Room.svelte';
+	import { goto } from '$app/navigation';
+	import type RoomChange from '$lib/interfaces/RoomChange.interface';
+	import type RoomType from '$lib/interfaces/Room.interface';
 
-	const rooms = ['First', 'Second', '42342', '4dsfsdfsa4234'];
+	let rooms: RoomType[] = [];
+	let myRooms: RoomType[] = [];
+	let showModal = false;
+	let roomName: string = '';
 
 	const resetUsername = (): void => {
 		username.set('');
+		sessionID.set('');
+		io.close();
 	};
 
 	onMount(() => {
-		io.on('connect', () => {
-			console.log('Connected to socket');
+		io.emit('getRooms');
+		io.emit('getRoomsPlayer');
+		io.on('getRooms', (data: RoomType[]) => {
+			// console.log('getRooms', data);
+			rooms = data;
 		});
-		io.on('disconnect', () => {
-			console.log('Disconect to socket');
+		io.on('getRoomsPlayer', (data: RoomType[]) => {
+			// console.log('getRoomsPlayer', data);
+			myRooms = data;
 		});
-		io.on('connect_error', () => {
-			console.log('Error connection socket');
+		io.on('roomOpened', (data: { room: RoomType }) => {
+			// console.log('opened', data.room);
+			rooms = [...rooms, data.room];
 		});
-		io.on('reconnecting', () => {
-			console.log('Reconnecting to socket');
+		io.on('roomClosed', (data: { room: RoomType }) => {
+			// console.log('close', data);
+			rooms = rooms.filter((x) => {
+				if (x.name == data.room.name) return false;
+				return true;
+			});
+			myRooms = myRooms.filter((x) => {
+				if (x.name == data.room.name) return false;
+				return true;
+			});
 		});
-		io.on('reconnect', () => {
-			console.log('reconnect to socket');
+		io.on('roomChange', (data: RoomChange) => {
+			// console.log('change', data);
+			switch (data.reason) {
+				case 'player incoming':
+					rooms[rooms.findIndex((x) => x.name == data.room.name)] = data.room;
+					myRooms[myRooms.findIndex((x) => x.name == data.room.name)] = data.room;
+					rooms = rooms;
+					myRooms = myRooms;
+					break;
+				case 'player outgoing':
+					rooms[rooms.findIndex((x) => x.name == data.room.name)] = data.room;
+					myRooms[myRooms.findIndex((x) => x.name == data.room.name)] = data.room;
+					rooms = rooms;
+					myRooms = myRooms;
+					break;
+			}
 		});
 	});
 
 	onDestroy(() => {
-		io.close();
+		io.off('getRooms');
+		io.off('getRoomsPlayer');
+		io.off('roomOpened');
+		io.off('roomClosed');
+		io.off('roomChange');
 	});
+
+	const createRoom = (): void => {
+		io.emit('createRoom', roomName);
+		io.emit('joinRoom', roomName);
+		goto(`/#${roomName}[${$username}]`);
+		roomName = '';
+		showModal = false;
+	};
+
+	const modalView = (): void => {
+		showModal = !showModal;
+	};
+
+	const updateRooms = (): void => {
+		rooms = rooms.filter((x) => {
+			for (const e of myRooms) {
+				if (x.name == e.name) return false;
+			}
+			return true;
+		});
+	};
+
+	$: if (rooms) {
+		for (const e of rooms) {
+			for (const p of e.players) {
+				if (p.sessionID == $sessionID) {
+					myRooms.push(e);
+					break;
+				}
+			}
+		}
+		updateRooms();
+	}
+
+	$: if (myRooms) {
+		updateRooms();
+	}
 </script>
 
 <div class="main">
-	<p>Choose a room</p>
+	<p>My Rooms</p>
 	<div class="rooms">
-		{#each rooms as room}
-			<a href={`#${room}[${$username}]`}>{room}</a>
+		{#each myRooms as room}
+			<Room {room} />
 		{/each}
 	</div>
-	<button>Create a room</button>
+	<p>Rooms</p>
+	<div class="rooms">
+		{#each rooms as room}
+			<Room {room} />
+		{/each}
+	</div>
+	<button on:click={modalView}>Create a room</button>
 	<button class="resetUsername" on:click={resetUsername}>Reset your username</button>
 </div>
+
+<Modal bind:show={showModal}>
+	<form on:submit={createRoom}>
+		<p>Room Name:</p>
+		<input type="text" bind:value={roomName} />
+		<button type="submit">send</button>
+	</form>
+</Modal>
 
 <style lang="scss">
 	.main {
@@ -52,8 +144,7 @@
 		height: 100vh;
 		gap: 10px;
 
-		p,
-		a {
+		p {
 			color: $white2;
 		}
 

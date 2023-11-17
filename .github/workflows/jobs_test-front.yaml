@@ -15,21 +15,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 18.14.1
-  
-    # - name: Install playright
-    #   run: npx playwright install
 
-    - name: Install dependencies
+    - name: Install dependencies frontend
       working-directory: frontend/
       run: npm install
-
-    # - name: Run run test playwright
-    #   working-directory: frontend/
-    #   run: npm run test:playwright
-
-    # - name: Run run test vitest
-    #   working-directory: frontend/
-    #   run: npm run test:vitest
+    
+    - name: Install dependencies backend
+      working-directory: backend/
+      run: npm install
 
     - name: Copy .env.example in .env
       working-directory: frontend/

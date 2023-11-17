@@ -85,7 +85,9 @@
 		right: 20px;
 		padding: 10px;
 		border-radius: calc(0.3em + 8px);
-		box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+		box-shadow:
+			rgba(0, 0, 0, 0.25) 0px 14px 28px,
+			rgba(0, 0, 0, 0.22) 0px 10px 10px;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;

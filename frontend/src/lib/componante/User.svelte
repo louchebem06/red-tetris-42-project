@@ -1,13 +1,15 @@
 <script lang="ts">
 	import ImageUser from '$lib/componante/ImageUser.svelte';
+	import type Player from '$lib/interfaces/Player.interface';
+	import { sessionID } from '../../store';
 
-	export let username: string;
+	export let user: Player;
 	export let master = false;
 </script>
 
 <div class:master>
-	<ImageUser {username} />
-	<p>{username}</p>
+	<ImageUser username={user.username} />
+	<p>{user.sessionID == $sessionID ? 'You' : user.username}</p>
 </div>
 
 <style lang="scss">
