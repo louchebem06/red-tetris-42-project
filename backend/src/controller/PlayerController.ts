@@ -1,14 +1,17 @@
 import { Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import PlayerStore from '../store/PlayerStore';
+
+import { logger } from './LogController';
 import Player from '../model/Player';
+import Room from '../model/Room';
+import PlayerStore from '../store/PlayerStore';
 import ServerService from '../service/ServerService';
 import RoomController from './RoomController';
-import Room from '../model/Room';
-import IRoomJSON from 'interface/IRoomJSON';
-import { logger } from './LogController';
 
-export type State = 'new' | 'reconnected' | 'disconnected';
+import IRoomJSON from '../interface/IRoomJSON';
+import IPlayerJSON from '../interface/IPlayerJSON';
+import { State } from '../type/PlayerConnectionState';
+
 class PlayerController {
 	private playerStore: PlayerStore = new PlayerStore();
 	private _ss: ServerService;
@@ -42,6 +45,47 @@ class PlayerController {
 		}
 	}
 
+	public getPlayerById(sessionID: string): Promise<Player> {
+		return new Promise<Player>((resolve, reject) => {
+			const player = this.playerStore.get(sessionID);
+			if (player) {
+				resolve(player);
+			}
+			reject(new Error(`Player ${sessionID} not found`));
+		});
+	}
+
+	public hasPlayer(sessionID: string): boolean {
+		return this.playerStore.get(sessionID) ? true : false;
+	}
+
+	public getPlayerByIdJSON(sessionID: string): IPlayerJSON {
+		return this.playerStore.get(sessionID)?.toJSON() as IPlayerJSON;
+	}
+
+	public getPlayersByUsernames(username: string): Player[] {
+		return this.playerStore.all.filter((p) => p.username.includes(username));
+	}
+
+	public savePlayer(sessionID: string, player: Player): void {
+		this.playerStore.save(sessionID, player);
+	}
+
+	public all(): Player[] {
+		return this.playerStore.all;
+	}
+
+	public deletePlayer(sessionID: string): void {
+		this._ss.deleteSession(sessionID).then(() => {
+			const pl = this.playerStore.get(sessionID);
+			if (pl) {
+				pl.sessionID = `FREE-${pl.username}-${sessionID}`;
+				this.savePlayer(pl.sessionID, pl);
+				this.playerStore.delete(sessionID);
+			}
+		});
+	}
+
 	public changeUsername(username: string, socket: Socket): void {
 		const player = socket.data.player;
 		const sid = player?.sessionID;
@@ -55,7 +99,6 @@ class PlayerController {
 					reason: 'change username',
 					player: player.toJSON(),
 				});
-				// this._ss.emit(sid, 'playerChange', player.toJSON());
 			}
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
@@ -73,27 +116,6 @@ class PlayerController {
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
-	}
-
-	public log(socket: Socket, next: (err?: Error) => void): void {
-		const total = this.playerStore.total;
-		const current = this.playerStore.get(socket.data.player?.sessionID);
-		const s = total > 1 ? 's' : '';
-		let username = current?.username || `NEW ${socket.handshake.auth.username}`;
-		username += ` - Socket communication`;
-		const llog = `\n[${username}]
-(currently registered: ${total} player${s})\n`;
-		const log = `\n\x1b[34m[${username}]\x1b[0m
-\x1b[4m(currently registered: ${total} player${s})\x1b[0m\n`;
-		console.log(log);
-		logger.log(llog);
-		this.all().forEach((player) => {
-			player.log();
-		});
-		logger.log(`============================================================`);
-		console.log(`\x1b[34m============================================================\x1b[0m`);
-
-		next();
 	}
 
 	public catchRoomControllerState(roomController: RoomController): void {
@@ -145,37 +167,25 @@ class PlayerController {
 			});
 	}
 
-	public all(): Player[] {
-		return this.playerStore.all;
-	}
-
-	public getPlayerById(sessionID: string): Promise<Player> {
-		return new Promise<Player>((resolve, reject) => {
-			const player = this.playerStore.get(sessionID);
-			if (player) {
-				resolve(player);
-			}
-			reject(new Error(`Player ${sessionID} not found`));
+	public log(socket: Socket, next: (err?: Error) => void): void {
+		const total = this.playerStore.total;
+		const current = this.playerStore.get(socket.data.player?.sessionID);
+		const s = total > 1 ? 's' : '';
+		let username = current?.username || `NEW ${socket.handshake.auth.username}`;
+		username += ` - Socket communication`;
+		const llog = `\n[${username}]
+(currently registered: ${total} player${s})\n`;
+		const log = `\n\x1b[34m[${username}]\x1b[0m
+\x1b[4m(currently registered: ${total} player${s})\x1b[0m\n`;
+		console.log(log);
+		logger.log(llog);
+		this.all().forEach((player) => {
+			player.log();
 		});
-	}
+		logger.log(`============================================================`);
+		console.log(`\x1b[34m============================================================\x1b[0m`);
 
-	public getPlayersByUsernames(username: string): Player[] {
-		return this.playerStore.all.filter((p) => p.username.includes(username));
-	}
-
-	public savePlayer(sessionID: string, player: Player): void {
-		this.playerStore.save(sessionID, player);
-	}
-
-	public deletePlayer(sessionID: string): void {
-		this._ss.deleteSession(sessionID).then(() => {
-			const pl = this.playerStore.get(sessionID);
-			if (pl) {
-				pl.sessionID = `FREE-${pl.username}-${sessionID}`;
-				this.savePlayer(pl.sessionID, pl);
-				this.playerStore.delete(sessionID);
-			}
-		});
+		next();
 	}
 }
 

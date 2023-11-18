@@ -111,6 +111,22 @@ socketClient.emit('changeUsername', username);
 */
 ```
 
+### message
+
+Un joueur envoie un message:
+
+```js
+socketClient.emit('message', {
+	message: string // message
+	receiver: string // nom de la room ou session id d'un player
+});
+
+/*
+	-> reponse attendue du serveur:
+		* message                                          ROOM | PLAYER
+*/
+```
+
 ## on (Server -> Client)
 
 ### join
@@ -519,5 +535,73 @@ Les différents motifs possibles implémentés sont:
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
     },
+}
+```
+
+### message
+
+-   date: Date // message (serialisee en string par socketio)
+-   message: string
+-   emitter: le player emetteur du message
+-   receiver: le player ou la room receveur du message
+
+```js
+
+// reponse event client `message`
+{
+	date: Date, // message (serialisee en string par socketio)
+	message: string,
+	emitter: {
+		username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueurr lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+	}
+	receiver: {
+		username: string, // username
+        sessionId: string, // uuid
+        dateCreated: string,
+        connected: boolean, // connecté ou non
+        leads: string[] // nom des rooms que le joueurr lead
+        wins: string[] // nom des rooms gagnées
+        games: object[] // Non defini encore
+	} | {
+		name: string,
+        dateCreated: string,
+        leader: {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueur lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
+        gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
+        winner: {
+            username: string, // username
+            sessionId: string, // uuid
+            dateCreated: string,
+            connected: boolean, // connecté ou non
+            leads: string[] // nom des rooms que le joueur lead
+            wins: string[] // nom des rooms gagnées
+            games: object[] // Non defini encore
+        }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
+        players: [
+            {
+                username: string, // username
+                sessionId: string, // uuid
+                dateCreated: string,
+                connected: boolean, // connecté ou non
+                leads: string[] // nom des rooms que le joueur lead
+                wins: string[] // nom des rooms gagnées
+                games: object[] // Non defini encore
+            },
+        ], // liste des joueurs etant dans la room
+        totalPlayer: number // Nombre de player de la room,
+	}
 }
 ```

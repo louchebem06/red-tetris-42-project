@@ -1,4 +1,4 @@
-import { Payload } from './ISrvToCltEvts';
+import { Payload } from '../type/PayloadsTypes';
 
 export interface IBrodacastFormat {
 	event: string;

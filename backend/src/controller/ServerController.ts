@@ -1,10 +1,13 @@
 import { Server, Socket } from 'socket.io';
+
+import { logger } from './LogController';
+import Player from '../model/Player';
 import PlayerController from '../controller/PlayerController';
 import RoomController from '../controller/RoomController';
 import ServerService from '../service/ServerService';
-import Player from '../model/Player';
-import { logger } from './LogController';
-import { Payload } from '../interface/ISrvToCltEvts';
+
+import { IMessageIncomingPayload, IMessageOutgoingPayload } from '../interface/IMessagePayload';
+import { Payload } from '../type/PayloadsTypes';
 
 export default class ServerController {
 	private _pc: PlayerController;
@@ -21,6 +24,7 @@ export default class ServerController {
 
 		this.updateInternals = this.updateInternals.bind(this);
 		this.sendRooms = this.sendRooms.bind(this);
+		this.forwardMessage = this.forwardMessage.bind(this);
 
 		this.use(this._rc.catchState);
 		this.use(this._pc.catchSessionDatas);
@@ -76,6 +80,10 @@ export default class ServerController {
 
 						case 'changeUsername':
 							this.changeUsername(args[0], socket);
+							break;
+
+						case 'message':
+							this.forwardMessage(args[0], socket);
 							break;
 
 						default:
@@ -158,6 +166,35 @@ export default class ServerController {
 
 	public sendError(sid: string, message: string): void {
 		this._ss.emit(sid, 'error', message);
+	}
+
+	public forwardMessage(datas: IMessageIncomingPayload, socket: Socket): void {
+		const player = socket.data.player;
+		const sid = player?.sessionID;
+		const payload: IMessageOutgoingPayload = {
+			date: new Date(),
+			message: datas.message,
+			emitter: player,
+			receiver: undefined,
+		};
+		try {
+			if (datas.receiver === sid) {
+				// mp perso -> perso
+				payload.receiver = player.toJSON();
+			} else if (this._pc.hasPlayer(datas.receiver)) {
+				// mp player -> player
+				payload.receiver = this._pc.getPlayerByIdJSON(datas.receiver);
+			} else if (this._rc.hasRoom(datas.receiver)) {
+				// mp player -> room
+				payload.receiver = this._rc.getRoomJSON(datas.receiver);
+			}
+			if (!payload.receiver) {
+				throw new Error('receiver not found');
+			}
+			this._ss.forwardMessage(payload, datas.receiver);
+		} catch (e) {
+			this.sendError(sid, `${(<Error>e).message}`);
+		}
 	}
 
 	public sendRooms(socket: Socket): void {

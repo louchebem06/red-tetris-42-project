@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import http, { Server as ServerHttp } from 'http';
 import 'dotenv/config';
 import cors, { CorsOptions } from 'cors';
-import AsyncAPICustomDocumentation from '../docs/AsyncAPIDocumentation';
+// import AsyncAPICustomDocumentation from '../docs/AsyncAPIDocumentation';
 import MermaidDocumentation from '../docs/MermaidDocumentation';
 // import path from 'path';
 
@@ -161,11 +161,11 @@ class HttpServer {
 			res.json({ message: 'Hello World!' });
 		});
 
-		this.app.get('/ws-docs', async (req: Request, res: Response) => {
-			const doc = new AsyncAPICustomDocumentation();
-			await doc.generateDoc('asyncapi.yaml');
-			res.send(doc.html);
-		});
+		// this.app.get('/ws-docs', async (req: Request, res: Response) => {
+		// 	const doc = new AsyncAPICustomDocumentation();
+		// 	await doc.generateDoc('asyncapi.yaml');
+		// 	res.send(doc.html);
+		// });
 
 		this.app.get('/mermaid', (req: Request, res: Response) => {
 			const doc = new MermaidDocumentation('');
