@@ -1,11 +1,16 @@
 import { Server as ServerHttp } from 'http';
 import { Server as ServerIO } from 'socket.io';
+
 import HttpServer from './HttpServer';
 import ServerController from '../controller/ServerController';
+
 import ISrvToCltEvts from '../interface/ISrvToCltEvts';
 import ICltToSrvEvts from '../interface/ICltToSrvEvts';
 import IInterSrvEvts from '../interface/IInterSrvEvts';
 import ISocketData from '../interface/ISocketData';
+
+import { signals } from '../type/SignalsTypes';
+import { logger } from '../controller/LogController';
 
 class App {
 	private httpServer: HttpServer;
@@ -41,6 +46,7 @@ class App {
 	 */
 	public start(port?: number): void {
 		this.httpServer.start(port);
+		this.gracefulShutdown();
 	}
 
 	/**
@@ -66,9 +72,24 @@ class App {
 	 *
 	 * @return {void} - No return value.
 	 */
-	public stop(): void {
+	public stop(cb?: () => void): void {
 		this.io.close();
-		this.httpServer.stop();
+		this.httpServer.stop(cb);
+	}
+
+	public gracefulShutdown(): void {
+		signals.forEach((signal) => {
+			process.on(signal, () => {
+				this.stop((): void => {
+					logger.log(`[SHUTDOWN] Received ${signal} signal`);
+
+					// TODO: kill le front aussi!
+					setTimeout(() => {
+						process.exit(0);
+					}, 2000);
+				});
+			});
+		});
 	}
 }
 

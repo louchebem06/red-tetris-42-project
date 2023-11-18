@@ -17,10 +17,13 @@ export class LogController {
 	}
 
 	public log(message: string): void {
-		const dd = new Date();
+		const ds = new Date();
 		const content = `${message}\n`;
-		this.write(`[${dd.toISOString()}] (LogController::log:21): \n\n`);
+		this.write(`[${ds.toISOString()}]:\tSTART LOGGING\n`);
 		this.write(content);
+		const df = new Date();
+		this.write(`[${df.toISOString()}]:\tEND LOGGING\n`);
+		this.write(`>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n`);
 	}
 
 	private write(content: string, ...args: string[]): void {

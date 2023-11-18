@@ -10,7 +10,7 @@
 		"env": "npx ts-node configSetup.ts",
 		"build": "npx tsc --build",
 		"start": "npm run env && npm run build && TZ='UTC' node dist/app.js",
-		"dev": "npm run env && npm run dev:backend; npm run rm",
+		"dev": "npm run rm && npm run env && npm run dev:backend",
 		"install:frontend": "npm install -C ../frontend",
 		"build:frontend": "npm run build -C ../frontend",
 		"prod:frontend": "npm run preview -C ../frontend -- --open",
