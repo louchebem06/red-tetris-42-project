@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './baseFixtures';
 
 test('End-to-End Test: Connection, Room Creation, and Multi-Tab Management', async ({
 	context,

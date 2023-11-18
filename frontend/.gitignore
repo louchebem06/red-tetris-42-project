@@ -11,3 +11,4 @@ vite.config.ts.timestamp-*
 .npmrc
 test-results/
 svelte.config.js
+.nyc_output/
