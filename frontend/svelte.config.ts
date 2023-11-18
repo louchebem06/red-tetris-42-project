@@ -3,7 +3,9 @@ import { vitePreprocess } from '@sveltejs/kit/vite';
 
 const config: import('@sveltejs/kit').Config = {
 	preprocess: vitePreprocess(),
-
+	test: {
+		include: ['src/tests/*.{test,spec}.{js,ts}', 'src/**/*.{test,spec}.{js,ts}'],
+	},
 	kit: {
 		adapter: adapter({
 			pages: 'build',

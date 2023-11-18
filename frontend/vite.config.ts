@@ -1,8 +1,18 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import type { UserConfig } from 'vite';
+import istanbul from 'vite-plugin-istanbul';
 
 const config: UserConfig = {
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit(),
+		istanbul({
+			include: 'src/*',
+			exclude: ['node_modules', 'test/'],
+			extension: ['.ts', '.svelte'],
+			requireEnv: false,
+			forceBuildInstrument: true,
+		}),
+	],
 	css: {
 		preprocessorOptions: {
 			scss: {
