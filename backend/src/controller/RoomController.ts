@@ -1,13 +1,15 @@
 import { Socket } from 'socket.io';
+
+import { logger } from './LogController';
 import Player from '../model/Player';
 import Room from '../model/Room';
 import ServerService from '../service/ServerService';
 import RoomStore from '../store/RoomStore';
-import { Payload } from '../interface/ISrvToCltEvts';
+
 import IRoomJSON from '../interface/IRoomJSON';
 import IPlayerJSON from '../interface/IPlayerJSON';
 import { IBrodacastFormat } from '../interface/IBrodacastFormat';
-import { logger } from './LogController';
+import { Payload } from '../type/PayloadsTypes';
 
 // TODO Repercuter les updates sur les players dans le controller principal (dans le serveur http)
 export default class RoomController {
@@ -22,6 +24,14 @@ export default class RoomController {
 
 	private getRoom(roomName: string): Room | undefined {
 		return this.roomStore.get(roomName);
+	}
+
+	public hasRoom(roomName: string): boolean {
+		return this.roomStore.get(roomName) ? true : false;
+	}
+
+	public getRoomJSON(roomName: string): IRoomJSON {
+		return this.roomStore.get(roomName)?.toJSON() as IRoomJSON;
 	}
 
 	public get roomsJSON(): IRoomJSON[] {

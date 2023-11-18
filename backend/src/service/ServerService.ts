@@ -1,11 +1,11 @@
 import { Server, Socket } from 'socket.io';
-// import IRoomPayload from '../interface/IRoomPayload';
-import { Payload } from '../interface/ISrvToCltEvts';
-import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 
 import { logger } from '../controller/LogController';
 
-export type ChangeRoom = 'join' | 'leave';
+import { IBrodacastFormat } from '../interface/IBrodacastFormat';
+import { IMessageOutgoingPayload } from '../interface/IMessagePayload';
+import { Payload } from '../type/PayloadsTypes';
+import { ChangeRoom } from '../type/RoomActionsTypes';
 
 export default class ServerService {
 	private io: Server;
@@ -175,6 +175,24 @@ export default class ServerService {
 						this.throwError(`Cannot join room: you are already in ${room}`);
 					}
 					break;
+			}
+		} catch (e) {
+			this.throwError(`${e instanceof Error && e.message}`);
+		}
+	}
+
+	public forwardMessage(datas: IMessageOutgoingPayload, sid: string): void {
+		try {
+			if (this.isSession(sid)) {
+				this.emit(sid, 'message', datas);
+			} else if (this.isPublicRoom(sid)) {
+				this.broadcast({
+					event: 'message',
+					data: datas,
+					room: sid,
+				});
+			} else {
+				this.throwError(`Recipient ${sid} not found`);
 			}
 		} catch (e) {
 			this.throwError(`${e instanceof Error && e.message}`);
