@@ -3,5 +3,10 @@
 	"lines": 70,
 	"functions": 70,
 	"statements": 70,
-	"check-coverage": true
+	"check-coverage": true,
+	"all": true,
+	"report-dir": "./coverage",
+	"temp-dir": ".nyc_output",
+	"reporter": ["text"],
+	"exclude-after-remap": false
 }

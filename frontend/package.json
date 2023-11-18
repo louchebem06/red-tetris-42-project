@@ -12,6 +12,7 @@
 		"prod": "concurrently \"npm run start -C ../backend\" \"npm run preview\"",
 		"dev:frontend": "npm run build:svelteconfig && vite dev",
 		"build": "npm run build:svelteconfig && vite build",
+		"build:clean": "rm -rf .nyc_output && rm -rf .svelte-kit && rm -rf build",
 		"build:svelteconfig": "esbuild svelte.config.ts --outfile=svelte.config.js",
 		"preview": "vite preview",
 		"lint": "prettier --check . && eslint .",
@@ -22,8 +23,8 @@
 		"playwright:codegen": "playwright codegen",
 		"test": "playwright test",
 		"test:ui": "playwright test --ui",
-		"coverage": "npx nyc report --report-dir ./coverage --temp-dir .nyc_output --reporter=text --exclude-after-remap false",
-		"test:coverage": "npm run build && npm run test && npm run coverage"
+		"coverage": "npx nyc report",
+		"test:coverage": "npm run build:clean && npm run build && npm run test && npm run coverage"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.40.0",
