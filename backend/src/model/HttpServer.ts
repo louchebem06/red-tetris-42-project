@@ -161,12 +161,6 @@ class HttpServer {
 			res.json({ message: 'Hello World!' });
 		});
 
-		// this.app.get('/ws-docs', async (req: Request, res: Response) => {
-		// 	const doc = new AsyncAPICustomDocumentation();
-		// 	await doc.generateDoc('asyncapi.yaml');
-		// 	res.send(doc.html);
-		// });
-
 		this.app.get('/mermaid', (req: Request, res: Response) => {
 			const doc = new MermaidDocumentation('');
 			res.send(doc.html);
@@ -175,18 +169,7 @@ class HttpServer {
 		this.app.get('/leaderboard', (req: Request, res: Response) => {
 			res.json({ message: 'Leaderboard coming soon' });
 		});
-
-		// this.testSocketClt();
 	}
-
-	// TODO: testSocketClt = route pour debug - utile pr simuler deco/reco
-	// a delete en fin de dev
-	// public testSocketClt(): void {
-	// 	this.app.get('/test', (req: Request, res: Response) => {
-	// 		const htmlPath = path.resolve(__dirname + `/../docs/test/index.html`);
-	// 		res.sendFile(htmlPath);
-	// 	});
-	// }
 
 	/**
 	 * Retrieves the HTTP server.
