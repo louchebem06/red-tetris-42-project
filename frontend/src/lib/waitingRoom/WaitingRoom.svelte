@@ -50,7 +50,7 @@
 			master = data.leader;
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			console.log('change', data);
+			// console.log('change', data);
 			if (data.room.name != room) return;
 			switch (data.reason) {
 				case 'player incoming':
@@ -68,11 +68,15 @@
 					break;
 			}
 		});
+		io.on('roomClosed', (data: { room: RoomType }) => {
+			if (data.room.name == room) goto('/');
+		});
 	});
 
 	onDestroy(() => {
 		io.off('roomInfo');
 		io.off('roomChange');
+		io.off('roomClosed');
 	});
 
 	$: if ($page.url.hash) {
