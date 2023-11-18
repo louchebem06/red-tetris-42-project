@@ -1,75 +1,19 @@
 <script lang="ts">
 	import Message from './Message.svelte';
-	import { username } from '../../../store';
+	import { sessionID } from '../../../store';
+	import type Player from '$lib/interfaces/Player.interface';
+	import { onDestroy, onMount } from 'svelte';
+	import { io } from '$lib/socket';
+	import type RoomType from '$lib/interfaces/Room.interface';
+
+	export let master: Player;
+	export let players: Player[];
+	export let room: string;
 
 	let chat: HTMLDivElement;
-	let msgs = [
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: true,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-		{
-			message: 'Je suis un message',
-			username: 'user1',
-			me: false,
-		},
-	];
+	let msgs: { message: string; username: string; me: boolean }[] = [];
+	let inputMessage: HTMLElement;
+	let ready = 0;
 
 	const autoScrollDown = (): void => {
 		if (typeof chat != 'undefined') {
@@ -79,50 +23,100 @@
 
 	let newMessage: string = '';
 
+	onMount(() => {
+		io.on('message', (data: { message: string; emitter: Player; receiver: RoomType }) => {
+			// console.log('message', data);
+			if (data.receiver.name != room) return;
+			msgs = [
+				...msgs,
+				{
+					message: data.message,
+					username: data.emitter.username,
+					me: data.emitter.sessionID == $sessionID,
+				},
+			];
+			setTimeout(() => {
+				autoScrollDown();
+				inputMessage.focus();
+			}, 100);
+		});
+	});
+
+	onDestroy(() => {
+		io.off('message');
+	});
+
 	const onSubmit = (): void => {
 		if (!newMessage) return;
-		msgs = [...msgs, { message: newMessage, username: $username, me: true }];
+		io.emit('message', {
+			message: newMessage,
+			receiver: room,
+		});
 		newMessage = '';
 	};
-
-	$: if (msgs) {
-		setTimeout(() => autoScrollDown(), 100);
-	}
 </script>
 
 <div class="content">
+	<div class="ready">
+		<p>{ready} player{ready > 1 ? 's' : ''} ready of {players.length}</p>
+		<button>Set ready</button>
+		{#if $sessionID == master?.sessionID}
+			<button>Run Game</button>
+		{/if}
+	</div>
+
 	<div class="chat" bind:this={chat}>
+		{#if msgs.length == 0}
+			<p>No messages</p>
+		{/if}
 		{#each msgs as message}
 			<Message {...message} />
 		{/each}
 	</div>
 
 	<form on:submit={onSubmit}>
-		<input bind:value={newMessage} type="text" placeholder="your message" />
+		<input
+			bind:this={inputMessage}
+			bind:value={newMessage}
+			type="text"
+			placeholder="your message"
+		/>
 		<button type="submit">Send</button>
 	</form>
 </div>
 
 <style lang="scss">
-	.chat {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		padding: 4px;
-		border-radius: 14px;
-		background: $white70;
-		box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-		height: calc(100vh - 175px);
-		width: 50vw;
-		overflow-y: auto;
-	}
-
 	.content {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
 		gap: 10px;
+
+		.ready {
+			width: calc(50vw - 10px);
+			height: 50px;
+			background: $white70;
+			padding: 10px;
+			box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+			border-radius: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.chat {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			padding: 4px;
+			border-radius: 14px;
+			background: $white70;
+			box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+			height: calc(100vh - 175px - 85px);
+			width: 50vw;
+			overflow-y: auto;
+		}
 
 		form {
 			padding: 10px;
