@@ -91,7 +91,7 @@
 	<button class="btnListRoom" on:click={goHome}>Leave</button>
 	<div>
 		<Room bind:players bind:master />
-		<Chat />
+		<Chat bind:room bind:players bind:master />
 	</div>
 {:else}
 	<Game />
