@@ -3,12 +3,12 @@
 </script>
 
 <svelte:head>
-	<title>{$page.status} - {$page.error ? $page.error.message : ''} | Red Tetris</title>
+	<title>{$page.status} - {$page.error?.message} | Red Tetris</title>
 </svelte:head>
 
 <div>
 	<h1>{$page.status}</h1>
-	<p>{$page.error ? $page.error.message : ''}</p>
+	<p>{$page.error?.message}</p>
 	<a href="/">Comme back to Home</a>
 </div>
 

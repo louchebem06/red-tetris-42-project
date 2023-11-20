@@ -7,7 +7,7 @@ const config: UserConfig = {
 		sveltekit(),
 		istanbul({
 			include: 'src/*',
-			exclude: ['node_modules', 'test/', 'src/lib/game/*'],
+			exclude: ['node_modules', 'tests/', 'src/lib/game/*'],
 			extension: ['.ts', '.svelte'],
 			requireEnv: false,
 			forceBuildInstrument: true,

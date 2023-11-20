@@ -24,7 +24,8 @@
 		"test": "playwright test",
 		"test:ui": "playwright test --ui",
 		"coverage": "npx nyc report",
-		"test:coverage": "npm run build:clean && npm run build && npm run test && npm run coverage"
+		"test:coverage": "npm run build:clean && npm run build && npm run test && npm run coverage",
+		"test:coverage:web": "npm run test:coverage && open coverage/index.html"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.40.0",
