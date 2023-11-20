@@ -85,6 +85,25 @@ export default class RoomController {
 		});
 	}
 
+	public setPlayerReady(sid: string, socket: Socket): void {
+		const room = this.getRoom(socket.data.room);
+		if (!room) {
+			throw new Error('Room not found');
+		}
+
+		socket.data.player.toggleReady();
+		socket.data.player = room.updatePlayer(socket.data.player);
+		this.broadcast({
+			event: 'playerCHange',
+			data: {
+				reason: 'ready',
+				player: socket.data.player.toJSON(),
+			},
+			sid: undefined,
+			room: sid,
+		});
+	}
+
 	private broadcast(format: IBrodacastFormat): void {
 		this._ss.broadcast(format);
 	}

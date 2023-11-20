@@ -1,4 +1,6 @@
+import { State } from '../type/PlayerWaitingRoomState';
 import { logger } from '../controller/LogController';
+import { IRoomState } from '../interface/IRoomState';
 class Player {
 	private _dateCreated: Date = new Date();
 
@@ -8,26 +10,50 @@ class Player {
 	private _leads: string[] = [];
 	private _wins: string[] = [];
 	public connected: boolean = true;
+	private _rooms: Map<string, IRoomState> = new Map<string, IRoomState>();
 
 	public constructor(
 		public username: string,
 		public sessionID: string,
 	) {}
 
-	/**
-	 * Returns the date the object was created.
-	 *
-	 * @return {Date} The date the object was created.
-	 */
+	public addRoomState(roomState: IRoomState): void {
+		this._rooms.set(roomState.name, roomState);
+	}
+
+	public get roomsState(): Map<string, IRoomState> {
+		return this._rooms;
+	}
+
+	public roomState(roomName: string): IRoomState | undefined {
+		return this._rooms.get(roomName);
+	}
+
+	public toggleReady(room: string): void {
+		const state = this.roomState(room)?.status;
+		if (state === 'ready') {
+			this.setRoomStatus('idle', room);
+		} else if (state === 'idle') {
+			this.setRoomStatus('ready', room);
+		}
+	}
+
+	public setRoomStatus(status: State, name: string): void {
+		const state = this._rooms.get(name);
+		if (state) {
+			state.status = status;
+			this._rooms.set(name, state);
+		}
+	}
+
+	public get rooms(): IRoomState[] {
+		return [...this._rooms.values()];
+	}
+
 	public get dateCreated(): Date {
 		return this._dateCreated;
 	}
 
-	/**
-	 * Returns an array of all games.
-	 *
-	 * @return {object[]} An array of game objects.
-	 */
 	public get games(): object[] {
 		return [...this._games.values()];
 	}
@@ -52,13 +78,6 @@ class Player {
 		}
 	}
 
-	/**
-	 * Adds a game to the collection.
-	 *
-	 * @param {string} id - The ID of the game.
-	 * @param {object} game - The game object to be added.
-	 * @return {void}
-	 */
 	public addGame(id: string, game: object): void {
 		this._games.set(id, game);
 	}
@@ -95,12 +114,21 @@ class Player {
 		});
 		if (this.games.length > 0) {
 			log += `\t\t....................................\n`;
+			llog += `\t\t....................................\n`;
 		}
 		this.games.forEach((game) => {
 			log += `\t+ \x1b[4mplays\x1b[0m: \x1b[36m${game}\x1b[0m\n`;
-			llog += `\t\t....................................\n`;
+			llog += `\t+ plays: ${JSON.stringify(game)}\n`;
 		});
-		log += `------------------------------------------------------------`;
+		if (this.rooms.length > 0) {
+			log += `\t\t....................................\n`;
+			llog += `\t\t....................................\n`;
+		}
+		this.rooms.forEach((room) => {
+			log += `\t+ \x1b[4mroom\x1b[0m: \x1b[36m${JSON.stringify(room)}\x1b[0m\n`;
+			llog += `\t+ room: ${JSON.stringify(room)}\n`;
+		});
+		log += `-----------------------------------------------------------`;
 		llog += `------------------------------------------------------------`;
 		console.log(log);
 		logger.log(llog);
@@ -115,6 +143,7 @@ class Player {
 			leads: this.leads,
 			wins: this.wins,
 			games: this.games,
+			roomsState: this.rooms,
 		};
 	}
 }

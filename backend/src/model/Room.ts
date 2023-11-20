@@ -9,6 +9,7 @@ export default class Room {
 	private _leader: Player;
 	private _game: Game;
 	private _dateCreated: Date = new Date();
+	private _readys: PlayerStore = new PlayerStore();
 
 	/**
 	 * Create a new instance of the constructor.
@@ -19,6 +20,7 @@ export default class Room {
 	public constructor(name: string, leader: Player) {
 		this._name = name;
 		leader.leads = this.name;
+		// TODO class Leader extends Player
 		this._leader = leader; // TODO a repercuter dans le player correspondant
 		this._game = new Game(this._name);
 	}
@@ -31,14 +33,37 @@ export default class Room {
 	 */
 	public addPlayer(player: Player): void {
 		if (!this.hasPlayer(player)) {
+			player.addRoomState({
+				name: this.name,
+				status: 'active',
+				leads: this.isLeader(player),
+				readys: this._readys.total,
+				started: this._game.isStarted(),
+			});
 			this._players.save(player.sessionID, player);
 		}
 	}
 
-	public updatePlayer(player: Player): void {
+	public updatePlayer(player: Player): Player | undefined {
 		if (this.hasPlayer(player)) {
+			const state = player.roomState(this.name);
+			if (state) {
+				state.leads = this.isLeader(player);
+				if (state.status === 'ready') {
+					this._readys.save(player.sessionID, player);
+				} else {
+					this._readys.delete(player.sessionID);
+				}
+				if (this.winner) {
+					state.wins = this.winner.username === player.username;
+				}
+				state.readys = this._readys.total;
+				state.started = this._game.isStarted();
+			}
 			this._players.save(player.sessionID, player);
+			return player;
 		}
+		return undefined;
 	}
 
 	/**
@@ -49,10 +74,17 @@ export default class Room {
 	 */
 	public removePlayer(player: Player): void {
 		if (this.hasPlayer(player)) {
+			const state = player.roomState(this.name);
+			if (!state) {
+				throw new Error(`player ${player.username} is not in room ${this.name}`);
+			}
 			this._players.delete(player.sessionID);
+			this._readys.delete(player.sessionID);
+			state.status = 'left';
 			if (this.isLeader(player)) {
 				player.leads.splice(player.leads.indexOf(this.name), 1);
 				if (this.players[0]) {
+					state.leads = false;
 					this.leader = this.players[0];
 				}
 				this.leader.leads = this.name;
@@ -63,8 +95,11 @@ export default class Room {
 			}
 
 			if (this.totalPlayers === 0 && this._game.isStarted()) {
+				state.started = false;
+				state.wins = this.winner?.sessionID === player.sessionID;
 				this.stopGame(player);
 			}
+			player.addRoomState(state);
 		}
 	}
 

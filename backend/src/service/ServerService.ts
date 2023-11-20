@@ -23,6 +23,7 @@ export default class ServerService {
 
 	public updateSession(socket: Socket, sessionID: string): void {
 		if (this.sessions.has(sessionID)) {
+			this.sessions.add(sessionID);
 		} else {
 			this.throwError(`Session ${sessionID} not found`);
 		}
