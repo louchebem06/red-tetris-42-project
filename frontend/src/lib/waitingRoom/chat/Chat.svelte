@@ -111,6 +111,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 10px;
+		height: calc(100vh - 100px);
 
 		.ready {
 			width: calc(50vw - 10px);
@@ -132,7 +133,7 @@
 			border-radius: 14px;
 			background: $white70;
 			box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-			height: calc(100vh - 175px - 85px);
+			height: 100%;
 			width: 50vw;
 			overflow-y: auto;
 		}
