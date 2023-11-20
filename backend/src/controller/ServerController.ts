@@ -86,6 +86,10 @@ export default class ServerController {
 							this.forwardMessage(args[0], socket);
 							break;
 
+						case 'ready':
+							this.setPlayerReady(args[0], socket);
+							break;
+
 						default:
 							const _args = `${JSON.stringify(args)} * ${socket.id}`;
 							logger.log(`[EVENT NOT HANDLED]: ${event} ${_args}`);
@@ -137,7 +141,27 @@ export default class ServerController {
 				msg += ` * ${sessionID} * ${socket.id}`;
 				logger.log(msg);
 				console.log(msg);
+				// const handle = setInterval(() => {
+				// 	logger.log(`La socket a été deconnecté depuis 5000 ms`);
+				// 	console.log(`La socket a été deconnecté depuis 5000 ms`, socket.connected);
+				// 	testInterval(socket);
+				// 	clearInterval(handle);
+				// }, 10000);
 			});
+
+			// const testInterval = async (socket: Socket): Promise<void> => {
+			// 	return await new Promise((resolve) => {
+			// 		logger.log(`[TEST INTERVAL] - ${socket.id}`);
+			// 		logger.logSocketIO(socket);
+			// 		resolve();
+			// 	});
+			// };
+
+			// const interval = setInterval(() => {
+			// 	console.log('interval declenché au bout de 5000 ms');
+			// 	testInterval(socket);
+			// 	clearInterval(interval);
+			// }, 5000);
 		});
 	}
 
@@ -168,6 +192,15 @@ export default class ServerController {
 		this._ss.emit(sid, 'error', message);
 	}
 
+	public setPlayerReady(sid: string, socket: Socket): void {
+		try {
+			if (this._rc.hasRoom(sid)) {
+				this._rc.setPlayerReady(sid, socket);
+			}
+		} catch (e) {
+			this.sendError(sid, `${(<Error>e).message}`);
+		}
+	}
 	public forwardMessage(datas: IMessageIncomingPayload, socket: Socket): void {
 		const player = socket.data.player;
 		const sid = player?.sessionID;

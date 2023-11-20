@@ -127,6 +127,17 @@ socketClient.emit('message', {
 */
 ```
 
+### getRoom
+
+```js
+socketClient.emit('ready', roomName);
+
+/*
+    -> reponse attendue du serveur:
+        * playerChange, reason: ready                      ROOM
+*/
+```
+
 ## on (Server -> Client)
 
 ### join
@@ -141,6 +152,7 @@ socketClient.emit('message', {
         leads: string[] // nom des rooms que le joueurr lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: object[] // Non defini encore
     },
 ```
 
@@ -321,9 +333,19 @@ socketClient.emit('message', {
             sessionId: string, // uuid
             dateCreated: string,
             connected: boolean, // connecté ou non
-            leads: string[] // nom des rooms que le joueur lead
-            wins: string[] // nom des rooms gagnées
-            games: object[] // Non defini encore
+            leads: string[], // nom des rooms que le joueur lead
+            wins: string[], // nom des rooms gagnées
+            games: object[], // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
         gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
         winner: {
@@ -334,6 +356,16 @@ socketClient.emit('message', {
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
         players: [
             {
@@ -344,6 +376,16 @@ socketClient.emit('message', {
                 leads: string[] // nom des rooms que le joueur lead
                 wins: string[] // nom des rooms gagnées
                 games: object[] // Non defini encore
+				rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
             },
         ], // liste des joueurs etant dans la room
         totalPlayer: number // Nombre de player de la room
@@ -356,6 +398,16 @@ socketClient.emit('message', {
         leads: string[] // nom des rooms que le joueur lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
     }, // joueur concerné par le changement
 }
 ```
@@ -377,6 +429,16 @@ La Room retournée est celle indiquée dans le payload d'origine, ou bien une er
         leads: string[] // nom des rooms que le joueur lead, le nom de cette room open doit apparaitre ici
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
     }, // le player qui cree une room en devient le leader
     gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la room, et si il est dans la room
     winner: {
@@ -387,6 +449,16 @@ La Room retournée est celle indiquée dans le payload d'origine, ou bien une er
         leads: string[] // nom des rooms que le joueurr lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
     }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room
     players: [
         {
@@ -397,6 +469,16 @@ La Room retournée est celle indiquée dans le payload d'origine, ou bien une er
             leads: string[] // nom des rooms que le joueurr lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         },
     ], // Devrait etre vide a l'ouverture d'une room, socketio distingue ouverture de room et rejoindre cette meme room. En gros, on ouvre la room, puis on la rejoint, ou non
     totalPlayer: number // Nombre de player de la room, doit etre 0 a l'ouverture
@@ -426,6 +508,16 @@ Des qu'un changement intervient dans la room
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
         gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
         winner: {
@@ -436,6 +528,16 @@ Des qu'un changement intervient dans la room
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
         players: [
             {
@@ -446,6 +548,16 @@ Des qu'un changement intervient dans la room
                 leads: string[] // nom des rooms que le joueur lead
                 wins: string[] // nom des rooms gagnées
                 games: object[] // Non defini encore
+				rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
             },
         ], // liste des joueurs etant dans la room
         totalPlayer: number // Nombre de player de la room
@@ -458,6 +570,16 @@ Des qu'un changement intervient dans la room
         leads: string[] // nom des rooms que le joueur lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
     }, // joueur concerné par le changement
 }
 ```
@@ -477,6 +599,16 @@ Des qu'un changement intervient dans la room
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
         gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
         winner: {
@@ -487,6 +619,16 @@ Des qu'un changement intervient dans la room
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
         players: [
             {
@@ -497,6 +639,16 @@ Des qu'un changement intervient dans la room
                 leads: string[] // nom des rooms que le joueur lead
                 wins: string[] // nom des rooms gagnées
                 games: object[] // Non defini encore
+				rooms: [
+				 	{
+						name: string;
+						status: State;
+						leads: boolean;
+						wins?: boolean | undefined;
+						readys: number;
+						started: boolean;
+					}
+				],
             },
         ], // liste des joueurs etant dans la room
         totalPlayer: number // Nombre de player de la room
@@ -509,6 +661,16 @@ Des qu'un changement intervient dans la room
         leads: string[] // nom des rooms que le joueur lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
     }, // joueur concerné par le changement
 }
 ```
@@ -520,6 +682,7 @@ Les différents motifs possibles implémentés sont:
 -   Arrivée d'un joueur sur le serveur `new player`
 -   Changement de nom d'utilisateur `change username`
 -   Deconnection d'un joueur `player disconnected`
+-   Le jeu se set/unset du status **ready** avec `ready`
 
 ```js
 // Reponse à une demande de changement sur le player (event changeUsername)
@@ -534,6 +697,16 @@ Les différents motifs possibles implémentés sont:
         leads: string[] // nom des rooms que le joueurr lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
     },
 }
 ```
@@ -559,6 +732,16 @@ Les différents motifs possibles implémentés sont:
         leads: string[] // nom des rooms que le joueurr lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
 	}
 	receiver: {
 		username: string, // username
@@ -568,6 +751,16 @@ Les différents motifs possibles implémentés sont:
         leads: string[] // nom des rooms que le joueurr lead
         wins: string[] // nom des rooms gagnées
         games: object[] // Non defini encore
+		rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
 	} | {
 		name: string,
         dateCreated: string,
@@ -579,6 +772,16 @@ Les différents motifs possibles implémentés sont:
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // le leader de la room. Si le leader quitte la room, le joueur arrivé juste apres le leader devient leader
         gameState: false, // Le jeu ne peut etre demarré/arrété par le leader de la roon
         winner: {
@@ -589,6 +792,16 @@ Les différents motifs possibles implémentés sont:
             leads: string[] // nom des rooms que le joueur lead
             wins: string[] // nom des rooms gagnées
             games: object[] // Non defini encore
+			rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
         }, // Aucun winner ne peut exister tant qu'au moins un joueur n'a pas cherché à joindre et quitter la room. Le joueur est designé lorsqu'il reste 1 joueur ou moins dans la room
         players: [
             {
@@ -599,6 +812,16 @@ Les différents motifs possibles implémentés sont:
                 leads: string[] // nom des rooms que le joueur lead
                 wins: string[] // nom des rooms gagnées
                 games: object[] // Non defini encore
+				rooms: [
+				 {
+					name: string;
+					status: State;
+					leads: boolean;
+					wins?: boolean | undefined;
+					readys: number;
+					started: boolean;
+				}
+			],
             },
         ], // liste des joueurs etant dans la room
         totalPlayer: number // Nombre de player de la room,
