@@ -5,13 +5,15 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { io } from '$lib/socket';
 	import type RoomType from '$lib/interfaces/Room.interface';
+	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 
 	export let master: Player;
 	export let players: Player[];
 	export let room: string;
 
 	let chat: HTMLDivElement;
-	let msgs: { message: string; username: string; me: boolean }[] = [];
+	let msgs: { message: string; username: string | undefined; me?: boolean; system?: boolean }[] =
+		[];
 	let inputMessage: HTMLElement;
 	let ready = 0;
 
@@ -40,10 +42,27 @@
 				inputMessage.focus();
 			}, 100);
 		});
+		io.on('roomChange', (data: RoomChange) => {
+			console.log('change', data);
+			if (data.room.name != room) return;
+			msgs = [
+				...msgs,
+				{
+					message: `${data.reason}: ${
+						data.reason != 'new leader'
+							? data.player.username
+							: data.room.leader.username
+					}`,
+					username: undefined,
+					system: true,
+				},
+			];
+		});
 	});
 
 	onDestroy(() => {
 		io.off('message');
+		io.off('roomChange');
 	});
 
 	const onSubmit = (): void => {

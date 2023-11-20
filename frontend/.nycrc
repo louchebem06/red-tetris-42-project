@@ -13,6 +13,6 @@
 	"all": true,
 	"report-dir": "./coverage",
 	"temp-dir": ".nyc_output",
-	"reporter": ["text"],
+	"reporter": ["text", "html"],
 	"exclude-after-remap": false
 }

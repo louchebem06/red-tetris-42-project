@@ -2,12 +2,15 @@
 	import ImageUser from '$lib/componante/ImageUser.svelte';
 
 	export let message: string;
-	export let username: string;
+	export let username: string | undefined;
 	export let me: boolean = false;
+	export let system: boolean = false;
 </script>
 
-<div class="message" class:me>
-	<ImageUser bind:username />
+<div class="message" class:me class:system>
+	{#if !system && typeof username != 'undefined'}
+		<ImageUser bind:username />
+	{/if}
 	<p>{message}</p>
 </div>
 
@@ -30,5 +33,10 @@
 
 	.me {
 		margin-left: 25vw;
+	}
+
+	.system {
+		background: transparent !important;
+		color: $black;
 	}
 </style>
