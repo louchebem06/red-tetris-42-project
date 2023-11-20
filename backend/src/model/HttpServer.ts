@@ -1,11 +1,12 @@
+import http, { Server as ServerHttp } from 'http';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import http, { Server as ServerHttp } from 'http';
-import 'dotenv/config';
 import cors, { CorsOptions } from 'cors';
-// import AsyncAPICustomDocumentation from '../docs/AsyncAPIDocumentation';
+
+import 'dotenv/config';
+
 import MermaidDocumentation from '../docs/MermaidDocumentation';
-// import path from 'path';
+import { logger } from '../controller/LogController';
 
 // TODO inserer le vrai port par default (process.env.PORT)
 class HttpServer {
@@ -39,6 +40,7 @@ class HttpServer {
 	public start(port?: number): void {
 		this.port = port || this.port;
 		this.server.listen(this.port.toString(), () => {
+			logger.log(`Server is running at http://localhost:${this.port}`);
 			console.log(`Server is running at http://localhost:${this.port}`);
 		});
 	}
@@ -49,8 +51,8 @@ class HttpServer {
 	 * @param {void} None
 	 * @return {void} None
 	 */
-	public stop(): void {
-		this.server.close();
+	public stop(cb?: () => void): void {
+		this.server.close(cb);
 		this.server.closeAllConnections();
 		this.server.closeIdleConnections();
 	}
