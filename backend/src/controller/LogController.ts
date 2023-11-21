@@ -3,16 +3,20 @@ import fs from 'fs';
 import { Socket } from 'socket.io';
 
 export class LogController {
-	private logFileName: string = `${process.cwd()}/logs/${Date.now()}.txt`;
-	// private logFileName: string = `${process.cwd()}/logs/devlogs.txt`;
-	private stream = fs.createWriteStream(this.logFileName, {
-		flags: 'a',
-		encoding: 'utf8',
-		autoClose: true,
-	});
+	private logFileName: string;
+	private stream: fs.WriteStream;
 
 	public constructor() {
-		console.log(`Starting log at ${this.logFileName}`);
+		if (process.env.DEV || process.env.UNITSTESTS) {
+			this.logFileName = `${process.cwd()}/logs/devlogs.txt`;
+		} else {
+			this.logFileName = `${process.cwd()}/logs/${Date.now()}.txt`;
+		}
+		this.stream = fs.createWriteStream(this.logFileName, {
+			flags: 'a',
+			encoding: 'utf8',
+			autoClose: true,
+		});
 		this.log(`Starting log at ${this.logFileName}`);
 	}
 
@@ -74,7 +78,6 @@ Socket id <${id}> for namespace <${nsp}>.
 state: ${s.c ? 'connected' : 'disconnected'} (${!s.r && 'not '}recovered).\n`;
 		content += `handshake: ${JSON.stringify(handshake)}\n`;
 
-		// addObjToCont(content, handshake);
 		content += `rooms (on server) : ${a.r}\n`;
 		content += `rooms that the socket is in: ${JSON.stringify(rooms)}\n`;
 		content += `sids (on server) : ${a.s}\n`;
@@ -102,8 +105,6 @@ state: ${s.c ? 'connected' : 'disconnected'} (${!s.r && 'not '}recovered).\n`;
 						}
 					}
 				}
-				// content += `${pc}\n`;
-				// pc.log(socket, () => {});
 			} else {
 				content += `(null)\n`;
 			}
@@ -138,7 +139,6 @@ state: ${s.c ? 'connected' : 'disconnected'} (${!s.r && 'not '}recovered).\n`;
 		}
 		content += `
 ********************************************************************************`;
-		this.write(`LogController::logSocketIO:106`);
 		this.write(content);
 	}
 }

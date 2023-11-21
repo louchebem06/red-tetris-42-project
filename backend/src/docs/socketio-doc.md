@@ -127,7 +127,7 @@ socketClient.emit('message', {
 */
 ```
 
-### getRoom
+### ready
 
 ```js
 socketClient.emit('ready', roomName);

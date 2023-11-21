@@ -1,13 +1,10 @@
 import request from 'supertest';
 import app from '../app';
 import App from '../model/App';
-import SocketClient from './SocketClient';
 import IPlayerJSON from '../interface/IPlayerJSON';
 import IRoomJSON from '../interface/IRoomJSON';
 import { Socket, io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
-
-let socketClt: SocketClient;
 
 const protocol = process.env.PROTOCOL || 'ws';
 const host = process.env.HOST || 'localhost';
@@ -25,56 +22,47 @@ type Session = {
 };
 const sessions: Session[] = [];
 
-const checkProperties = (socketClt: SocketClient): void => {
-	expect(socketClt).toHaveProperty('player');
-	expect(socketClt).toHaveProperty('rooms');
-	expect(socketClt).toHaveProperty('roomNames');
-	expect(socketClt).toHaveProperty('rooms');
-	expect(socketClt).toHaveProperty('messages');
-	expect(socketClt).toHaveProperty('errors');
-};
+// const checkRoomProperties = (room: IRoomJSON, name: string, t: number, l: IPlayerJSON): void => {
+// 	expect(room).toHaveProperty('name');
+// 	expect(room).toHaveProperty('dateCreated');
+// 	expect(room).toHaveProperty('leader');
+// 	expect(room).toHaveProperty('gameState');
+// 	expect(room).toHaveProperty('players');
+// 	expect(room).toHaveProperty('totalPlayers');
 
-const checkRoomProperties = (room: IRoomJSON, name: string, t: number, l: IPlayerJSON): void => {
-	expect(room).toHaveProperty('name');
-	expect(room).toHaveProperty('dateCreated');
-	expect(room).toHaveProperty('leader');
-	expect(room).toHaveProperty('gameState');
-	expect(room).toHaveProperty('players');
-	expect(room).toHaveProperty('totalPlayers');
+// 	expect(room.name).toBeDefined();
+// 	expect(room.dateCreated).toBeDefined();
+// 	expect(room.leader).toBeDefined();
+// 	expect(room.gameState).toBeDefined();
+// 	expect(room.players).toBeDefined();
+// 	expect(room.totalPlayers).toBeDefined();
 
-	expect(room.name).toBeDefined();
-	expect(room.dateCreated).toBeDefined();
-	expect(room.leader).toBeDefined();
-	expect(room.gameState).toBeDefined();
-	expect(room.players).toBeDefined();
-	expect(room.totalPlayers).toBeDefined();
-
-	if (name) {
-		expect(room.name).toBe(name);
-	}
-	if (t) {
-		expect(room.totalPlayers).toBe(t);
-		expect(room.players.length).toBe(t);
-		if (t === 0) {
-			expect(room.winner).toBeNull();
-			expect(room.gameState).toBeFalsy();
-		}
-		if (t > 0) {
-			expect(room.players).toContainEqual(room.leader);
-			expect(room.players).toContainEqual(l);
-		}
-	}
-	if (l) {
-		expect(room.leader.username).toBe(l.username);
-		expect(room.leader.sessionID).toBe(l.sessionID);
-		expect(room.leader.dateCreated).toBe(l.dateCreated);
-		expect(room.leader.connected).toBe(l.connected);
-		expect(room.leader.wins).toStrictEqual(l.wins);
-		expect(room.leader.games).toStrictEqual(l.games);
-		expect(room.leader.leads).toStrictEqual(l.leads);
-		expect(room.leader.connected).toBeTruthy();
-	}
-};
+// 	if (name) {
+// 		expect(room.name).toBe(name);
+// 	}
+// 	if (t) {
+// 		expect(room.totalPlayers).toBe(t);
+// 		expect(room.players.length).toBe(t);
+// 		if (t === 0) {
+// 			expect(room.winner).toBeNull();
+// 			expect(room.gameState).toBeFalsy();
+// 		}
+// 		if (t > 0) {
+// 			expect(room.players).toContainEqual(room.leader);
+// 			expect(room.players).toContainEqual(l);
+// 		}
+// 	}
+// 	if (l) {
+// 		expect(room.leader.username).toBe(l.username);
+// 		expect(room.leader.sessionID).toBe(l.sessionID);
+// 		expect(room.leader.dateCreated).toBe(l.dateCreated);
+// 		expect(room.leader.connected).toBe(l.connected);
+// 		expect(room.leader.wins).toStrictEqual(l.wins);
+// 		expect(room.leader.games).toStrictEqual(l.games);
+// 		expect(room.leader.leads).toStrictEqual(l.leads);
+// 		expect(room.leader.connected).toBeTruthy();
+// 	}
+// };
 
 const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: string): void => {
 	expect(player).toHaveProperty('username');
@@ -84,6 +72,7 @@ const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: str
 	expect(player).toHaveProperty('games');
 	expect(player).toHaveProperty('leads');
 	expect(player).toHaveProperty('connected');
+	expect(player).toHaveProperty('roomsState');
 
 	expect(player.username).toBeDefined();
 	expect(player.sessionID).toBeDefined();
@@ -92,6 +81,7 @@ const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: str
 	expect(player.wins).toBeDefined();
 	expect(player.leads).toBeDefined();
 	expect(player.games).toBeDefined();
+	expect(player.roomsState).toBeDefined();
 
 	expect(player.connected).toBeTruthy();
 	if (u) {
@@ -105,11 +95,9 @@ const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: str
 	}
 };
 
-let flagHttpTest = false;
 beforeAll(async () => {
 	await new Promise<App>((resolve) => {
 		console.log(`SERVER CONNECTED`);
-		flagHttpTest = true;
 		resolve(app);
 	});
 });
@@ -118,24 +106,6 @@ afterAll((done) => {
 	app.stop();
 	console.log(`SERVER DISCONNECTED`);
 	done();
-});
-
-beforeEach(async () => {
-	if (!flagHttpTest) {
-		socketClt = new SocketClient(`${protocol}://${host}:${serverPort}`);
-		socketClt = await socketClt.connect(players[indexPlayer]);
-		if (socketClt.player) {
-			sessions.push({ username: socketClt.player.username, id: socketClt.player.sessionID });
-		}
-	}
-});
-
-afterEach(async () => {
-	if (!flagHttpTest) {
-		indexPlayer = ++indexPlayer % players.length;
-		indexRoom = ++indexRoom % rooms.length;
-		await socketClt.disconnect();
-	}
 });
 
 describe('Home page', () => {
@@ -157,282 +127,93 @@ describe('Home page', () => {
 		done();
 	}, 1500);
 	afterAll((done) => {
-		flagHttpTest = false;
 		done();
 	});
 });
 
-describe.skip(`App`, () => {
-	beforeAll((done) => {
-		indexPlayer = indexRoom = 0;
+const socketsClients: Socket[] = [];
+describe('New Client', () => {
+	beforeEach((done) => {
+		const socket: Socket = io(`${protocol}://${host}:${serverPort}`, {
+			forceNew: true,
+			reconnectionDelay: 0,
+			reconnection: true,
+			auth: {
+				username: players[indexPlayer],
+			},
+			autoConnect: false,
+		});
+		socket.connect();
+		socket.on('join', (player) => {
+			const u = player.username;
+			const i = player.sessionID;
+			socket.auth = { username: u, sessionID: i };
+			sessions.push({ username: u, id: i });
+			socketsClients.push(socket);
+			checkPlayerProperties(player, u, '', i);
+		});
+
+		setTimeout(() => {
+			done();
+		}, 2500);
+	}, 3000);
+	test('join room', (done) => {
+		expect(socketsClients).toHaveLength(1);
+		const socket = socketsClients[0];
+
+		socket.emit('createRoom', rooms[indexRoom]);
+		socket.emit('joinRoom', rooms[indexRoom]);
+		setTimeout(() => {
+			socket.emit('message', {
+				message: 'Hello World!',
+				receiver: rooms[indexRoom],
+			});
+			socket.emit('ready', rooms[indexRoom]);
+			setTimeout(() => {
+				socket.emit('leave', rooms[indexRoom]);
+				socket.emit('leaveRoom', rooms[indexRoom]);
+			}, 1000);
+		}, 1500);
+		socket.onAny((event, ...args) => {
+			switch (event) {
+				case 'roomOpened':
+					console.log('test roomOpened', event, args);
+					// {
+					// 	const [player, room] = args;
+					// 	checkRoomProperties(room, rooms[indexRoom], 1, player);
+					// 	const u = players[indexPlayer];
+					// 	const r = rooms[indexRoom];
+					// 	const id = sessions[indexPlayer].id;
+					// 	checkPlayerProperties(player, u, r, id);
+					// }
+					break;
+				case 'roomChange':
+					console.log('test roomChange', event, args);
+					break;
+				case 'playerChange':
+					console.log('test playerChange', event, args);
+					break;
+				case 'message':
+					console.log('test message', event, args);
+					break;
+				case 'roomClosed':
+					console.log('test roomClosed', event, args);
+					break;
+			}
+		});
+		setTimeout(() => {
+			done();
+		}, 4500);
+	}, 5000);
+	afterEach((done) => {
+		for (const socket of socketsClients) {
+			socket.disconnect();
+		}
+		indexPlayer = ++indexPlayer % players.length;
+		indexRoom = ++indexRoom % rooms.length;
+
 		done();
 	});
-	test('Basic successful create - join - leave room', async () => {
-		try {
-			socketClt = await socketClt.createRoom(rooms[indexRoom]);
-			checkProperties(socketClt);
-
-			let player = socketClt.player;
-			let args = [players[indexPlayer], rooms[indexRoom]];
-			if (player) {
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-
-				const msgs = socketClt.messages;
-				expect(msgs).toHaveLength(2);
-				const msg = `You are the new leader of ${rooms[indexRoom]}`;
-				expect(msgs).toContainEqual(msg);
-				expect(socketClt?.errors).toHaveLength(0);
-			}
-
-			let roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(indexRoom + 1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 0, player);
-					}
-				});
-			}
-
-			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
-			player = socketClt.player;
-			if (player) {
-				args = [players[indexPlayer], rooms[indexRoom]];
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-			}
-			roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(indexRoom + 1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 1, player);
-					}
-				});
-			}
-
-			socketClt = await socketClt.getRooms();
-			// expect(socketClt?.roomNames).toContainEqual(rooms[indexRoom]);
-
-			socketClt = await socketClt.leaveRoom(rooms[indexRoom]);
-			player = socketClt.player;
-			if (player) {
-				args = [players[indexPlayer], rooms[indexRoom]];
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-				const msgs = socketClt.messages;
-				expect(msgs).toHaveLength(5);
-				const msg = `You are the new leader of ${rooms[indexRoom]}`;
-				const win = `You are the winner of ${rooms[indexRoom]}`;
-				expect(msgs).toContainEqual(msg);
-				expect(msgs).toContainEqual(win);
-			}
-			roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(0);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 0, player);
-					}
-				});
-			}
-			socketClt = await socketClt.getRooms();
-			// expect(socketClt?.roomNames).not.toContainEqual(rooms[indexRoom]);
-			// expect(socketClt?.roomNames).toHaveLength(indexRoom);
-
-			expect(socketClt?.errors).toHaveLength(0);
-		} catch (e) {
-			console.log(e);
-		}
-	}, 5000);
-
-	test('Unsuccessful create room', async () => {
-		try {
-			socketClt = await socketClt.createRoom(rooms[indexRoom]);
-			checkProperties(socketClt);
-
-			const player = socketClt.player;
-			let args = [players[indexPlayer], rooms[indexRoom]];
-			if (player) {
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-
-				const msgs = socketClt.messages;
-				expect(msgs).toHaveLength(2);
-				const msg = `You are the new leader of ${rooms[indexRoom]}`;
-				expect(msgs).toContainEqual(msg);
-				socketClt = await socketClt.createRoom(player?.sessionID);
-			}
-
-			const roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 0, player);
-					}
-				});
-			}
-			socketClt = await socketClt.createRoom(rooms[indexRoom]);
-			const sid = socketClt?.getSocket()?.id;
-			if (sid) {
-				socketClt = await socketClt.createRoom(sid);
-			}
-			socketClt = await socketClt.createRoom('a');
-			socketClt = await socketClt.createRoom('a'.repeat(500));
-			expect(socketClt?.errors).toHaveLength(5);
-		} catch (e) {
-			console.log(e);
-		}
-	}, 5000);
-
-	test('Unsuccessful join room', async () => {
-		try {
-			socketClt = await socketClt.createRoom(rooms[indexRoom]);
-			checkProperties(socketClt);
-
-			let player = socketClt.player;
-			let args = [players[indexPlayer], rooms[indexRoom]];
-			if (player) {
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-
-				const msgs = socketClt.messages;
-				expect(msgs).toHaveLength(2);
-				const msg = `You are the new leader of ${rooms[indexRoom]}`;
-				expect(msgs).toContainEqual(msg);
-				expect(socketClt?.errors).toHaveLength(0);
-				socketClt = await socketClt.joinRoom(player?.sessionID);
-			}
-
-			let roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 0, player);
-					}
-				});
-			}
-
-			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
-			player = socketClt.player;
-			if (player) {
-				args = [players[indexPlayer], rooms[indexRoom]];
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-			}
-			roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 1, player);
-					}
-				});
-			}
-			const sid = socketClt?.getSocket()?.id;
-			if (sid) {
-				socketClt = await socketClt.joinRoom(sid);
-			}
-			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
-			socketClt = await socketClt.joinRoom("Cette room n'existe pas");
-			expect(socketClt?.errors?.length).toBeGreaterThanOrEqual(1);
-		} catch (e) {
-			console.log(e);
-		}
-	}, 5000);
-
-	test('Unsuccessful leave room', async () => {
-		try {
-			socketClt = await socketClt.createRoom(rooms[indexRoom]);
-			checkProperties(socketClt);
-
-			let player = socketClt.player;
-			let args = [players[indexPlayer], rooms[indexRoom]];
-			if (player) {
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-
-				const msgs = socketClt.messages;
-				expect(msgs).toHaveLength(2);
-				const msg = `You are the new leader of ${rooms[indexRoom]}`;
-				expect(msgs).toContainEqual(msg);
-				expect(socketClt?.errors).toHaveLength(0);
-			}
-
-			let roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 0, player);
-					}
-				});
-			}
-
-			socketClt = await socketClt.joinRoom(rooms[indexRoom]);
-			player = socketClt.player;
-			if (player) {
-				args = [players[indexPlayer], rooms[indexRoom]];
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-			}
-			roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(1);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 1, player);
-					}
-				});
-			}
-
-			socketClt = await socketClt.leaveRoom(rooms[indexRoom]);
-			player = socketClt.player;
-			if (player) {
-				args = [players[indexPlayer], rooms[indexRoom]];
-				args.push(sessions[indexPlayer].id);
-				checkPlayerProperties(player, args[0], args[1], args[2]);
-				const msgs = socketClt.messages;
-				expect(msgs).toHaveLength(5);
-				const msg = `You are the new leader of ${rooms[indexRoom]}`;
-				const win = `You are the winner of ${rooms[indexRoom]}`;
-				expect(msgs).toContainEqual(msg);
-				expect(msgs).toContainEqual(win);
-				socketClt = await socketClt.leaveRoom(player?.sessionID);
-			}
-			roomsJSON = socketClt?.rooms;
-			if (roomsJSON) {
-				expect(roomsJSON).toHaveLength(0);
-				roomsJSON.forEach((room) => {
-					args = [room.name];
-					if (player) {
-						checkRoomProperties(room, room.name, 0, player);
-					}
-				});
-			}
-			const sid = socketClt?.getSocket()?.id;
-			if (sid) {
-				socketClt = await socketClt.leaveRoom(sid);
-			}
-			socketClt = await socketClt.leaveRoom(rooms[indexRoom]);
-			socketClt = await socketClt.leaveRoom(rooms[indexRoom - 1]);
-			socketClt = await socketClt.leaveRoom(rooms[indexRoom - 2]);
-			expect(socketClt?.errors?.length).toBeGreaterThanOrEqual(1);
-		} catch (e) {
-			console.log(e);
-		}
-	}, 5000);
 });
 
 describe.skip('Reconnect', () => {
@@ -447,8 +228,10 @@ describe.skip('Reconnect', () => {
 			autoConnect: false,
 		});
 		recoSocket.connect();
-		done();
-	});
+		setTimeout(() => {
+			done();
+		}, 2000);
+	}, 3000);
 
 	test('Succesfully reconnect', (done) => {
 		try {
@@ -462,12 +245,12 @@ describe.skip('Reconnect', () => {
 				recoSocket.connect();
 				setTimeout(() => {
 					done();
-				}, 1000);
+				}, 4000);
 			});
 		} catch (e) {
 			console.log(e);
 		}
-	}, 2500);
+	}, 5000);
 
 	test('Unhandled Event', (done) => {
 		try {

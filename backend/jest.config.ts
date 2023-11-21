@@ -12,13 +12,14 @@ const config: Config = {
 		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
 		'<rootDir>/src/tests/coverage-reports/',
+		// '<rootDir>/src/tests/App.spec.ts/',
 	],
 	coverageThreshold: {
 		global: {
-			branches: 0,
-			functions: 0,
-			lines: 0,
-			statements: 0,
+			branches: 50,
+			functions: 70,
+			lines: 70,
+			statements: 70,
 		},
 	},
 	reporters: ['default', ['github-actions', { silent: false }], 'summary'],
