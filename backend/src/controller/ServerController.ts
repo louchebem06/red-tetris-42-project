@@ -195,7 +195,7 @@ export default class ServerController {
 	public setPlayerReady(sid: string, socket: Socket): void {
 		try {
 			if (this._rc.hasRoom(sid)) {
-				this._rc.setPlayerReady(sid, socket);
+				this._pc.changeRoomStatus('ready', sid, socket);
 			}
 		} catch (e) {
 			this.sendError(sid, `${(<Error>e).message}`);

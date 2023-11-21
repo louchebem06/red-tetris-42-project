@@ -10,7 +10,8 @@ import RoomController from './RoomController';
 
 import IRoomJSON from '../interface/IRoomJSON';
 import IPlayerJSON from '../interface/IPlayerJSON';
-import { State } from '../type/PlayerConnectionState';
+import { State as CoState } from '../type/PlayerConnectionState';
+import { State as RoomState } from '../type/PlayerWaitingRoomState';
 
 class PlayerController {
 	private playerStore: PlayerStore = new PlayerStore();
@@ -27,8 +28,8 @@ class PlayerController {
 		this.log = this.log.bind(this);
 	}
 
-	public startSession(socket: Socket, sessionID: string): State {
-		let state: State = 'new';
+	public startSession(socket: Socket, sessionID: string): CoState {
+		let state: CoState = 'new';
 		if (this._ss.sessions.has(sessionID)) {
 			state = 'reconnected';
 		}
@@ -100,6 +101,36 @@ class PlayerController {
 					player: player.toJSON(),
 				});
 			}
+		} catch (e) {
+			throw new Error(`${(<Error>e).message}`);
+		}
+	}
+
+	public changeRoomStatus(state: RoomState, room: string, socket: Socket): Player {
+		const player = socket.data.player;
+		const sid = player?.sessionID;
+		let reason = state;
+
+		try {
+			if (state === 'ready' || state === 'idle') {
+				player.toggleReady(room);
+				reason = 'ready';
+			} else {
+				player.setRoomStatus(room, state);
+			}
+			this.savePlayer(sid, player);
+			this.updateSession(socket, sid);
+			socket.data.roomController.updatePlayer(room, player);
+			this._ss.broadcast({
+				event: 'playerChange',
+				data: {
+					reason: reason as string,
+					player: player.toJSON(),
+				},
+				sid: '',
+				room: room,
+			});
+			return player;
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}

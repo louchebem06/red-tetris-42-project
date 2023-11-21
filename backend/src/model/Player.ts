@@ -35,6 +35,8 @@ class Player {
 			this.setRoomStatus('idle', room);
 		} else if (state === 'idle') {
 			this.setRoomStatus('ready', room);
+		} else if (state === 'active') {
+			this.setRoomStatus('ready', room);
 		}
 	}
 
@@ -125,8 +127,14 @@ class Player {
 			llog += `\t\t....................................\n`;
 		}
 		this.rooms.forEach((room) => {
-			log += `\t+ \x1b[4mroom\x1b[0m: \x1b[36m${JSON.stringify(room)}\x1b[0m\n`;
-			llog += `\t+ room: ${JSON.stringify(room)}\n`;
+			const keys = Object.keys(room);
+			const values = Object.values(room);
+			log += `\t+ \x1b[4mroom\x1b[0m:\n`;
+			llog += `\t+ room:\n`;
+			for (let i = 0; i < keys.length; ++i) {
+				log += `\t\t+ \x1b[4m${keys[i]}\x1b[0m: \x1b[36m${values[i]}\x1b[0m\n`;
+				llog += `\t\t+ ${keys[i]}: ${values[i]}\n`;
+			}
 		});
 		log += `-----------------------------------------------------------`;
 		llog += `------------------------------------------------------------`;

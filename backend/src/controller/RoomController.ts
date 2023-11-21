@@ -77,6 +77,9 @@ export default class RoomController {
 	}
 
 	public updateRoomsWithPlayer(player: Player): void {
+		if (!player) {
+			throw new Error('Player not found');
+		}
 		this.rooms.forEach((room: Room) => {
 			if (room.players.includes(player)) {
 				room.updatePlayer(player);
@@ -85,23 +88,26 @@ export default class RoomController {
 		});
 	}
 
-	public setPlayerReady(sid: string, socket: Socket): void {
-		const room = this.getRoom(socket.data.room);
-		if (!room) {
-			throw new Error('Room not found');
+	public updatePlayer(sid: string, player: Player): void {
+		try {
+			const room = this.getRoom(sid);
+			if (!room) {
+				throw new Error('Room not found');
+			}
+			this.updateRoomsWithPlayer(room.updatePlayer(player) as Player);
+			if (room.totalReady === room.totalPlayers) {
+				this.broadcastRoom(
+					{
+						reason: 'ready',
+						room: room.toJSON() as IRoomJSON,
+						player: player.toJSON() as IPlayerJSON,
+					},
+					sid,
+				);
+			}
+		} catch (e) {
+			throw new Error(`${(<Error>e).message}`);
 		}
-
-		socket.data.player.toggleReady();
-		socket.data.player = room.updatePlayer(socket.data.player);
-		this.broadcast({
-			event: 'playerCHange',
-			data: {
-				reason: 'ready',
-				player: socket.data.player.toJSON(),
-			},
-			sid: undefined,
-			room: sid,
-		});
 	}
 
 	private broadcast(format: IBrodacastFormat): void {
