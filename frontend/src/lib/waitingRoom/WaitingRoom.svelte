@@ -14,6 +14,8 @@
 	let room: string;
 	let user: string;
 	let game: boolean = false;
+	let ready: number = 0;
+	let userIsReady: boolean = false;
 
 	let players: Player[] = [];
 	let master: Player;
@@ -48,6 +50,10 @@
 			}
 			players = data.players;
 			master = data.leader;
+			ready = data.totalReady;
+			if (data.readys.filter((e) => e.sessionID == $sessionID).length == 1) {
+				userIsReady = true;
+			}
 		});
 		io.on('roomChange', (data: RoomChange) => {
 			// console.log('change', data);
@@ -91,7 +97,7 @@
 	<button class="btnListRoom" on:click={goHome}>Leave</button>
 	<div>
 		<Room bind:players bind:master />
-		<Chat bind:room bind:players bind:master />
+		<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
 	</div>
 {:else}
 	<Game />

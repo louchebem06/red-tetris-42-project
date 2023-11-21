@@ -10,12 +10,13 @@
 	export let master: Player;
 	export let players: Player[];
 	export let room: string;
+	export let ready = 0;
+	export let userIsReady: boolean;
 
 	let chat: HTMLDivElement;
 	let msgs: { message: string; username: string | undefined; me?: boolean; system?: boolean }[] =
 		[];
 	let inputMessage: HTMLElement;
-	let ready = 0;
 
 	const autoScrollDown = (): void => {
 		if (typeof chat != 'undefined') {
@@ -24,6 +25,20 @@
 	};
 
 	let newMessage: string = '';
+
+	const addSystemMessage = (msg: string): void => {
+		msgs = [
+			...msgs,
+			{
+				message: msg,
+				username: undefined,
+				system: true,
+			},
+		];
+		setTimeout(() => {
+			autoScrollDown();
+		}, 100);
+	};
 
 	onMount(() => {
 		io.on('message', (data: { message: string; emitter: Player; receiver: RoomType }) => {
@@ -43,26 +58,33 @@
 			}, 100);
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			console.log('change', data);
-			if (data.room.name != room) return;
-			msgs = [
-				...msgs,
-				{
-					message: `${data.reason}: ${
-						data.reason != 'new leader'
-							? data.player.username
-							: data.room.leader.username
-					}`,
-					username: undefined,
-					system: true,
-				},
-			];
+			// console.log('change', data);
+			if (data.room.name != room || data.reason == 'ready') return;
+			addSystemMessage(
+				`${data.reason}: ${
+					data.reason != 'new leader' ? data.player.username : data.room.leader.username
+				}
+				`,
+			);
+		});
+		io.on('playerChange', (data: { reason: string; player: Player }) => {
+			// console.log('player change', data);
+			if (data.reason != 'ready') return;
+			const statusRoom = data.player?.roomsState.filter((e) => e.name == room)[0];
+			statusRoom.status == 'ready' ? ready++ : ready--;
+			if ($sessionID == data.player.sessionID) {
+				userIsReady = statusRoom.status == 'ready';
+			}
+			addSystemMessage(
+				`${data.player.username} ${statusRoom.status == 'ready' ? 'set' : 'unset'} ready`,
+			);
 		});
 	});
 
 	onDestroy(() => {
 		io.off('message');
 		io.off('roomChange');
+		io.off('playerChange');
 	});
 
 	const onSubmit = (): void => {
@@ -73,12 +95,22 @@
 		});
 		newMessage = '';
 	};
+
+	const toggleReady = (): void => {
+		io.emit('ready', room);
+	};
 </script>
 
 <div class="content">
 	<div class="ready">
 		<p>{ready} player{ready > 1 ? 's' : ''} ready of {players.length}</p>
-		<button>Set ready</button>
+		<button on:click={toggleReady}>
+			{#if userIsReady}
+				Unset ready
+			{:else}
+				Set ready
+			{/if}
+		</button>
 		{#if $sessionID == master?.sessionID}
 			<button>Run Game</button>
 		{/if}
