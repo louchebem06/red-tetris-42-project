@@ -8,4 +8,6 @@ export default interface IRoomJSON {
 	winner: IPlayerJSON | null;
 	players: IPlayerJSON[];
 	totalPlayers: number;
+	readys: IPlayerJSON[];
+	totalReady: number;
 }

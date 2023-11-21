@@ -2,6 +2,8 @@ import Game from './Game';
 import Player from './Player';
 import PlayerStore from '../store/PlayerStore';
 import IPlayerJSON from '../interface/IPlayerJSON';
+import { logger } from '../controller/LogController';
+import { State } from 'type/PlayerWaitingRoomState';
 
 export default class Room {
 	private _players: PlayerStore = new PlayerStore();
@@ -33,9 +35,13 @@ export default class Room {
 	 */
 	public addPlayer(player: Player): void {
 		if (!this.hasPlayer(player)) {
+			let playerStatus: State = 'active';
+			if (this.gameState) {
+				playerStatus = 'idle';
+			}
 			player.addRoomState({
 				name: this.name,
-				status: 'active',
+				status: playerStatus,
 				leads: this.isLeader(player),
 				readys: this._readys.total,
 				started: this._game.isStarted(),
@@ -58,6 +64,7 @@ export default class Room {
 					state.wins = this.winner.username === player.username;
 				}
 				state.readys = this._readys.total;
+
 				state.started = this._game.isStarted();
 			}
 			this._players.save(player.sessionID, player);
@@ -99,7 +106,10 @@ export default class Room {
 				state.wins = this.winner?.sessionID === player.sessionID;
 				this.stopGame(player);
 			}
+			logger.log(`player ${player.username} left room ${this.name}`);
 			player.addRoomState(state);
+			logger.log(`state: ${JSON.stringify(state)}`);
+			logger.log(`player: ${JSON.stringify(player)}`);
 		}
 	}
 
@@ -219,6 +229,18 @@ export default class Room {
 		return [...this.players.map((p: Player) => p.toJSON() as IPlayerJSON)];
 	}
 
+	public get totalReady(): number {
+		return this._readys.total;
+	}
+
+	public get readys(): Player[] {
+		return this._readys.all;
+	}
+
+	public get readyJSON(): IPlayerJSON[] {
+		return [...this.readys.map((p: Player) => p.toJSON() as IPlayerJSON)];
+	}
+
 	public toJSON(): object {
 		return {
 			name: this.name,
@@ -228,6 +250,8 @@ export default class Room {
 			winner: this.winner?.toJSON() as IPlayerJSON,
 			players: this.playersJSON,
 			totalPlayers: this.totalPlayers,
+			readys: this.readyJSON,
+			totalReady: this.totalReady,
 		};
 	}
 }
