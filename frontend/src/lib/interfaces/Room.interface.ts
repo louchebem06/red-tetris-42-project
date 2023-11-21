@@ -8,4 +8,6 @@ export default interface RoomType {
 	winner?: Player;
 	players: Player[];
 	totalPlayers: number;
+	readys: Player[];
+	totalReady: number;
 }
