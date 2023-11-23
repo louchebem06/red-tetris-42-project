@@ -1,49 +1,21 @@
 import { Socket } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
 
 import { logger } from './LogController';
 import Player from '../model/Player';
-import Room from '../model/Room';
 import PlayerStore from '../store/PlayerStore';
-import ServerService from '../service/ServerService';
 import RoomController from './RoomController';
 
-import IRoomJSON from '../interface/IRoomJSON';
 import IPlayerJSON from '../interface/IPlayerJSON';
-import { State as CoState } from '../type/PlayerConnectionState';
 import { State as RoomState } from '../type/PlayerWaitingRoomState';
 
 class PlayerController {
 	private playerStore: PlayerStore = new PlayerStore();
-	private _ss: ServerService;
 
-	public constructor(serverService: ServerService) {
-		this._ss = serverService;
-
-		this.catchSessionDatas = this.catchSessionDatas.bind(this);
+	public constructor() {
 		this.getPlayerById = this.getPlayerById.bind(this);
 		this.all = this.all.bind(this);
 		this.savePlayer = this.savePlayer.bind(this);
-		this.startSession = this.startSession.bind(this);
 		this.log = this.log.bind(this);
-	}
-
-	public startSession(socket: Socket, sessionID: string): CoState {
-		let state: CoState = 'new';
-		if (this._ss.sessions.has(sessionID)) {
-			state = 'reconnected';
-		}
-		this._ss.setSession(socket, sessionID);
-		this.savePlayer(sessionID, socket.data.player);
-		return state;
-	}
-
-	public updateSession(socket: Socket, sid: string): void {
-		try {
-			this._ss.updateSession(socket, sid);
-		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
-		}
 	}
 
 	public getPlayerById(sessionID: string): Promise<Player> {
@@ -76,31 +48,15 @@ class PlayerController {
 		return this.playerStore.all;
 	}
 
-	public deletePlayer(sessionID: string): void {
-		this._ss.deleteSession(sessionID).then(() => {
-			const pl = this.playerStore.get(sessionID);
-			if (pl) {
-				pl.sessionID = `FREE-${pl.username}-${sessionID}`;
-				this.savePlayer(pl.sessionID, pl);
-				this.playerStore.delete(sessionID);
-			}
-		});
-	}
-
-	public changeUsername(username: string, socket: Socket): void {
+	public changeUsername(username: string, socket: Socket): Player {
 		const player = socket.data.player;
 		const sid = player?.sessionID;
 		try {
 			if (player.username !== username) {
 				player.username = username;
 				this.savePlayer(sid, player);
-				this.updateSession(socket, sid);
-				socket.data.roomController.updateRoomsWithPlayer(player);
-				this._ss.emit(sid, 'playerChange', {
-					reason: 'change username',
-					player: player.toJSON(),
-				});
 			}
+			return player;
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
@@ -109,41 +65,15 @@ class PlayerController {
 	public changeRoomStatus(state: RoomState, room: string, socket: Socket): Player {
 		const player = socket.data.player;
 		const sid = player?.sessionID;
-		let reason = state;
 
 		try {
 			if (state === 'ready' || state === 'idle') {
 				player.toggleReady(room);
-				reason = 'ready';
 			} else {
 				player.setRoomStatus(room, state);
 			}
 			this.savePlayer(sid, player);
-			this.updateSession(socket, sid);
-			socket.data.roomController.updatePlayer(room, player);
-			this._ss.broadcast({
-				event: 'playerChange',
-				data: {
-					reason: reason as string,
-					player: player.toJSON(),
-				},
-				sid: '',
-				room: room,
-			});
 			return player;
-		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
-		}
-	}
-
-	public sendRoomsPlayer(socket: Socket): void {
-		const player = socket.data.player;
-		const sid = player?.sessionID;
-		const rc = socket.data.roomController;
-		try {
-			const rooms = rc.getRoomsWithPlayer(player);
-			const roomsJSON: IRoomJSON[] = rooms.map((room: Room) => room.toJSON());
-			this._ss.emit(sid, 'getRoomsPlayer', roomsJSON);
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
@@ -155,58 +85,11 @@ class PlayerController {
 		});
 	}
 
-	public catchSessionDatas(socket: Socket, next: (err?: Error) => void): void {
-		logger.logSocketIO(socket);
-		console.log('[SESSION DATA] - handshake', socket.handshake);
-		this.getPlayerById(socket.handshake.auth.sessionID)
-			.then((session) => {
-				logger.log(`[SESSION] - ${JSON.stringify(session)}`);
-				console.log('[SESSION]', session);
-				this.catchRoomControllerState(socket.data.roomController);
-				socket.data.playerController = this;
-				session.connected = true;
-				socket.data.player = session;
-
-				socket.data.roomController.rooms.forEach((room: Room) => {
-					if (room.players.includes(session)) {
-						socket.join(room.name);
-					}
-				});
-				return next();
-			})
-			.catch((err) => {
-				logger.log(`[NO SESSION] - ${JSON.stringify(err)}`);
-				console.log('[NO SESSION]', err.message);
-
-				const username = socket.handshake.auth.username;
-				if (!username) {
-					return next(new Error('invalid username'));
-				}
-
-				// const pls = this.getPlayersByUsernames(username);
-				// const player = pls?.find((p) => p.sessionID.includes(`FREE - ${p.username}`));
-				// if (player) {
-				// 	this.playerStore.delete(player.sessionID);
-				// 	player.username = username;
-				// 	player.sessionID = uuidv4();
-				// 	socket.data.player = player;
-				// } else {
-				// create new session
-				socket.data.player = new Player(username, uuidv4());
-				// }
-				next();
-			});
-	}
-
 	public log(socket: Socket, next: (err?: Error) => void): void {
 		const total = this.playerStore.total;
-		const current = this.playerStore.get(socket.data.player?.sessionID);
 		const s = total > 1 ? 's' : '';
-		let username = current?.username || `NEW ${socket.handshake.auth.username}`;
-		username += ` - Socket communication`;
-		const llog = `\n[${username}]
-(currently registered: ${total} player${s})\n`;
-		const log = `\n\x1b[34m[${username}]\x1b[0m
+		const llog = `\n[playercontroller]: (currently registered: ${total} player${s})\n`;
+		const log = `\n\x1b[34m[playercontroller]\x1b[0m
 \x1b[4m(currently registered: ${total} player${s})\x1b[0m\n`;
 		console.log(log);
 		logger.log(llog);
@@ -221,3 +104,4 @@ class PlayerController {
 }
 
 export default PlayerController;
+export type PC = PlayerController;

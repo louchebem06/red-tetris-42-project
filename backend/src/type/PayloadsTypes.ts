@@ -11,3 +11,5 @@ export type StringPayload = string | string[];
 export type MainPayload = IRoomPayload | IPlayerPayload | MessagePayload | StringPayload;
 
 export type Payload = JSONPayload | MainPayload;
+export type IMIP = IMessageIncomingPayload;
+export type IMOP = IMessageOutgoingPayload;

@@ -30,11 +30,9 @@ export class LogController {
 		this.write(`>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n`);
 	}
 
-	private write(content: string, ...args: string[]): void {
+	private write(content: string): void {
 		this.stream.write(content, this.logError);
-		if (args.length > 0) {
-			this.stream.write(args.join('\n'), this.logError);
-		}
+
 		this.stream.write('\n', this.logError);
 	}
 
@@ -88,55 +86,8 @@ state: ${s.c ? 'connected' : 'disconnected'} (${!s.r && 'not '}recovered).\n`;
 		content += `request.headers: ${JSON.stringify(request.headers)}\n`;
 		content += `request.method: ${JSON.stringify(request.method)}\n`;
 
-		if (data) {
-			const pc = data.playerController;
-			content += `data.playerController:\n`;
-			if (pc) {
-				const keys = Object.keys(pc);
-				const values = Object.values(pc);
-				for (let i = 0; i < keys.length; i++) {
-					if (typeof values[i] !== 'function') {
-						if (typeof values[i] === 'object') {
-							content += `${keys[i]}: ${values[i]}\n`;
-						} else if (Array.isArray(values[i])) {
-							content += `${keys[i]}: ${(values[i] as []).join(', ')}\n`;
-						} else {
-							content += `${keys[i]}: ${values[i]}\n`;
-						}
-					}
-				}
-			} else {
-				content += `(null)\n`;
-			}
-			const rc = data.roomController;
-			content += `data.roomController:\n`;
-			if (rc) {
-				const keys = Object.keys(rc);
-				const values = Object.values(rc);
-				for (let i = 0; i < keys.length; i++) {
-					if (typeof values[i] !== 'function') {
-						if (typeof values[i] === 'object') {
-							content += `${keys[i]}: ${values[i]}\n`;
-						} else if (Array.isArray(values[i])) {
-							content += `${keys[i]}: ${(values[i] as []).join(', ')}\n`;
-						} else {
-							content += `${keys[i]}: ${values[i]}\n`;
-						}
-					}
-				}
-				// content += `${rc}\n`;
-				// rc.log(socket, () => {});
-			} else {
-				content += `(null)\n`;
-			}
-			const pl = data.player;
-			content += `data.player:\n`;
-			if (rc) {
-				content += `${JSON.stringify(pl)}\n`;
-			} else {
-				content += `(null)\n`;
-			}
-		}
+		const pl = data.player;
+		content += `data.player:\n${JSON.stringify(pl)}\n`;
 		content += `
 ********************************************************************************`;
 		this.write(content);

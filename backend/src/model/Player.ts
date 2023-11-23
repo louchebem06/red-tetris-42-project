@@ -84,12 +84,6 @@ class Player {
 		this._games.set(id, game);
 	}
 
-	/**
-	 * Converts the object to a JSON representation.
-	 *
-	 * @return {object} The JSON representation of the object.
-	 */
-
 	public log(stateColor: string = '\x1b[0m'): void {
 		const coCol = this.connected ? `\x1b[32m` : `\x1b[31m`;
 		let log = `[${stateColor}${this.username}\x1b[0m`;

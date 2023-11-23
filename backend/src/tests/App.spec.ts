@@ -162,7 +162,20 @@ describe('New Client', () => {
 		const socket = socketsClients[0];
 
 		socket.emit('createRoom', rooms[indexRoom]);
+		socket.emit('createRoom', rooms[indexRoom]);
+		socket.emit('createRoom', players[indexPlayer]);
+		socket.emit('createRoom', sessions[indexPlayer].id);
+		socket.emit('createRoom', socket.id);
+		socket.emit('createRoom', 'a'.repeat(300));
+		socket.emit('createRoom', 'a'.repeat(2));
 		socket.emit('joinRoom', rooms[indexRoom]);
+		socket.emit('joinRoom', rooms[indexRoom]);
+		socket.emit('joinRoom', socket.id);
+		socket.emit('joinRoom', 'a'.repeat(300));
+		socket.emit('joinRoom', 'a'.repeat(2));
+		socket.emit('getRooms');
+		socket.emit('getRoomsPlayer');
+		socket.emit('getRoom', rooms[indexRoom]);
 		setTimeout(() => {
 			socket.emit('message', {
 				message: 'Hello World!',
@@ -172,7 +185,8 @@ describe('New Client', () => {
 			setTimeout(() => {
 				socket.emit('leave', rooms[indexRoom]);
 				socket.emit('leaveRoom', rooms[indexRoom]);
-			}, 1000);
+				socket.emit('leaveRoom', rooms[indexRoom]);
+			}, 1200);
 		}, 1500);
 		socket.onAny((event, ...args) => {
 			switch (event) {
@@ -199,6 +213,9 @@ describe('New Client', () => {
 				case 'roomClosed':
 					console.log('test roomClosed', event, args);
 					break;
+				case 'error':
+					console.log('test cerror', event, args);
+					break;
 			}
 		});
 		setTimeout(() => {
@@ -216,7 +233,7 @@ describe('New Client', () => {
 	});
 });
 
-describe.skip('Reconnect', () => {
+describe('Reconnect', () => {
 	let recoSocket: Socket;
 	beforeEach((done) => {
 		recoSocket = io(`${protocol}://${host}:${serverPort}`, {
@@ -225,6 +242,7 @@ describe.skip('Reconnect', () => {
 				sessionID: sessions[0].id,
 			},
 			reconnection: true,
+			reconnectionDelay: 0,
 			autoConnect: false,
 		});
 		recoSocket.connect();
@@ -235,7 +253,8 @@ describe.skip('Reconnect', () => {
 
 	test('Succesfully reconnect', (done) => {
 		try {
-			recoSocket.emit('joinRoom', 'Loulouville');
+			recoSocket.emit('createRoom', rooms[0]);
+			recoSocket.emit('joinRoom', rooms[0]);
 
 			recoSocket.once('roomChange', () => {
 				recoSocket.disconnect();
@@ -244,8 +263,9 @@ describe.skip('Reconnect', () => {
 				recoSocket.off('roomChange');
 				recoSocket.connect();
 				setTimeout(() => {
+					expect(recoSocket.connected).toBe(true);
 					done();
-				}, 4000);
+				}, 2500);
 			});
 		} catch (e) {
 			console.log(e);
