@@ -12,7 +12,6 @@ const config: Config = {
 		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
 		'<rootDir>/src/tests/coverage-reports/',
-		// '<rootDir>/src/tests/App.spec.ts/',
 	],
 	coverageThreshold: {
 		global: {

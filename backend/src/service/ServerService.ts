@@ -1,6 +1,7 @@
-import { Server, Socket } from 'socket.io';
+import { Server /*, Socket*/ } from 'socket.io';
 
 import { logger } from '../controller/LogController';
+import { sessionController } from '../controller/SessionController';
 
 import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 import { IMessageOutgoingPayload } from '../interface/IMessagePayload';
@@ -10,45 +11,8 @@ import { ChangeRoom } from '../type/RoomActionsTypes';
 export default class ServerService {
 	private io: Server;
 
-	private _sessions: Set<string> = new Set();
-
 	public constructor(io: Server) {
 		this.io = io;
-	}
-
-	public setSession(socket: Socket, sessionID: string): void {
-		this.sessions.add(sessionID);
-		socket.join(sessionID);
-	}
-
-	public updateSession(socket: Socket, sessionID: string): void {
-		if (this.sessions.has(sessionID)) {
-			this.sessions.add(sessionID);
-		} else {
-			this.throwError(`Session ${sessionID} not found`);
-		}
-	}
-
-	public deleteSession(sid: string): Promise<boolean> {
-		return new Promise(async (resolve): Promise<void> => {
-			const sockets = await this.io.to(sid).fetchSockets();
-
-			if (sockets.length > 0) {
-				this.io.to(sid).socketsLeave(sid);
-				for (const socket of sockets) {
-					socket.disconnect();
-				}
-				this.sessions.delete(sid);
-				resolve(false);
-			} else {
-				this.sessions.delete(sid);
-				resolve(true);
-			}
-		});
-	}
-
-	public get sessions(): Set<string> {
-		return this._sessions;
 	}
 
 	private get sids(): Map<string, Set<string>> {
@@ -68,7 +32,7 @@ export default class ServerService {
 	}
 
 	private isSession(sid: string): boolean {
-		return this.sessions.has(sid);
+		return sessionController.hasSession(sid);
 	}
 
 	private isPublicRoom(room: string): boolean {
@@ -165,7 +129,8 @@ export default class ServerService {
 					if (rooms.has(room)) {
 						this.io.in(sessionID).socketsLeave(room);
 					} else {
-						this.throwError(`Cannot leave room: you are not in ${room}`);
+						const msg = `Cannot leave room: you are not in ${room}`;
+						this.emit(sessionID, 'error', msg);
 					}
 					break;
 
@@ -173,7 +138,8 @@ export default class ServerService {
 					if (!rooms.has(room)) {
 						this.io.in(sessionID).socketsJoin(room);
 					} else {
-						this.throwError(`Cannot join room: you are already in ${room}`);
+						const msg = `Cannot join room: you are already in ${room}`;
+						this.emit(sessionID, 'error', msg);
 					}
 					break;
 			}
@@ -201,14 +167,8 @@ export default class ServerService {
 	}
 
 	public log(): void {
-		let log = `${this.sessions.size} session(s) registered:`;
-		let llog = `${this.sessions.size} session(s) registered:`;
-		this.sessions.forEach((session, sid) => {
-			log += `\n ** \x1b[4m ${session} - ${sid}\x1b[0m:`;
-			llog += `\n ** ${session} - ${sid}:`;
-		});
-		log += `\n\n${this.rooms.size} rooms(s) registered`;
-		llog += `\n\n${this.rooms.size} rooms(s) registered`;
+		let log = `${this.rooms.size} rooms(s) registered`;
+		let llog = `${this.rooms.size} rooms(s) registered`;
 		this.rooms.forEach((room, sid) => {
 			log += `\n ** \x1b[4m${sid}\x1b[0m contains:`;
 			llog += `\n ** ${sid} contains:`;
@@ -227,7 +187,7 @@ export default class ServerService {
 				llog += `\n        ->    ${sid}`;
 			});
 		});
-		logger.log(`ServerService::log:185`);
+		// logger.log(`ServerService::log:185`);
 		logger.log(llog);
 		logger.log(`============================================================`);
 		console.log(log);

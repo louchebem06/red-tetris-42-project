@@ -13,12 +13,6 @@ export default class Room {
 	private _dateCreated: Date = new Date();
 	private _readys: PlayerStore = new PlayerStore();
 
-	/**
-	 * Create a new instance of the constructor.
-	 *
-	 * @param {string} name - The name of the constructor.
-	 * @param {Player} leader - The leader of the constructor.
-	 */
 	public constructor(name: string, leader: Player) {
 		this._name = name;
 		leader.leads = this.name;

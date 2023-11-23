@@ -19,7 +19,7 @@ export default class RoomController {
 	public constructor(serverService: ServerService) {
 		this._ss = serverService;
 		this.log = this.log.bind(this);
-		this.catchState = this.catchState.bind(this);
+		// this.catchState = this.catchState.bind(this);
 	}
 
 	private getRoom(roomName: string): Room | undefined {
@@ -126,9 +126,9 @@ export default class RoomController {
 		});
 	}
 
-	public inform(id: string, event: string, info: string): void {
-		this._ss.emit(id, event, info);
-	}
+	// public inform(id: string, event: string, info: string): void {
+	// 	this._ss.emit(id, event, info);
+	// }
 
 	public create(name: string, player: Player): void {
 		try {
@@ -166,6 +166,7 @@ export default class RoomController {
 				});
 			}
 		} catch (e) {
+			console.log('roomcontroller ca bubble la', (<Error>e).message);
 			throw new Error(`${(<Error>e).message}`);
 		}
 	}
@@ -212,10 +213,10 @@ export default class RoomController {
 		}
 	}
 
-	public catchState(socket: Socket, next: (err?: Error) => void): void {
-		socket.data.roomController = this;
-		next();
-	}
+	// public catchState(socket: Socket, next: (err?: Error) => void): void {
+	// 	socket.data.roomController = this;
+	// 	next();
+	// }
 
 	public log(socket: Socket, next: (err?: Error) => void): void {
 		const total = this.roomStore.total;
@@ -246,3 +247,4 @@ export default class RoomController {
 		next();
 	}
 }
+export type RC = RoomController;
