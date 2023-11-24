@@ -105,6 +105,7 @@ class HttpServer {
 			'http://localhost:80',
 			'http://localhost:4173',
 			'http://localhost:5173',
+			'https://red-tetris-frontend.onrender.com:443',
 		];
 		this.corsOpt = {
 			/**
