@@ -98,14 +98,14 @@ class HttpServer {
 	private setCorsOpts(): void {
 		this.whiteList = [
 			`http://127.0.0.1:${this.port}`,
-			'http://127.0.0.1:80',
+			'http://127.0.0.1',
 			'http://127.0.0.1:4173',
 			'http://127.0.0.1:5173',
 			`http://localhost:${this.port}`,
-			'http://localhost:80',
+			'http://localhost',
 			'http://localhost:4173',
 			'http://localhost:5173',
-			'https://red-tetris-frontend.onrender.com:443',
+			'https://red-tetris-frontend.onrender.com',
 		];
 		this.corsOpt = {
 			/**
