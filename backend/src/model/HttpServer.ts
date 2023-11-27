@@ -39,10 +39,12 @@ class HttpServer {
 	 */
 	public start(port?: number): void {
 		this.port = port || this.port;
-		this.server.listen(this.port.toString(), () => {
+		const callback = (): void => {
 			logger.log(`Server is running at http://localhost:${this.port}`);
 			console.log(`Server is running at http://localhost:${this.port}`);
-		});
+		};
+		this.server.listen(this.port, callback);
+		// this.server.listen(this.port, '0.0.0.0', callback);
 	}
 
 	/**
@@ -81,7 +83,9 @@ class HttpServer {
 	 */
 	private setupCors(): void {
 		this.setCorsOpts();
+		// TODO remetre ancienne version * for testos
 		this.app.use(cors(this.getCorsOpts()));
+		// this.app.use(cors());
 	}
 
 	/**
@@ -105,6 +109,7 @@ class HttpServer {
 			'http://localhost',
 			'http://localhost:4173',
 			'http://localhost:5173',
+			'http://freebox.bryanledda.fr:5173',
 			'https://red-tetris-frontend.onrender.com',
 		];
 		this.corsOpt = {
@@ -120,6 +125,8 @@ class HttpServer {
 				if (this.whiteList.includes(orig || '') || !orig) {
 					cb(null, true);
 				} else {
+					logger.log(`${orig} not allowed by CORS`);
+					console.log(`${orig} not allowed by CORS`);
 					cb(new Error(`${orig} not allowed by CORS`));
 				}
 			},

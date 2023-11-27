@@ -25,7 +25,8 @@
 		"./src/definition/*.d.ts",
 		"coverage/lcov-report/IPlayer.ts",
 		"Room.spec.ts",
-		"IPrivateMessage.ts"
+		"IPrivateMessage.ts",
+		"configSetup.ts"
 	],
 	"exclude": [
 		"node_modules",

@@ -1,19 +1,64 @@
 import request from 'supertest';
+import { Socket, io } from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
+
 import app from '../app';
 import App from '../model/App';
 import IPlayerJSON from '../interface/IPlayerJSON';
+import timer from '../model/Timer';
+import { eventEmitter } from '../model/EventEmitter';
 import IRoomJSON from '../interface/IRoomJSON';
-import { Socket, io } from 'socket.io-client';
-import { v4 as uuidv4 } from 'uuid';
 
 const protocol = process.env.PROTOCOL || 'ws';
 const host = process.env.HOST || 'localhost';
 const serverPort = process.env.PORT || '8080';
 
-const players = ['Minnie', 'Daisy', 'Donald', 'Riri', 'Fifi', 'Loulou', 'Mickey', 'Picsou'];
+const destroyTimer = timer.destroySession ?? 5000;
+const discoTimer = timer.disconnectSession ?? 5000;
+
+const usernames = [
+	'Minnie',
+	'Daisy',
+	'Donald',
+	'Riri',
+	'Fifi',
+	'Loulou',
+	'Mickey',
+	'Picsou',
+	'Plutot',
+	'Tic',
+	'Tac',
+	'Clarabelle',
+	'Dingo',
+	'Bulbizarre',
+	'Salameche',
+	'Dracofeu',
+	'Carapuce',
+	'Pikachu',
+	'Rondoudou',
+	'Papillusion',
+	'Magicarpe',
+	'Evoli',
+	'Poissirene',
+	'Ronflex',
+];
 let indexPlayer = 0;
 
-const rooms = ['Donaldville', 'Loulouville', 'Mickeyville', 'Pikachuville'];
+const rooms = [
+	'Donaldville',
+	'Picsouville',
+	'Mickeyville',
+	'EuroDisney',
+	'Bourg Palette',
+	'Jadielle',
+	'Argenta',
+	'Azuria',
+	'Carmin-sur-Mer',
+	'Lavanville',
+	'Celadopole',
+	'Safrania',
+	'Parmanie',
+];
 let indexRoom = 0;
 
 type Session = {
@@ -21,35 +66,38 @@ type Session = {
 	id: string;
 };
 const sessions: Session[] = [];
+const socketsClients: Socket[] = [];
+const players: IPlayerJSON[] = [];
+const roomsJSON: IRoomJSON[] = [];
 
 // const checkRoomProperties = (room: IRoomJSON, name: string, t: number, l: IPlayerJSON): void => {
 // 	expect(room).toHaveProperty('name');
 // 	expect(room).toHaveProperty('dateCreated');
 // 	expect(room).toHaveProperty('leader');
 // 	expect(room).toHaveProperty('gameState');
-// 	expect(room).toHaveProperty('players');
-// 	expect(room).toHaveProperty('totalPlayers');
+// 	expect(room).toHaveProperty('usernames');
+// 	expect(room).toHaveProperty('totalusernames');
 
 // 	expect(room.name).toBeDefined();
 // 	expect(room.dateCreated).toBeDefined();
 // 	expect(room.leader).toBeDefined();
 // 	expect(room.gameState).toBeDefined();
-// 	expect(room.players).toBeDefined();
-// 	expect(room.totalPlayers).toBeDefined();
+// 	expect(room.usernames).toBeDefined();
+// 	expect(room.totalusernames).toBeDefined();
 
 // 	if (name) {
 // 		expect(room.name).toBe(name);
 // 	}
 // 	if (t) {
-// 		expect(room.totalPlayers).toBe(t);
-// 		expect(room.players.length).toBe(t);
+// 		expect(room.totalusernames).toBe(t);
+// 		expect(room.usernames.length).toBe(t);
 // 		if (t === 0) {
 // 			expect(room.winner).toBeNull();
 // 			expect(room.gameState).toBeFalsy();
 // 		}
 // 		if (t > 0) {
-// 			expect(room.players).toContainEqual(room.leader);
-// 			expect(room.players).toContainEqual(l);
+// 			expect(room.usernames).toContainEqual(room.leader);
+// 			expect(room.usernames).toContainEqual(l);
 // 		}
 // 	}
 // 	if (l) {
@@ -95,6 +143,85 @@ const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: str
 	}
 };
 
+const createClient = (username: string): Socket => {
+	let playerJSON: IPlayerJSON;
+	const socket: Socket = io(`${protocol}://${host}:${serverPort}`, {
+		forceNew: true,
+		reconnectionDelay: 0,
+		reconnection: true,
+		auth: {
+			username: username,
+		},
+		autoConnect: false,
+	});
+	socket.connect();
+
+	socket.onAny((event, data) => {
+		console.log(
+			event,
+			// data,
+		);
+		if (data?.player?.sessionID === playerJSON?.sessionID) {
+			playerJSON = data.player;
+			console.log('update player: ', playerJSON);
+		}
+		if (data?.room) {
+			let roomJSON: IRoomJSON = roomsJSON.find((r) => r.name === data.room.name) as IRoomJSON;
+			console.log('update room: ', data.room);
+			if (!roomsJSON.includes(data.room)) {
+				roomJSON = data.room;
+				roomsJSON.push(roomJSON);
+			}
+		}
+		switch (event) {
+			case 'join': {
+				const u = data?.username;
+				const i = data?.sessionID;
+				socket.auth = { username: u, sessionID: i };
+				sessions.push({ username: u, id: i });
+				socketsClients.push(socket);
+				players.push(playerJSON);
+				checkPlayerProperties(data, u, '', i);
+				playerJSON = data;
+				break;
+			}
+			case 'error':
+				break;
+			case 'playerChange': {
+				break;
+			}
+			case 'roomChange':
+				break;
+			case 'roomOpened':
+				{
+					const r = data?.room;
+					const p = data?.player;
+					if (!roomsJSON.includes(r)) {
+						roomsJSON.push(r);
+					}
+					console.log('new room: ', r, p, playerJSON);
+				}
+				break;
+			case 'roomClosed':
+				{
+					const r = data?.room;
+					const p = data?.player;
+					if (roomsJSON.includes(r)) {
+						roomsJSON.splice(rooms.indexOf(r), 1);
+					}
+					console.log('close room: ', r, p, playerJSON);
+				}
+				break;
+		}
+	});
+	socket.on('disconnect', () => {
+		if (players.includes(playerJSON)) {
+			players.splice(players.indexOf(playerJSON), 1);
+		}
+	});
+	return socket;
+};
+
 beforeAll(async () => {
 	await new Promise<App>((resolve) => {
 		console.log(`SERVER CONNECTED`);
@@ -102,11 +229,17 @@ beforeAll(async () => {
 	});
 });
 
-afterAll((done) => {
-	app.stop();
-	console.log(`SERVER DISCONNECTED`);
-	done();
-});
+afterAll(
+	(done) => {
+		app.stop();
+		console.log(`SERVER DISCONNECTED`);
+		setTimeout(() => {
+			console.log('LOG EVENT-EMITTER', eventEmitter);
+			done();
+		}, destroyTimer + discoTimer);
+	},
+	destroyTimer + discoTimer + 100,
+);
 
 describe('Home page', () => {
 	const rejectPromise = jest.fn();
@@ -131,102 +264,105 @@ describe('Home page', () => {
 	});
 });
 
-const socketsClients: Socket[] = [];
-describe('New Client', () => {
+describe(`New Client ${usernames[indexPlayer]}`, () => {
 	beforeEach((done) => {
-		const socket: Socket = io(`${protocol}://${host}:${serverPort}`, {
-			forceNew: true,
-			reconnectionDelay: 0,
-			reconnection: true,
-			auth: {
-				username: players[indexPlayer],
-			},
-			autoConnect: false,
-		});
-		socket.connect();
-		socket.on('join', (player) => {
-			const u = player.username;
-			const i = player.sessionID;
-			socket.auth = { username: u, sessionID: i };
-			sessions.push({ username: u, id: i });
-			socketsClients.push(socket);
-			checkPlayerProperties(player, u, '', i);
-		});
+		createClient(usernames[indexPlayer]);
 
 		setTimeout(() => {
 			done();
-		}, 2500);
-	}, 3000);
+		}, 500);
+	}, 1000);
 	test('join room', (done) => {
-		expect(socketsClients).toHaveLength(1);
-		const socket = socketsClients[0];
+		try {
+			expect(socketsClients).toHaveLength(1);
+			const socket = socketsClients[0];
 
-		socket.emit('createRoom', rooms[indexRoom]);
-		socket.emit('createRoom', rooms[indexRoom]);
-		socket.emit('createRoom', players[indexPlayer]);
-		socket.emit('createRoom', sessions[indexPlayer].id);
-		socket.emit('createRoom', socket.id);
-		socket.emit('createRoom', 'a'.repeat(300));
-		socket.emit('createRoom', 'a'.repeat(2));
-		socket.emit('joinRoom', rooms[indexRoom]);
-		socket.emit('joinRoom', rooms[indexRoom]);
-		socket.emit('joinRoom', socket.id);
-		socket.emit('joinRoom', 'a'.repeat(300));
-		socket.emit('joinRoom', 'a'.repeat(2));
-		socket.emit('getRooms');
-		socket.emit('getRoomsPlayer');
-		socket.emit('getRoom', rooms[indexRoom]);
-		setTimeout(() => {
+			socket.emit('createRoom', rooms[indexRoom]);
+			socket.emit('createRoom', rooms[indexRoom]);
+			socket.emit('createRoom', usernames[indexPlayer]);
+			socket.emit('createRoom', sessions[indexPlayer].id);
+			socket.emit('createRoom', socket.id);
+			socket.emit('createRoom', 'a&;'.repeat(25));
+			socket.emit('createRoom', 'a'.repeat(300));
+			socket.emit('createRoom', 'a'.repeat(2));
+			socket.emit('joinRoom', rooms[indexRoom]);
+			socket.emit('joinRoom', rooms[indexRoom]);
+			socket.emit('joinRoom', socket.id);
+			socket.emit('joinRoom', 'a&;'.repeat(25));
+			socket.emit('joinRoom', 'a'.repeat(300));
+			socket.emit('joinRoom', 'a'.repeat(2));
+			socket.emit('changeUsername', 'a&;'.repeat(25));
+			socket.emit('changeUsername', 'a'.repeat(25));
+			socket.emit('changeUsername', usernames[indexPlayer]);
+			socket.emit('getRooms');
+			socket.emit('getRoomsPlayer');
+			socket.emit('getRoom', rooms[indexRoom]);
 			socket.emit('message', {
-				message: 'Hello World!',
+				message: 'Hello Room!',
 				receiver: rooms[indexRoom],
 			});
-			socket.emit('ready', rooms[indexRoom]);
+			socket.emit('message', {
+				message: 'Hello Nawak!',
+				receiver: 'Nawak',
+			});
+			socket.emit('message', {
+				message: 'Hello Player!',
+				receiver: sessions[indexPlayer].id,
+			});
+			let i = 0;
 			setTimeout(() => {
-				socket.emit('leave', rooms[indexRoom]);
-				socket.emit('leaveRoom', rooms[indexRoom]);
-				socket.emit('leaveRoom', rooms[indexRoom]);
-			}, 1200);
-		}, 1500);
-		socket.onAny((event, ...args) => {
-			switch (event) {
-				case 'roomOpened':
-					console.log('test roomOpened', event, args);
-					// {
-					// 	const [player, room] = args;
-					// 	checkRoomProperties(room, rooms[indexRoom], 1, player);
-					// 	const u = players[indexPlayer];
-					// 	const r = rooms[indexRoom];
-					// 	const id = sessions[indexPlayer].id;
-					// 	checkPlayerProperties(player, u, r, id);
-					// }
-					break;
-				case 'roomChange':
-					console.log('test roomChange', event, args);
-					break;
-				case 'playerChange':
-					console.log('test playerChange', event, args);
-					break;
-				case 'message':
-					console.log('test message', event, args);
-					break;
-				case 'roomClosed':
-					console.log('test roomClosed', event, args);
-					break;
-				case 'error':
-					console.log('test cerror', event, args);
-					break;
-			}
-		});
-		setTimeout(() => {
-			done();
-		}, 4500);
-	}, 5000);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+				socket.emit('ready', rooms[indexRoom]);
+			}, 500);
+
+			socket.onAny((event, ...args) => {
+				switch (event) {
+					case 'playerChange':
+						{
+							console.log('test playerChange', i, event, args, args[0]?.reason);
+							args[0]?.reason === 'ready' && i++;
+							if (i === 9) {
+								socket.emit('leave', rooms[indexRoom]);
+								socket.emit('leaveRoom', rooms[indexRoom]);
+								socket.emit('leaveRoom', rooms[indexRoom]);
+								setTimeout(() => {
+									try {
+										done();
+									} catch (e) {
+										console.log('settimeout try/catch done', e);
+									}
+								}, 2000);
+							}
+						}
+
+						break;
+				}
+			});
+
+			setTimeout(() => {
+				try {
+					done();
+				} catch (e) {
+					console.log('settimeout try/catch done', e);
+				}
+			}, 3000);
+		} catch (e) {
+			console.log('join room', e);
+			done(e);
+		}
+	}, 3200);
 	afterEach((done) => {
 		for (const socket of socketsClients) {
 			socket.disconnect();
 		}
-		indexPlayer = ++indexPlayer % players.length;
+		indexPlayer = ++indexPlayer % usernames.length;
 		indexRoom = ++indexRoom % rooms.length;
 
 		done();
@@ -248,8 +384,8 @@ describe('Reconnect', () => {
 		recoSocket.connect();
 		setTimeout(() => {
 			done();
-		}, 2000);
-	}, 3000);
+		}, 500);
+	}, 1000);
 
 	test('Succesfully reconnect', (done) => {
 		try {
@@ -265,12 +401,12 @@ describe('Reconnect', () => {
 				setTimeout(() => {
 					expect(recoSocket.connected).toBe(true);
 					done();
-				}, 2500);
+				}, 1500);
 			});
 		} catch (e) {
 			console.log(e);
 		}
-	}, 5000);
+	}, 2000);
 
 	test('Unhandled Event', (done) => {
 		try {
@@ -282,16 +418,19 @@ describe('Reconnect', () => {
 			});
 			setTimeout(() => {
 				done();
-			}, 4000);
+			}, 1500);
 		} catch (e) {
 			console.log(e);
 		}
-	}, 5000);
+	}, 2000);
 
-	afterEach((done) => {
-		recoSocket.disconnect();
-		done();
-	});
+	afterEach(
+		(done) => {
+			recoSocket.disconnect();
+			done();
+		},
+		destroyTimer + discoTimer + 100,
+	);
 });
 
 describe('Failed Connection', () => {
@@ -323,111 +462,43 @@ describe('Failed Connection', () => {
 		}
 	});
 
-	afterAll((done) => {
-		if (recoSocket.connected) {
-			recoSocket.disconnect();
-		}
-		done();
-	});
-});
-
-describe.skip('App - Multiple Clients', () => {
-	let socket: Socket;
-	const sockets: Socket[] = [];
-	let room: IRoomJSON;
-
-	beforeAll((done) => {
-		sessions.forEach((session) => {
-			socket = io(`${protocol}://${host}:${serverPort}`, {
-				auth: {
-					username: session.username,
-					sessionID: session.id,
-				},
-				reconnection: true,
-				autoConnect: false,
-			});
-			sockets.push(socket);
-			socket.connect();
-		});
-
-		setTimeout(() => {
-			sockets[0].emit('createRoom', 'EuroDisney');
-			sockets[0].on('roomChange', (data) => {
-				room = JSON.parse(JSON.stringify(data));
-				setTimeout(() => {
-					done();
-				}, 500);
-			});
-		}, 1000);
-	}, 2000);
-
-	test('Joining and leaving room', (done) => {
-		const players: IPlayerJSON[] = [];
-		sockets.forEach((s, i) => {
-			s.emit('joinRoom', 'EuroDisney');
-			s.on('roomChange', (data) => {
-				if (data.reason === 'player incoming') {
-					if (!players.find((player) => player.sessionID === data.player.sessionID)) {
-						players.push(data.player);
-					}
-				}
-				if (data.reason === 'player outgoing') {
-					room = JSON.parse(JSON.stringify(data.room));
-				}
-			});
-			if (!(i % 2)) {
-				setTimeout(() => {
-					s.emit('leaveRoom', 'EuroDisney');
-				}, 200);
-			}
-			setTimeout(() => {}, 5000);
-		});
-		setTimeout(() => {
-			sockets.forEach((s) => {
-				s.emit('leaveRoom', 'EuroDisney');
-			});
-		}, 2000);
-		setTimeout(() => {
-			if (room.winner) {
-				expect(room.winner.sessionID).toBe(players[5].sessionID);
-				expect(room.leader.sessionID).toBe(players[5].sessionID);
+	afterAll(
+		(done) => {
+			if (recoSocket.connected) {
+				recoSocket.disconnect();
 			}
 			done();
-		}, 20000);
-	}, 50000);
-
-	afterAll((done) => {
-		sockets.forEach((socket) => {
-			socket.close();
-		});
-		done();
-	}, 2000);
+		},
+		destroyTimer + discoTimer + 100,
+	);
 });
 
 describe('Forgery uuid', () => {
 	let socket: Socket;
 	beforeAll((done) => {
-		const uuid = uuidv4();
-		socket = io(`${protocol}://${host}:${serverPort}`, {
-			auth: {
-				username: 'Je suis un vilain usurpateur',
-				sessionID: uuid,
-			},
-			reconnection: true,
-			autoConnect: false,
-		});
-		socket.connect();
-		socket.on('join', (data) => {
-			console.log('connect forgery uuid', uuid, data);
-			expect(data.sessionID).not.toBe(uuid);
+		try {
+			const uuid = uuidv4();
+			socket = io(`${protocol}://${host}:${serverPort}`, {
+				auth: {
+					username: 'Je suis un vilain usurpateur',
+					sessionID: uuid,
+				},
+				reconnection: true,
+				autoConnect: false,
+			});
+			socket.connect();
+			socket.on('join', (data) => {
+				console.log('connect forgery uuid', uuid, data);
+				expect(data.sessionID).not.toBe(uuid);
+				done();
+			});
 			setTimeout(() => {
 				done();
-			}, 1000);
-		});
-		setTimeout(() => {
-			done();
-		}, 1000);
-	}, 3000);
+			}, 1500);
+		} catch (e) {
+			done(e);
+		}
+	}, 2000);
 
 	test('Should generate a new internal uuid and set it as a new player', (done) => {
 		try {
@@ -435,16 +506,126 @@ describe('Forgery uuid', () => {
 			socket.onAny((event, data) => {
 				console.log('on joinRoom -> this msg should never be logged', event, data);
 			});
+			setTimeout(() => {
+				done();
+			}, 1500);
+		} catch (e) {
+			done(e);
+		}
+	}, 2000);
+
+	afterAll(
+		(done) => {
+			if (socket.connected) {
+				socket.disconnect();
+			}
+			done();
+		},
+		destroyTimer + discoTimer + 100,
+	);
+});
+
+const offset = 30;
+describe('Multi Clients', () => {
+	beforeAll((done) => {
+		socketsClients.splice(0, socketsClients.length);
+		sessions.splice(0, sessions.length);
+		indexPlayer = ++indexPlayer % usernames.length;
+		indexRoom = ++indexRoom % rooms.length;
+
+		indexPlayer = 0;
+		for (let i = 0; i < offset; i++) {
+			createClient(usernames[indexPlayer]);
+			indexPlayer = ++indexPlayer % usernames.length;
+			if (i === offset - 1) {
+				setTimeout(() => {
+					done();
+				}, 500);
+			}
+		}
+	}, 1000);
+
+	test('Clients should be connected', (done) => {
+		setTimeout(() => {
+			console.log('should be connected', socketsClients.length);
+			expect(socketsClients.length).toBe(offset);
+			expect(socketsClients.length).toBe(offset);
+			done();
+		}, 1500);
+	}, 2000);
+
+	test('create room', (done) => {
+		try {
+			socketsClients[0]?.emit('createRoom', rooms[indexRoom]);
 			done();
 		} catch (e) {
-			console.log(e);
-		}
-	}, 5000);
-
-	afterAll((done) => {
-		if (socket.connected) {
-			socket.disconnect();
-			done();
+			console.log('multi connected rooms error', e);
 		}
 	});
+
+	test(`Clients should be in the room ${rooms[indexRoom]}`, (done) => {
+		try {
+			socketsClients.forEach((socket) => {
+				socket.emit('joinRoom', rooms[indexRoom]);
+				console.log('should be connected joinRoom', socket.connected);
+				expect(socket.connected).toBeTruthy();
+			});
+
+			// setTimeout(() => {
+			done();
+			// }, 25000);
+		} catch (e) {
+			console.log('multi connected rooms error', e);
+		}
+	});
+	// (discoTimer + destroyTimer) * 2,
+
+	test(
+		`Clients should be set as ready in the room ${rooms[indexRoom]}`,
+		(done) => {
+			try {
+				socketsClients.forEach((socket) => {
+					socket.emit('ready', rooms[indexRoom]);
+					socket.emit('ready', rooms[indexRoom]);
+					socket.emit('ready', rooms[indexRoom]);
+					socket.emit('ready', rooms[indexRoom]);
+					socket.emit('ready', rooms[indexRoom]);
+					console.log('should be ready joinRoom', socket.connected);
+					expect(socket.connected).toBeTruthy();
+				});
+
+				setTimeout(() => {
+					socketsClients[0]?.emit('getRoom', rooms[indexRoom]);
+					socketsClients[0]?.emit('getRooms');
+
+					done();
+				}, 5000);
+				setTimeout(() => {
+					done();
+				}, 25000);
+			} catch (e) {
+				console.log('multi connected rooms error', e);
+			}
+		},
+		(discoTimer + destroyTimer) * 2,
+	);
+
+	afterAll(
+		(done) => {
+			for (const socket of socketsClients) {
+				console.log('salut');
+				socket.disconnect();
+			}
+			indexPlayer = ++indexPlayer % usernames.length;
+			indexRoom = ++indexRoom % rooms.length;
+
+			setTimeout(
+				() => {
+					done();
+				},
+				(discoTimer + destroyTimer) * 1,
+			);
+		},
+		(discoTimer + destroyTimer) * 1.5,
+	);
 });

@@ -1,5 +1,3 @@
-import { Socket } from 'socket.io';
-
 import { logger } from './LogController';
 import Player from '../model/Player';
 import Room from '../model/Room';
@@ -10,8 +8,9 @@ import IRoomJSON from '../interface/IRoomJSON';
 import IPlayerJSON from '../interface/IPlayerJSON';
 import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 import { Payload } from '../type/PayloadsTypes';
+import { eventEmitter } from '../model/EventEmitter';
+import timer from '../model/Timer';
 
-// TODO Repercuter les updates sur les players dans le controller principal (dans le serveur http)
 export default class RoomController {
 	private _ss: ServerService;
 	private roomStore: RoomStore = new RoomStore();
@@ -19,7 +18,32 @@ export default class RoomController {
 	public constructor(serverService: ServerService) {
 		this._ss = serverService;
 		this.log = this.log.bind(this);
-		// this.catchState = this.catchState.bind(this);
+		this.getRoom = this.getRoom.bind(this);
+		this.getRoomJSON = this.getRoomJSON.bind(this);
+		this.hasRoom = this.hasRoom.bind(this);
+		this.sendRooms = this.sendRooms.bind(this);
+		this.sendRoom = this.sendRoom.bind(this);
+		this.getRoomsWithPlayer = this.getRoomsWithPlayer.bind(this);
+		this.broadcast = this.broadcast.bind(this);
+		this.broadcastAll = this.broadcastAll.bind(this);
+		this.broadcastRoom = this.broadcastRoom.bind(this);
+
+		eventEmitter.onRoomEmpty((room: IRoomJSON, lastPlayer: IPlayerJSON) => {
+			// console.log('roomEmpty, room controller', room, lastPlayer);
+			this.close(room, lastPlayer);
+		});
+	}
+
+	private close(room: IRoomJSON, lastPlayer: IPlayerJSON): void {
+		logger.log(`Room ${room.name} closed by ${lastPlayer.username}`);
+		console.log(`Room ${room.name} closed by ${lastPlayer.username}`);
+		if (room?.totalPlayers === 0) {
+			this.roomStore.delete(room.name);
+			this.broadcastAll('roomClosed', {
+				room: room,
+				player: lastPlayer,
+			});
+		}
 	}
 
 	private getRoom(roomName: string): Room | undefined {
@@ -27,7 +51,7 @@ export default class RoomController {
 	}
 
 	public hasRoom(roomName: string): boolean {
-		return this.roomStore.get(roomName) ? true : false;
+		return this.roomStore.has(roomName);
 	}
 
 	public getRoomJSON(roomName: string): IRoomJSON {
@@ -43,71 +67,21 @@ export default class RoomController {
 	}
 
 	public sendRoom(name: string, sid: string): void {
-		try {
-			const room = this.getRoom(name);
-			this._ss.emit(sid, 'roomInfo', room?.toJSON() as IRoomJSON);
-		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
-		}
+		const room = this.getRoom(name);
+		this._ss.emit(sid, 'roomInfo', room?.toJSON() as IRoomJSON);
 	}
 
 	public get rooms(): Room[] {
 		return [...this.roomStore.all];
 	}
 
-	public get players(): Player[] {
-		const rooms = this.rooms;
-		const players = rooms.reduce((acc: Player[], room: Room) => {
-			room.players.forEach((player: Player) => {
-				acc.push(player);
-			});
-			return acc;
-		}, []);
-		return players;
+	private getRoomsWithPlayer(player: Player): Room[] {
+		return this.rooms.filter((room: Room) => room.players.includes(player));
 	}
 
-	public getRoomsWithPlayer(player: Player): Room[] {
-		const rooms: Room[] = [];
-		this.rooms.forEach((room: Room) => {
-			if (room.players.includes(player)) {
-				rooms.push(room);
-			}
-		});
-		return rooms;
-	}
-
-	public updateRoomsWithPlayer(player: Player): void {
-		if (!player) {
-			throw new Error('Player not found');
-		}
-		this.rooms.forEach((room: Room) => {
-			if (room.players.includes(player)) {
-				room.updatePlayer(player);
-				this.roomStore.save(room.name, room);
-			}
-		});
-	}
-
-	public updatePlayer(sid: string, player: Player): void {
-		try {
-			const room = this.getRoom(sid);
-			if (!room) {
-				throw new Error('Room not found');
-			}
-			this.updateRoomsWithPlayer(room.updatePlayer(player) as Player);
-			if (room.totalReady === room.totalPlayers) {
-				this.broadcastRoom(
-					{
-						reason: 'ready',
-						room: room.toJSON() as IRoomJSON,
-						player: player.toJSON() as IPlayerJSON,
-					},
-					sid,
-				);
-			}
-		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
-		}
+	public roomsPlayerPayload(player: Player): IRoomJSON[] {
+		const rooms = this.getRoomsWithPlayer(player);
+		return rooms.map((room) => room.toJSON()) as IRoomJSON[];
 	}
 
 	private broadcast(format: IBrodacastFormat): void {
@@ -126,10 +100,6 @@ export default class RoomController {
 		});
 	}
 
-	// public inform(id: string, event: string, info: string): void {
-	// 	this._ss.emit(id, event, info);
-	// }
-
 	public create(name: string, player: Player): void {
 		try {
 			this._ss.createRoom(name);
@@ -146,6 +116,11 @@ export default class RoomController {
 				room: room.toJSON() as IRoomJSON,
 				player: player.toJSON() as IPlayerJSON,
 			});
+			setTimeout(() => {
+				if (room.empty) {
+					eventEmitter.emit('roomEmpty', room.toJSON(), player.toJSON());
+				}
+			}, timer.disconnectSession);
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
@@ -154,11 +129,10 @@ export default class RoomController {
 	public join(name: string, player: Player): void {
 		try {
 			const room = this.getRoom(name);
-			if (room) {
+			if (room && !room.hasPlayer(player)) {
+				this._ss.changeRoom(player.sessionID, name, 'join');
 				room.addPlayer(player);
 				this.roomStore.save(name, room);
-
-				this._ss.changeRoom(player.sessionID, name, 'join');
 				this.broadcastAll('roomChange', {
 					reason: 'player incoming',
 					room: room.toJSON() as IRoomJSON,
@@ -166,21 +140,24 @@ export default class RoomController {
 				});
 			}
 		} catch (e) {
-			console.log('roomcontroller ca bubble la', (<Error>e).message);
 			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 
-	public leave(name: string, player: Player): void {
+	public leave(name: string, player: Player): Player {
 		try {
+			// on ne peut leave la room que si le jeu est pas demarre
+			// ou si le jeu est demarré et le state est idle!
+			logger.log(`[ROOMCONTROLLER (begin scope)]: player ${player} try left room ${name}`);
 			const room = this.getRoom(name);
 			if (!room) {
+				logger.log(`[ROOMCONTROLLER] room ${name} does not exist`);
 				throw new Error(`room ${name} does not exist`);
 			}
 			const leader = room.leader;
 			room.removePlayer(player);
-			this.roomStore.save(name, room);
 			this._ss.changeRoom(player.sessionID, name, 'leave');
+			logger.log(`[ROOMCONTROLLER (room.remove + ss.changeRoom)]: ${name}`);
 			if (room.totalPlayers > 0) {
 				this.broadcastAll('roomChange', {
 					reason: 'player outgoing',
@@ -195,56 +172,48 @@ export default class RoomController {
 						player: player.toJSON() as IPlayerJSON,
 					});
 				}
+				logger.log(`[ROOMCONTROLLER (il reste encore des joueurs)]: room ${name}`);
 			} else {
-				this.broadcastAll('roomChange', {
-					reason: 'new winner',
-					room: room.toJSON() as IRoomJSON,
-					player: player.toJSON() as IPlayerJSON,
-				});
-
-				this.roomStore.delete(name);
-				this.broadcastAll('roomClosed', {
-					room: room.toJSON() as IRoomJSON,
-					player: player.toJSON() as IPlayerJSON,
-				});
+				const state = player.roomState(name);
+				if (state?.status !== 'disconnected') {
+					this.broadcastAll('roomChange', {
+						reason: 'new winner',
+						room: room.toJSON() as IRoomJSON,
+						player: player.toJSON() as IPlayerJSON,
+					});
+				}
+				logger.log(`[ROOMCONTROLLER (il n'y a plus de joueurs)]:  ${name}`);
+				eventEmitter.emit('roomEmpty', room.toJSON(), player.toJSON());
 			}
+			return player;
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 
-	// public catchState(socket: Socket, next: (err?: Error) => void): void {
-	// 	socket.data.roomController = this;
-	// 	next();
-	// }
-
-	public log(socket: Socket, next: (err?: Error) => void): void {
+	public disconnectPlayer(player: Player): void {
+		player?.roomsState?.forEach((state) => {
+			const isPlayerDisconnected = state.status?.match(/left|disconnect/);
+			const room = this.getRoom(state.name);
+			if (!isPlayerDisconnected && room) {
+				room.updatePlayer(player, 'disconnected', room.hasPlayer(player));
+				this.leave(room.name, player);
+			}
+		});
+	}
+	public log(): void {
 		const total = this.roomStore.total;
 		const rooms = this.roomStore.all;
 		const s = total > 1 ? 's' : '';
 
-		const log = `\n\x1b[33m[${total} room${s}]\x1b[0m`;
+		const log = `\n\x1b[33mroom controller:\t[${total} room${s}]\x1b[0m`;
 		logger.log(`\n[${total} room${s}]`);
 		console.log(log);
 		rooms.forEach((room) => {
-			logger.log(`\n ** ${room.name}:\n`);
-			console.log(`\n ** \x1b[4m${room.name}\x1b[0m:\n`);
-			const players = room.players;
-			const leadColor = `\x1b[35m`;
-			players.forEach((player) => {
-				let stateCol = '';
-
-				if (player === room.leader) {
-					stateCol = leadColor;
-				}
-				player.log(stateCol);
-			});
-			logger.log(`\n\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n`);
-			console.log(`\n\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n`);
+			room.log();
 		});
 		logger.log(`============================================================`);
 		console.log(`\x1b[34m============================================================\x1b[0m`);
-		next();
 	}
 }
 export type RC = RoomController;

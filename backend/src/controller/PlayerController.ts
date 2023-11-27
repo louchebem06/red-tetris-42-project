@@ -3,7 +3,6 @@ import { Socket } from 'socket.io';
 import { logger } from './LogController';
 import Player from '../model/Player';
 import PlayerStore from '../store/PlayerStore';
-import RoomController from './RoomController';
 
 import IPlayerJSON from '../interface/IPlayerJSON';
 import { State as RoomState } from '../type/PlayerWaitingRoomState';
@@ -15,6 +14,10 @@ class PlayerController {
 		this.getPlayerById = this.getPlayerById.bind(this);
 		this.all = this.all.bind(this);
 		this.savePlayer = this.savePlayer.bind(this);
+		this.hasPlayer = this.hasPlayer.bind(this);
+		this.getPlayerByIdJSON = this.getPlayerByIdJSON.bind(this);
+		this.changeUsername = this.changeUsername.bind(this);
+		this.changeRoomStatus = this.changeRoomStatus.bind(this);
 		this.log = this.log.bind(this);
 	}
 
@@ -29,19 +32,19 @@ class PlayerController {
 	}
 
 	public hasPlayer(sessionID: string): boolean {
-		return this.playerStore.get(sessionID) ? true : false;
+		return this.playerStore.has(sessionID);
 	}
 
 	public getPlayerByIdJSON(sessionID: string): IPlayerJSON {
 		return this.playerStore.get(sessionID)?.toJSON() as IPlayerJSON;
 	}
 
-	public getPlayersByUsernames(username: string): Player[] {
-		return this.playerStore.all.filter((p) => p.username.includes(username));
-	}
-
 	public savePlayer(sessionID: string, player: Player): void {
 		this.playerStore.save(sessionID, player);
+	}
+
+	public removePlayer(sessionID: string): void {
+		this.playerStore.delete(sessionID);
 	}
 
 	public all(): Player[] {
@@ -52,9 +55,8 @@ class PlayerController {
 		const player = socket.data.player;
 		const sid = player?.sessionID;
 		try {
-			if (player.username !== username) {
+			if (this.hasPlayer(sid) && player.username !== username) {
 				player.username = username;
-				this.savePlayer(sid, player);
 			}
 			return player;
 		} catch (e) {
@@ -64,28 +66,14 @@ class PlayerController {
 
 	public changeRoomStatus(state: RoomState, room: string, socket: Socket): Player {
 		const player = socket.data.player;
-		const sid = player?.sessionID;
 
-		try {
-			if (state === 'ready' || state === 'idle') {
-				player.toggleReady(room);
-			} else {
-				player.setRoomStatus(room, state);
-			}
-			this.savePlayer(sid, player);
-			return player;
-		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
+		if (this.hasPlayer(player?.sessionID)) {
+			player.changeRoomStatus(state, room);
 		}
+		return player;
 	}
 
-	public catchRoomControllerState(roomController: RoomController): void {
-		roomController.players.forEach((player) => {
-			this.savePlayer(player.sessionID, player);
-		});
-	}
-
-	public log(socket: Socket, next: (err?: Error) => void): void {
+	public log(): void {
 		const total = this.playerStore.total;
 		const s = total > 1 ? 's' : '';
 		const llog = `\n[playercontroller]: (currently registered: ${total} player${s})\n`;
@@ -98,8 +86,6 @@ class PlayerController {
 		});
 		logger.log(`============================================================`);
 		console.log(`\x1b[34m============================================================\x1b[0m`);
-
-		next();
 	}
 }
 

@@ -20,6 +20,10 @@ export default class RoomStore implements IStore<Room> {
 		this.rooms.delete(id);
 	}
 
+	public has(id: string): boolean {
+		return this.rooms.has(id);
+	}
+
 	public get total(): number {
 		return this.rooms.size;
 	}

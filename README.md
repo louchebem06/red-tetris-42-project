@@ -3,31 +3,43 @@
 [![Test](https://github.com/louchebem06/red-tetris-42-project/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/louchebem06/red-tetris-42-project/actions/workflows/main.yaml)
 
 ## Branch naming
+
 ### ✨ Feature ✨
-- feat/*
-- feature/*
+
+- feat/\*
+- feature/\*
+
 ### 🐛 Bug fix 🐛
-- fix/*
-- hotfix/*
+
+- fix/\*
+- hotfix/\*
 
 ### ♻️ Refactorisation du code ♻️
-- facto/*
-- refactorisation/*
+
+- facto/\*
+- refactorisation/\*
 
 ## Frontend
+
 ![Framework](https://img.shields.io/badge/svelteKit-%23f1413d.svg?style=for-the-badge&logo=svelte&logoColor=white)
 
 ### Commandes
+
 #### Devellopement and build
-- ```npm run install```
-- ```npm run dev```
-- ```npm run build```
+
+- `npm run install`
+- `npm run dev`
+- `npm run build`
+
 #### Format, Linter and Syntax
-- ```npm run format```
-- ```npm run lint```
-- ```npm run check```
+
+- `npm run format`
+- `npm run lint`
+- `npm run check`
+
 #### Test
-- ```npm run test```
+
+- `npm run test`
 
 ## BackEnd Documentation
 
@@ -39,11 +51,11 @@
 ![Static Badge](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white)
 
--   [Node.js](https://nodejs.org/fr)
--   [TypeScript](https://www.typescriptlang.org/) strict 
--   [Express](https://expressjs.com/)  
--   [Socket.io](https://socket.io/fr/)
--   [Jest](https://jestjs.io/)
+- [Node.js](https://nodejs.org/fr)
+- [TypeScript](https://www.typescriptlang.org/) strict
+- [Express](https://expressjs.com/)
+- [Socket.io](https://socket.io/fr/)
+- [Jest](https://jestjs.io/)
 
 In a new terminal instance, do:
 
@@ -129,21 +141,33 @@ npm run check
 npm run ibt
 ```
 
-#### [Socket.io](https://socket.io/fr/) Documentation
+### .env file
 
-Start the backend server:
+The mandatory environment variables needed to be set are:
 
-```js
-cd backend
-npm run start
+```sh
+HOST=localhost
+PORT=8080
+PROTOCOL=ws
+DESTROY_TIMER=3600
+DISCO_TIMER=60
 ```
 
-Documentation is implemented [>>> HERE <<<](http://localhost:8080/ws-docs).
+_The timers variables are set in seconds. Then, into codebase, it will be converted into milliseconds._
 
-Or you can type into a second terminal:
-```js
-cd backend
-npm run wsdoc
-```
+#### DEV
 
-The browser should open a new page with the documentation available.
+If the `DEV` variable is set to `1` the server will run in development mode.
+The timers are decreased to 60s for DESTROY_TIMER and 30s for DISCO_TIMER.
+The .env file is automatically created.
+
+#### UNITSTESTS
+
+If the `UNITSTESTS` variable is set to `1` the server will run in unit tests mode
+The timers are decreased to 60s for DESTROY_TIMER and 30s for DISCO_TIMER.
+The .env file is automatically created.
+
+### PROD
+
+If the `DEV` and the `UNITSTESTS` variables are unset, we are in production mode.
+The .env file should be handled by the provider.

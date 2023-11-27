@@ -11,6 +11,7 @@ import ISocketData from '../interface/ISocketData';
 
 import { signals } from '../type/SignalsTypes';
 import { logger } from '../controller/LogController';
+import { eventEmitter } from './EventEmitter';
 
 class App {
 	private httpServer: HttpServer;
@@ -73,6 +74,7 @@ class App {
 	 * @return {void} - No return value.
 	 */
 	public stop(cb?: () => void): void {
+		eventEmitter.removeAllListeners();
 		this.io.close();
 		this.httpServer.stop(cb);
 	}
