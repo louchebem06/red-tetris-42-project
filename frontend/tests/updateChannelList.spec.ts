@@ -10,8 +10,10 @@ test('Update Channel List', async ({ context, browser }) => {
 	await page.getByRole('textbox').click();
 	await page.getByRole('textbox').fill('update channel number');
 	await page.getByRole('button', { name: 'send' }).click();
+	await page.waitForTimeout(1000);
 	await page.goto('/');
 	expect(await page.title()).toEqual('ListRoom | Red Tetris');
+	await page.waitForTimeout(1000);
 
 	const newContext = await browser.newContext();
 	const newPage = await newContext.newPage();
@@ -19,13 +21,16 @@ test('Update Channel List', async ({ context, browser }) => {
 	await newPage.getByPlaceholder('username').click();
 	await newPage.getByPlaceholder('username').fill('master2');
 	await newPage.getByRole('button', { name: 'Enter in Red Tetris' }).click();
+	await newPage.waitForTimeout(1000);
 	await newPage.getByRole('button', { name: 'update channel number 1 player' }).click();
+	await newPage.waitForTimeout(1000);
 
 	expect(
 		await page.getByRole('button', { name: 'update channel number 2 players' }).count(),
 	).toEqual(1);
 
 	await newPage.getByRole('button', { name: 'Leave' }).click();
+	await newPage.waitForTimeout(1000);
 
 	expect(
 		await page.getByRole('button', { name: 'update channel number 1 player' }).count(),
@@ -33,8 +38,11 @@ test('Update Channel List', async ({ context, browser }) => {
 
 	const page1 = await context.newPage();
 	await page1.goto('/');
+	await page1.waitForTimeout(1000);
 	await page1.getByRole('button', { name: 'update channel number 1 player' }).click();
+	await page1.waitForTimeout(1000);
 	await page1.getByRole('button', { name: 'Leave' }).click();
+	await page1.waitForTimeout(1000);
 
 	expect(
 		await page.getByRole('button', { name: 'update channel number 0 player' }).count(),
