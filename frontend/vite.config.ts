@@ -26,6 +26,9 @@ const config: UserConfig = {
 	build: {
 		sourcemap: true,
 	},
+	server: {
+		host: true,
+	},
 };
 
 export default config;

@@ -21,15 +21,13 @@ export default class ServerController {
 		this._rc = new RoomController(this._ss);
 
 		this.use(sessionController.startSession(this._pc, this._rc));
-		this.use(this._pc.log);
-		this.use(this._rc.log);
+
 		this._io.on('connection', (socket: Socket) => {
 			try {
 				const mySocket = new SocketController(socket, this._ss, this._pc, this._rc);
 				mySocket.join();
 			} catch (e) {
-				console.log('ca bubble la', (<Error>e).message);
-				// throw new Error(`${(<Error>e).message}`);
+				throw new Error(`io on connection: ${(<Error>e).message}`);
 			}
 		});
 	}

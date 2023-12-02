@@ -1,4 +1,4 @@
-import { Server /*, Socket*/ } from 'socket.io';
+import { Server } from 'socket.io';
 
 import { logger } from '../controller/LogController';
 import { sessionController } from '../controller/SessionController';
@@ -40,6 +40,7 @@ export default class ServerService {
 	}
 
 	public throwError(message: string): never {
+		// console.trace('server Service throwError:', message);
 		throw new Error(message);
 	}
 
@@ -103,72 +104,56 @@ export default class ServerService {
 	}
 
 	public createRoom(sessionID: string): void {
-		// console.log('createRoom', sessionID);
-		this.validateNewNameRoom(sessionID);
-		this.io.sockets.adapter.rooms.set(sessionID, new Set());
-		// console.log('createRoom', this.io.sockets.adapter.rooms);
+		try {
+			this.validateNewNameRoom(sessionID);
+			this.io.sockets.adapter.rooms.set(sessionID, new Set());
+		} catch (e) {
+			this.throwError(`${e instanceof Error && e.message}`);
+		}
 	}
 
 	public async changeRoom(sessionID: string, room: string, change: ChangeRoom): Promise<void> {
-		if (!this.isPublicRoom(room)) {
-			this.throwError(`Invalid public room ${room}`);
-		}
+		// tableau de socket de la session
+		const self = await this.io.in(sessionID).fetchSockets();
 
-		const sockets = await this.io.to(sessionID).fetchSockets();
-		const rooms = new Set();
-		sockets.forEach((s) => {
-			s.rooms.forEach((r) => {
-				if (r !== s.id) {
-					rooms.add(r);
-				}
-			});
-		});
-		try {
-			switch (change) {
-				case 'leave':
-					if (rooms.has(room)) {
-						this.io.in(sessionID).socketsLeave(room);
-					} else {
-						const msg = `Cannot leave room: you are not in ${room}`;
-						this.emit(sessionID, 'error', msg);
+		// les sids (Set sid socket) de la room demandee
+		const sids = this.io.sockets.adapter.rooms.get(room);
+		switch (change) {
+			case 'leave':
+				self.forEach((socket) => {
+					if (!sids?.has(socket.id)) {
+						this.throwError(`Session ${sessionID} not found in room ${room}`);
 					}
-					break;
+				});
+				this.io.in(sessionID).socketsLeave(room);
+				break;
 
-				case 'join':
-					if (!rooms.has(room)) {
-						this.io.in(sessionID).socketsJoin(room);
-					} else {
-						const msg = `Cannot join room: you are already in ${room}`;
-						this.emit(sessionID, 'error', msg);
+			case 'join':
+				self.forEach((socket) => {
+					if (sids?.has(socket.id)) {
+						this.throwError(`Session ${sessionID} already found in room ${room}`);
 					}
-					break;
-			}
-		} catch (e) {
-			this.throwError(`${e instanceof Error && e.message}`);
+				});
+				this.io.in(sessionID).socketsJoin(room);
+				break;
 		}
 	}
 
 	public forwardMessage(datas: IMessageOutgoingPayload, sid: string): void {
-		try {
-			if (this.isSession(sid)) {
-				this.emit(sid, 'message', datas);
-			} else if (this.isPublicRoom(sid)) {
-				this.broadcast({
-					event: 'message',
-					data: datas,
-					room: sid,
-				});
-			} else {
-				this.throwError(`Recipient ${sid} not found`);
-			}
-		} catch (e) {
-			this.throwError(`${e instanceof Error && e.message}`);
+		if (this.isSession(sid)) {
+			this.emit(sid, 'message', datas);
+		} else if (this.isPublicRoom(sid)) {
+			this.broadcast({
+				event: 'message',
+				data: datas,
+				room: sid,
+			});
 		}
 	}
 
 	public log(): void {
-		let log = `${this.rooms.size} rooms(s) registered`;
-		let llog = `${this.rooms.size} rooms(s) registered`;
+		let log = `[server service]\n${this.rooms.size} rooms(s) registered`;
+		let llog = `[server service]\n${this.rooms.size} rooms(s) registered`;
 		this.rooms.forEach((room, sid) => {
 			log += `\n ** \x1b[4m${sid}\x1b[0m contains:`;
 			llog += `\n ** ${sid} contains:`;
@@ -187,7 +172,6 @@ export default class ServerService {
 				llog += `\n        ->    ${sid}`;
 			});
 		});
-		// logger.log(`ServerService::log:185`);
 		logger.log(llog);
 		logger.log(`============================================================`);
 		console.log(log);
@@ -201,8 +185,10 @@ export default class ServerService {
 		if (this.isRoom(sid)) {
 			this.throwError(`Invalid new room ${sid}: already in use`);
 		}
-		if (this.isSession(sid)) {
-			this.throwError(`Invalid new room ${sid}: already in use`);
+
+		if (sid.match(/[^a-zA-Z0-9 _-]/g)) {
+			const allowed = `letters, numbers, hyphens and underscores`;
+			this.throwError(`Invalid new room ${sid}: name can only contain ${allowed}`);
 		}
 		if (sid.length < 3) {
 			this.throwError(`Invalid new room ${sid}: name must be at least 3 characters long`);

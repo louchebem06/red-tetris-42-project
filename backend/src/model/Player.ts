@@ -1,6 +1,7 @@
 import { State } from '../type/PlayerWaitingRoomState';
 import { logger } from '../controller/LogController';
 import { IRoomState } from '../interface/IRoomState';
+import { eventEmitter } from './EventEmitter';
 class Player {
 	private _dateCreated: Date = new Date();
 
@@ -15,7 +16,11 @@ class Player {
 	public constructor(
 		public username: string,
 		public sessionID: string,
-	) {}
+	) {
+		if (username.match(/[^a-zA-Z0-9_-]/)) {
+			throw new Error(`Invalid username: ${username}`);
+		}
+	}
 
 	public addRoomState(roomState: IRoomState): void {
 		this._rooms.set(roomState.name, roomState);
@@ -29,22 +34,32 @@ class Player {
 		return this._rooms.get(roomName);
 	}
 
-	public toggleReady(room: string): void {
-		const state = this.roomState(room)?.status;
+	private toggleReady(room: string): void {
+		let state = this.roomState(room)?.status;
+		const started = this.roomState(room)?.started;
+
 		if (state === 'ready') {
-			this.setRoomStatus('idle', room);
-		} else if (state === 'idle') {
-			this.setRoomStatus('ready', room);
-		} else if (state === 'active') {
-			this.setRoomStatus('ready', room);
+			state = 'idle';
+		} else if (started === false && state?.match(/idle|active/)) {
+			state = 'ready';
 		}
+		this.setRoomStatus(state, room);
+		eventEmitter.emit('ready', this, state ?? '');
 	}
 
-	public setRoomStatus(status: State, name: string): void {
+	private setRoomStatus(status: State, name: string): void {
 		const state = this._rooms.get(name);
 		if (state) {
 			state.status = status;
 			this._rooms.set(name, state);
+		}
+	}
+
+	public changeRoomStatus(status: State, name: string): void {
+		if (status === 'ready') {
+			this.toggleReady(name);
+		} else {
+			this.setRoomStatus(status, name);
 		}
 	}
 
@@ -65,7 +80,7 @@ class Player {
 	}
 
 	public set leads(value: string) {
-		if (typeof value === 'string' && !this.leads.includes(value)) {
+		if (!this.leads.includes(value)) {
 			this.leads.push(value);
 		}
 	}
@@ -75,13 +90,20 @@ class Player {
 	}
 
 	public set wins(value: string) {
-		if (typeof value === 'string' && !this.wins.includes(value)) {
+		if (!this.wins.includes(value)) {
 			this.wins.push(value);
 		}
 	}
 
 	public addGame(id: string, game: object): void {
 		this._games.set(id, game);
+	}
+
+	public disconnect(): void {
+		this.connected = false;
+		this.roomsState.forEach((state) => {
+			this.setRoomStatus('disconnected', state.name);
+		});
 	}
 
 	public log(stateColor: string = '\x1b[0m'): void {
@@ -112,10 +134,6 @@ class Player {
 			log += `\t\t....................................\n`;
 			llog += `\t\t....................................\n`;
 		}
-		this.games.forEach((game) => {
-			log += `\t+ \x1b[4mplays\x1b[0m: \x1b[36m${game}\x1b[0m\n`;
-			llog += `\t+ plays: ${JSON.stringify(game)}\n`;
-		});
 		if (this.rooms.length > 0) {
 			log += `\t\t....................................\n`;
 			llog += `\t\t....................................\n`;
