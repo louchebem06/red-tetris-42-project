@@ -1,4 +1,4 @@
-import HttpServer from '../model/HttpServer';
+import { HttpServer } from '../infra/';
 import request from 'supertest';
 import { AddressInfo } from 'net';
 

@@ -1,4 +1,4 @@
-import { logger } from '../controller/LogController';
+import { logger } from '../infra';
 
 describe('logger', () => {
 	// TODO chck path file

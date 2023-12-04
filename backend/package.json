@@ -26,7 +26,10 @@
 		"logs:rm": "rm -rf ./logs/*.txt",
 		"tests:rm": "rm -rf ./src/tests/output.txt",
 		"rm": " npm run env:rm && npm run tests:rm ",
-		"test": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --no-cache --forceExit > src/tests/output.txt",
+		"test:noCovDebug": "export UNITSTESTS='1' && export DEBUG=engine,socket* && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts",
+		"test:noCov": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts",
+		"test:Cov": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --config jest.config.ts",
+		"test": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles > src/tests/output.txt --config jest.config.ts",
 		"test:rm": "npm run test && npm run tests:rm",
 		"test:dev": "jest --coverage --detectOpenHandles --watchAll --no-cache",
 		"test:open": "open src/tests/coverage-reports/lcov-report/index.html"
@@ -34,7 +37,7 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@babel/preset-env": "^7.23.9",
-		"@babel/preset-typescript": "^7.22.15",
+		"@babel/preset-typescript": "^7.23.3",
 		"@types/express": "^4.17.17",
 		"@types/jest": "^29.5.12",
 		"@types/node": "^20.11.16",
@@ -57,6 +60,7 @@
 	},
 	"dependencies": {
 		"body-parser": "^1.20.2",
+		"concurrently": "^8.2.2",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.1",
 		"express": "^4.18.2",

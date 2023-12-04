@@ -1,4 +1,4 @@
-import App from './model/App';
+import { App } from './infra';
 
 const app = new App();
 app.start();
