@@ -27,6 +27,7 @@
 			sessionID.set('');
 			username.set('');
 			io.close();
+			goto('/');
 		});
 		io.on('join', (data: Player) => {
 			// console.log('join', data);
