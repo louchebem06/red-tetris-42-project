@@ -76,15 +76,6 @@ describe('HttpServer Basic Connection Home Page default port', () => {
 			});
 	});
 
-	test(`Mermaid Diagram`, (done) => {
-		request(server.getHttpServer())
-			.get('/mermaid')
-			.then((response) => {
-				expect(response.statusCode).toBe(200);
-				done();
-			});
-	}, 50000);
-
 	test(`LeaderBoard`, (done) => {
 		request(server.getHttpServer())
 			.get('/leaderboard')

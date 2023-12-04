@@ -5,7 +5,6 @@ import cors, { CorsOptions } from 'cors';
 
 import 'dotenv/config';
 
-import MermaidDocumentation from '../docs/MermaidDocumentation';
 import { logger } from '../controller/LogController';
 
 // TODO inserer le vrai port par default (process.env.PORT)
@@ -169,11 +168,6 @@ class HttpServer {
 
 		this.app.get('/', (req: Request, res: Response) => {
 			res.json({ message: 'Hello World!' });
-		});
-
-		this.app.get('/mermaid', (req: Request, res: Response) => {
-			const doc = new MermaidDocumentation('');
-			res.send(doc.html);
 		});
 
 		this.app.get('/leaderboard', (req: Request, res: Response) => {
