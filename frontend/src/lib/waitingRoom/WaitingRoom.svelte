@@ -10,6 +10,10 @@
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 	import type Player from '$lib/interfaces/Player.interface';
 	import type RoomType from '$lib/interfaces/Room.interface';
+	import type GameStart from '$lib/interfaces/GameStart.interface';
+	import { getNotificationsContext } from 'svelte-notifications';
+
+	const { addNotification } = getNotificationsContext();
 
 	let room: string;
 	let user: string;
@@ -51,6 +55,7 @@
 			players = data.players;
 			master = data.leader;
 			ready = data.totalReady;
+			game = data.gameState;
 			if (data.readys.filter((e) => e.sessionID == $sessionID).length == 1) {
 				userIsReady = true;
 			}
@@ -74,6 +79,20 @@
 					break;
 			}
 		});
+		io.on('gameStart', (data: GameStart) => {
+			if (data.roomName != room) return;
+			console.log(data);
+			if (data.reason === 'start') {
+				game = true;
+			} else {
+				addNotification({
+					text: data?.message,
+					position: 'top-right',
+					type: 'succes',
+					removeAfter: 1000,
+				});
+			}
+		})
 		io.on('roomClosed', (data: { room: RoomType }) => {
 			if (data.room.name == room) goto('/');
 		});
