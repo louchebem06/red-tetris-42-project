@@ -15,7 +15,7 @@ class MyEventEmitter extends EventEmitter {
 	public onPlayerReady(room: Room): void {
 		const ready = (player: Player, state: State): void => {
 			try {
-				room.updatePlayer(player, state, room.hasPlayer(player));
+				room.updatePlayer(player, state, true);
 				room.updatePlayers(player);
 				// this.removeListener('ready', ready);
 				setTimeout(() => {

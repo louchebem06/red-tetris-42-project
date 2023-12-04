@@ -168,6 +168,10 @@ export default class SocketController {
 			try {
 				if (rc.hasRoom(room)) {
 					const player = pc.changeRoomStatus('ready', room, this.socket);
+
+					const state = player.roomState(room);
+					logger.log(`c'est quoi ton state? ${JSON.stringify(state)}`);
+					console.log(`c'est quoi ton state?`, state);
 					this.io.broadcast({
 						event: 'playerChange',
 						data: {

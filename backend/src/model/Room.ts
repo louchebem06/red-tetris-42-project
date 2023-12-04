@@ -25,6 +25,16 @@ export default class Room {
 		eventEmitter.onRoomReady();
 	}
 
+	public getReadyPlayers(): number {
+		let nb = 0;
+		const players: Player[] = this._players.all;
+		players.map((player) => {
+			const valuePlayer = player.roomState(this._name);
+			nb += valuePlayer?.status === 'ready' ? 1 : 0;
+		});
+		return nb;
+	}
+
 	public addPlayer(player: Player): void {
 		this.updatePlayer(player, this.gameState ? 'idle' : 'active', !this.hasPlayer(player));
 		this._players.save(player.sessionID, player);
@@ -35,13 +45,14 @@ export default class Room {
 			if (status === 'ready' && !this._readys.all.includes(player)) {
 				this._readys.save(player.sessionID, player);
 			} else if (status !== 'ready' && this._readys.all.includes(player)) {
+				console.log(`ca passe ici ou pas?`, this._readys);
 				this._readys.delete(player.sessionID);
 			}
 			const state: IRoomState = {
 				name: this.name,
 				status,
 				leads: this.isLeader(player),
-				readys: this._readys.total,
+				readys: this.getReadyPlayers(),
 				wins: this.winner?.username === player.username ?? false,
 				started: this._game.isStarted(),
 			};
@@ -76,6 +87,7 @@ export default class Room {
 			}
 			this._players.delete(player.sessionID);
 			this._readys.delete(player.sessionID);
+			// this.updatePlayer(player, 'left', true);
 			logger.log(`[ROOM] player ${player.username} removed room ${this.name}`);
 			if (this.isLeader(player)) {
 				player.leads.splice(player.leads.indexOf(this.name), 1);
@@ -284,7 +296,7 @@ export default class Room {
 			players: this.playersJSON,
 			totalPlayers: this.totalPlayers,
 			readys: this.readyJSON,
-			totalReady: this.totalReady,
+			totalReady: this.getReadyPlayers(),
 		};
 	}
 }

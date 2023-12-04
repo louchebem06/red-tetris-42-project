@@ -156,8 +156,13 @@ export default class RoomController {
 			}
 			const leader = room.leader;
 			room.removePlayer(player);
+
 			this._ss.changeRoom(player.sessionID, name, 'leave');
 			logger.log(`[ROOMCONTROLLER (room.remove + ss.changeRoom)]: ${name}`);
+			this.broadcastAll('playerChange', {
+				reason: 'ready',
+				player: player.toJSON() as IPlayerJSON,
+			});
 			if (room.totalPlayers > 0) {
 				this.broadcastAll('roomChange', {
 					reason: 'player outgoing',
