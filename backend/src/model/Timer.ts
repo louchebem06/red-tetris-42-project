@@ -14,20 +14,19 @@ const timer: Timer = {
 	destroySession: parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000,
 	disconnectSession: parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000,
 	timerId: null,
-	countdown: 60,
+	countdown: parseInt(process.env.START_GAME_TIMER ?? '60', 10),
 	startCountdown: function (eventEmitter: EventEmitter): (player: Player, room: Room) => void {
 		return (player: Player, room: Room): void => {
 			this.resetCountdown();
 			const updateCountdown = (): void => {
 				this.countdown--;
 				// console.log('countdown', this.countdown);
+				const s = this.countdown > 1 ? 's' : '';
+				const msg = `The game will start in ${this.countdown} second${s}.`;
 				const readyTimerPayload = {
 					roomName: room.name,
 					reason: this.countdown > 0 ? 'time' : 'start',
-					message:
-						this.countdown > 0
-							? `The game will start in ${this.countdown} seconds.`
-							: 'The game has started.',
+					message: this.countdown > 0 ? msg : undefined,
 				};
 				eventEmitter.emit('readyTimer', readyTimerPayload);
 				if (this.countdown === 0) {
@@ -41,7 +40,7 @@ const timer: Timer = {
 		};
 	},
 	resetCountdown: function (): void {
-		this.countdown = 60;
+		this.countdown = parseInt(process.env.START_GAME_TIMER ?? '60', 10);
 		if (this.timerId) {
 			clearTimeout(this.timerId);
 		}

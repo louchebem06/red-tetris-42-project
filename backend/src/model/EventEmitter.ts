@@ -20,11 +20,7 @@ class MyEventEmitter extends EventEmitter {
 
 	public onReadyTimer(broadcast: (data: IGameStartPayload) => void): void {
 		const wrap = (data: IGameStartPayload): void => {
-			try {
-				broadcast(data);
-			} catch (e) {
-				throw new Error(`Event Emitter Error: ${(<Error>e).message}`);
-			}
+			broadcast(data);
 		};
 		this.on('readyTimer', wrap);
 	}

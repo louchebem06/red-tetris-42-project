@@ -1,7 +1,7 @@
-type Reason = "time" | "start";
+type Reason = 'time' | 'start';
 
 export default interface IGameStartPayload {
-	roomName: string,
-	reason: Reason,
-	message?: string
+	roomName: string;
+	reason: Reason;
+	message?: string;
 }

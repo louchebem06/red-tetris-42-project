@@ -156,7 +156,7 @@ export default class Room {
 	public removePlayer(player: Player): Player {
 		if (this.hasPlayer(player)) {
 			const status = player.status(this.name);
-			// On peut pas remove un player set as ready 
+			// On peut pas remove un player set as ready
 			// si la game est commencée(faudra gerer son depart depuis la game)
 			if (this.gameState && status?.match(/ready/)) {
 				throw new Error(`Game is started! player is '${status}'`);

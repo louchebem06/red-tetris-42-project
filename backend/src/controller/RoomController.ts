@@ -46,20 +46,47 @@ export default class RoomController {
 		this.onReadyTimer();
 	}
 
+	public toggleCountdownGame(name: string, player: Player): void {
+		try {
+			const room = this.getRoom(name);
+			if (room?.isLeader(player)) {
+				if (timer.countdown === parseInt(process.env.START_GAME_TIMER ?? '60', 10)) {
+					timer.startCountdown(eventEmitter)(player, room);
+				} else {
+					timer.resetCountdown();
+				}
+			} else {
+				throw new Error(`Countdown can only be toggled by the room leader`);
+			}
+		} catch (e) {
+			// this.broadcastAll('error', `RoomController startGame Error: ${(<Error>e).message}`);
+			throw new Error(`RoomController toggleCountdownGame Error: ${(<Error>e).message}`);
+		}
+	}
+
 	private onRoomEmpty(): void {
 		eventEmitter.onRoomEmpty(this.close.bind(this));
 	}
 	private onReadyTimer(): void {
-		eventEmitter.onReadyTimer(this.readyTimer.bind(this));
+		try {
+			eventEmitter.onReadyTimer(this.readyTimer.bind(this));
+		} catch (e) {
+			throw new Error(`RoomController onReadyTimer Error: ${(<Error>e).message}`);
+		}
 	}
 
 	private readyTimer(data: IGameStartPayload): void {
-		this.broadcast({
-			event: 'gameStart',
-			data,
-			sid: '',
-			room: data.roomName,
-		});
+		try {
+			this.broadcast({
+				event: 'gameStart',
+				data,
+				sid: '',
+				room: data.roomName,
+			});
+		} catch (e) {
+			this.broadcastAll('error', `RoomController readyTimer Error: ${(<Error>e).message}`);
+			// throw new Error(`RoomController readyTimer Error: ${(<Error>e).message}`);
+		}
 	}
 
 	private close(room: IRoomJSON, lastPlayer: IPlayerJSON): void {

@@ -30,6 +30,7 @@ export default class SocketController {
 		this.getRooms = this.getRooms.bind(this);
 		this.getRoomsPlayer = this.getRoomsPlayer.bind(this);
 		this.changeUsername = this.changeUsername.bind(this);
+		this.toggleCountDownGame = this.toggleCountDownGame.bind(this);
 		this.emitError = this.emitError.bind(this);
 		this.emit = this.emit.bind(this);
 		this.on = this.on.bind(this);
@@ -46,6 +47,7 @@ export default class SocketController {
 			this.on('getRoomsPlayer', this.getRoomsPlayer(pc, rc));
 			this.on('changeUsername', this.changeUsername(pc));
 			this.on('error', this.error);
+			this.on('gameStart', this.toggleCountDownGame(rc));
 
 			if (process.env.DEV) {
 				this.socket.onAny((event, ...args) => {
@@ -257,6 +259,17 @@ export default class SocketController {
 					reason: 'change username',
 					player: player.toJSON(),
 				} as Payload);
+			} catch (e) {
+				this.emitError(`${(<Error>e).message}`);
+			}
+		};
+	}
+
+	public toggleCountDownGame(rc: RC): (name: string) => void {
+		return (name: string): void => {
+			try {
+				console.log('c kiki ', name, this.socket.data.player);
+				rc.toggleCountdownGame(name, this.socket.data.player);
 			} catch (e) {
 				this.emitError(`${(<Error>e).message}`);
 			}
