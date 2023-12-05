@@ -77,7 +77,7 @@ export default class SocketController {
 					sessionController.log();
 					console.log(`End logging: ${Date.now()}`);
 					logger.log(`End logging: ${Date.now()}`);
-				}, 60000);
+				}, 10000);
 			}
 		} catch (e) {
 			this.emitError(`${(<Error>e).message}`);
@@ -169,9 +169,6 @@ export default class SocketController {
 				if (rc.hasRoom(room)) {
 					const player = pc.changeRoomStatus('ready', room, this.socket);
 
-					const state = player.roomState(room);
-					logger.log(`c'est quoi ton state? ${JSON.stringify(state)}`);
-					console.log(`c'est quoi ton state?`, state);
 					this.io.broadcast({
 						event: 'playerChange',
 						data: {

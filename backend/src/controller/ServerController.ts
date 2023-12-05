@@ -20,6 +20,8 @@ export default class ServerController {
 		this._pc = new PlayerController();
 		this._rc = new RoomController(this._ss);
 
+		this.use = this.use.bind(this);
+
 		this.use(sessionController.startSession(this._pc, this._rc));
 
 		this._io.on('connection', (socket: Socket) => {

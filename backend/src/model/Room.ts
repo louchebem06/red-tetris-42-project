@@ -1,11 +1,14 @@
 import Game from './Game';
 import Player from './Player';
+
 import PlayerStore from '../store/PlayerStore';
-import IPlayerJSON from '../interface/IPlayerJSON';
 import { logger } from '../controller/LogController';
-import { State } from '../type/PlayerWaitingRoomState';
 import { eventEmitter } from '../model/EventEmitter';
+
+import IPlayerJSON from '../interface/IPlayerJSON';
 import { IRoomState } from '../interface/IRoomState';
+import IRoomJSON from '../interface/IRoomJSON';
+import { State } from '../type/PlayerWaitingRoomState';
 
 export default class Room {
 	private _players: PlayerStore = new PlayerStore();
@@ -13,7 +16,6 @@ export default class Room {
 	private _leader: Player;
 	private _game: Game;
 	private _dateCreated: Date = new Date();
-	private _readys: PlayerStore = new PlayerStore();
 
 	public constructor(name: string, leader: Player) {
 		this._name = name;
@@ -21,101 +23,25 @@ export default class Room {
 		this._leader = leader;
 		this._game = new Game(this._name);
 
+		this.canStartGame = this.canStartGame.bind(this);
+		this.isReadytoPlay = this.isReadytoPlay.bind(this);
+
+		this.hasPlayer = this.hasPlayer.bind(this);
+		this.addPlayer = this.addPlayer.bind(this);
+		this.updatePlayer = this.updatePlayer.bind(this);
+		this.removePlayer = this.removePlayer.bind(this);
+		this.updatePlayers = this.updatePlayers.bind(this);
+
+		this.isLeader = this.isLeader.bind(this);
+		this.startGame = this.startGame.bind(this);
+		this.stopGame = this.stopGame.bind(this);
+		this.log = this.log.bind(this);
+
 		eventEmitter.onPlayerReady(this);
 		eventEmitter.onRoomReady();
 	}
 
-	public getReadyPlayers(): number {
-		let nb = 0;
-		const players: Player[] = this._players.all;
-		players.map((player) => {
-			const valuePlayer = player.roomState(this._name);
-			nb += valuePlayer?.status === 'ready' ? 1 : 0;
-		});
-		return nb;
-	}
-
-	public addPlayer(player: Player): void {
-		this.updatePlayer(player, this.gameState ? 'idle' : 'active', !this.hasPlayer(player));
-		this._players.save(player.sessionID, player);
-	}
-
-	public updatePlayer(player: Player, status: State, has: boolean = true): Player | undefined {
-		if (has) {
-			if (status === 'ready' && !this._readys.all.includes(player)) {
-				this._readys.save(player.sessionID, player);
-			} else if (status !== 'ready' && this._readys.all.includes(player)) {
-				console.log(`ca passe ici ou pas?`, this._readys);
-				this._readys.delete(player.sessionID);
-			}
-			const state: IRoomState = {
-				name: this.name,
-				status,
-				leads: this.isLeader(player),
-				readys: this.getReadyPlayers(),
-				wins: this.winner?.username === player.username ?? false,
-				started: this._game.isStarted(),
-			};
-			player.addRoomState(state);
-			return player;
-		}
-		return undefined;
-	}
-
-	public updatePlayers(player?: Player): void {
-		this.players
-			.filter((p) => p !== player)
-			.forEach((p) => {
-				this.updatePlayer(p, p.roomState(this.name)?.status ?? 'idle', this.hasPlayer(p));
-			});
-	}
-
-	public removePlayer(player: Player): Player {
-		if (this.hasPlayer(player)) {
-			logger.log(`[ROOM] player ${player.username} leaving room ${this.name}`);
-			const state = player.roomState(this.name);
-			if (!state) {
-				logger.log(`[ROOM ERROR] player ${player.username} not in room ${this.name}`);
-				throw new Error(`player ${player.username} is not in room ${this.name}`);
-			}
-			if (this.gameState && state.status?.match(/ready/)) {
-				logger.log(`[ROOM ERROR] Game is started! player is '${state.status} ${this.name}`);
-				throw new Error(`Game is started! player is '${state.status}'`);
-			}
-			if (state.status !== 'disconnected') {
-				state.status = 'left';
-			}
-			this._players.delete(player.sessionID);
-			this._readys.delete(player.sessionID);
-			// this.updatePlayer(player, 'left', true);
-			logger.log(`[ROOM] player ${player.username} removed room ${this.name}`);
-			if (this.isLeader(player)) {
-				player.leads.splice(player.leads.indexOf(this.name), 1);
-				if (this.players[0]) {
-					state.leads = false;
-					this.leader = this.players[0];
-					logger.log(`[ROOM] change leader ${player.username} removed room ${this.name}`);
-				}
-				this.leader.leads = this.name;
-
-				if (this.totalPlayers < 2 && state.status === 'left') {
-					this.winner = this.leader;
-				}
-			}
-
-			if (this.totalPlayers === 0 && this._game.isStarted() && state.status === 'left') {
-				state.started = false;
-				state.wins = this.winner?.sessionID === player.sessionID;
-				this.stopGame(player);
-				logger.log(`[ROOM] stop ${player.username} removed room ${this.name}`);
-			}
-			logger.log(`player ${player.username} left room ${this.name}`);
-			logger.log(`state: ${JSON.stringify(state)}`);
-			logger.log(`player: ${JSON.stringify(player)}`);
-		}
-		return player;
-	}
-
+	// getters and setters directly related to the room
 	public get name(): string {
 		return this._name;
 	}
@@ -124,8 +50,47 @@ export default class Room {
 		return this.totalPlayers === 0;
 	}
 
-	public get ready(): boolean {
+	private get arePlayersReady(): boolean {
 		return !this.empty && this.totalReady === this.totalPlayers;
+	}
+
+	private canStartGame(player: Player): boolean {
+		return this.isLeader(player) || this.arePlayersReady;
+	}
+
+	private isReadytoPlay(player: Player): boolean {
+		return !this.gameState && this.hasPlayer(player) && this.canStartGame(player);
+	}
+
+	public get gameState(): boolean {
+		return this._game.isStarted();
+	}
+
+	// accessors for handling players
+	public get players(): Player[] {
+		return this._players.all;
+	}
+
+	public hasPlayer(player: Player): boolean {
+		return this._players.has(player.sessionID);
+	}
+
+	public get totalPlayers(): number {
+		return this._players.total;
+	}
+
+	public get readys(): Player[] {
+		return this._players.all.filter((player) => {
+			return player.status(this._name)?.includes('ready');
+		});
+	}
+
+	public get totalReady(): number {
+		return this.readys.length;
+	}
+
+	public get readyJSON(): IPlayerJSON[] {
+		return [...this.readys.map((p: Player) => p.toJSON() as IPlayerJSON)];
 	}
 
 	public get leader(): Player {
@@ -134,6 +99,10 @@ export default class Room {
 
 	public set leader(player: Player) {
 		this._leader = player;
+	}
+
+	public isLeader(player: Player): boolean {
+		return this._leader === player;
 	}
 
 	public get winner(): Player | null {
@@ -145,66 +114,89 @@ export default class Room {
 		this._game.winner = player;
 	}
 
-	public isLeader(player: Player): boolean {
-		return this._leader === player;
+	public addPlayer(player: Player): void {
+		if (!this.hasPlayer(player)) {
+			this.updatePlayer(player, this.gameState ? 'idle' : 'active');
+			this._players.save(player.sessionID, player);
+		}
 	}
 
-	public hasPlayer(player: Player): boolean {
-		return this._players.has(player.sessionID);
+	public updatePlayer(player: Player, status: State): Player | undefined {
+		const state: IRoomState = {
+			name: this.name,
+			status,
+			leads: this.isLeader(player),
+			readys: this.totalReady,
+			wins: this.winner?.username === player.username ?? false,
+			started: this._game.isStarted(),
+		};
+		player.addRoomState(state);
+		return player;
 	}
 
-	private isReady(player: Player): boolean {
-		return !this.gameState && this.hasPlayer(player) && (this.isLeader(player) || this.ready);
+	private updateLeader(player: Player): void {
+		if (this.isLeader(player)) {
+			player.leads.splice(player.leads.indexOf(this.name), 1);
+			if (this.totalPlayers > 0) {
+				this.leader = this.players[0];
+				logger.log(`[ROOM] change leader ${player.username} removed room ${this.name}`);
+			}
+			this.leader.leads = this.name;
+		}
 	}
 
+	public updatePlayers(player?: Player): void {
+		this.players
+			.filter((p) => p !== player)
+			.forEach((p) => {
+				this.updatePlayer(p, p.roomState(this.name)?.status ?? 'idle');
+			});
+	}
+
+	public removePlayer(player: Player): Player {
+		if (this.hasPlayer(player)) {
+			const status = player.status(this.name);
+			// On peut pas remove un player set as ready 
+			// si la game est commencée(faudra gerer son depart depuis la game)
+			if (this.gameState && status?.match(/ready/)) {
+				throw new Error(`Game is started! player is '${status}'`);
+			} else if (!status?.includes('disconnected')) {
+				player.changeRoomStatus('left', this.name);
+			}
+			this._players.delete(player.sessionID);
+			this.updateLeader(player);
+
+			this.stopGame(player);
+			this.updatePlayer(player, player.status(this.name));
+			logger.log(`player ${player.username} has left room ${this.name}`);
+		}
+		return player;
+	}
+
+	// Methods related to the game
 	public startGame(player: Player): void {
-		if (this.isReady(player)) {
+		if (this.isReadytoPlay(player)) {
 			this._game.start();
 			this.players.forEach((p) => {
-				let status = p.roomState(this.name)?.status;
-				if (status !== 'ready') {
-					status = 'idle';
+				if (!p.status(this.name)?.includes('ready')) {
+					p.changeRoomStatus('idle', this.name);
 				}
-				this.updatePlayer(p, status, this.hasPlayer(p));
 				p.addGame(this._name, this._game);
 			});
+			this.updatePlayers();
 		}
 	}
 
 	public stopGame(player: Player): void {
-		// ? est-ce que le leader peut vraiment arreter le jeu
-		// ? est-ce que l'arret du jeu designe un winner
-		if ((this.gameState && this.isLeader(player)) || this.totalPlayers === 0) {
+		// si le jeu est demarré
+		// et que le joueur est le leader ou que la room est vide
+		// et que le player a la status 'left' pour la room
+		// alors on autorise l'arret du jeu
+		const status = player.status(this.name);
+		if (this.gameState && (this.isLeader(player) || this.empty) && status?.includes('left')) {
+			this.winner = player;
 			this._game.stop();
 		}
-	}
-
-	public get gameState(): boolean {
-		return this._game.isStarted();
-	}
-
-	public get totalPlayers(): number {
-		return this._players.total;
-	}
-
-	public get players(): Player[] {
-		return this._players.all;
-	}
-
-	public get playersJSON(): IPlayerJSON[] {
-		return [...this.players.map((p: Player) => p.toJSON() as IPlayerJSON)];
-	}
-
-	public get totalReady(): number {
-		return this._readys.total;
-	}
-
-	public get readys(): Player[] {
-		return this._readys.all;
-	}
-
-	public get readyJSON(): IPlayerJSON[] {
-		return [...this.readys.map((p: Player) => p.toJSON() as IPlayerJSON)];
 	}
 
 	public log(msg?: string): void {
@@ -222,10 +214,10 @@ export default class Room {
 				log += `\t\t....................................\n`;
 				llog += `\t\t....................................\n`;
 				log += `\t+ \x1b[4m${quality}\x1b[0m: \x1b[36m${player.username}\x1b[0m\n`;
+				llog += `\t+ ${quality}: ${player.username}}\n`;
 				player.log(qualityColor);
 				console.log(log);
 				log = '';
-				llog += `\t+ ${quality}: ${JSON.stringify(player)}}\n`;
 			}
 		}
 
@@ -286,17 +278,17 @@ export default class Room {
 		logger.log(msg ?? ' ');
 	}
 
-	public toJSON(): object {
+	public toJSON(): IRoomJSON {
 		return {
 			name: this.name,
 			dateCreated: this._dateCreated,
 			leader: this.leader.toJSON() as IPlayerJSON,
 			gameState: this.gameState,
 			winner: this.winner?.toJSON() as IPlayerJSON,
-			players: this.playersJSON,
+			players: this._players.toJSON(),
 			totalPlayers: this.totalPlayers,
 			readys: this.readyJSON,
-			totalReady: this.getReadyPlayers(),
+			totalReady: this.totalReady,
 		};
 	}
 }

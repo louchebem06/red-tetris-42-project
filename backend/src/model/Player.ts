@@ -20,6 +20,17 @@ class Player {
 		if (username.match(/[^a-zA-Z0-9_-]/)) {
 			throw new Error(`Invalid username: ${username}`);
 		}
+
+		this.addRoomState = this.addRoomState.bind(this);
+		this.roomState = this.roomState.bind(this);
+		this.status = this.status.bind(this);
+		this.toggleReady = this.toggleReady.bind(this);
+		this.setRoomStatus = this.setRoomStatus.bind(this);
+		this.changeRoomStatus = this.changeRoomStatus.bind(this);
+		this.addGame = this.addGame.bind(this);
+		this.disconnect = this.disconnect.bind(this);
+		this.log = this.log.bind(this);
+		this.toJSON = this.toJSON.bind(this);
 	}
 
 	public addRoomState(roomState: IRoomState): void {
@@ -34,11 +45,16 @@ class Player {
 		return this._rooms.get(roomName);
 	}
 
+	public status(roomName: string): State | undefined {
+		return this.roomState(roomName)?.status;
+	}
+
 	private toggleReady(room: string): void {
-		let state = this.roomState(room)?.status;
+		let state = this.status(room);
+		// let state = this.roomState(room)?.status;
 		const started = this.roomState(room)?.started;
 
-		if (state === 'ready') {
+		if (state?.includes('ready')) {
 			state = 'idle';
 		} else if (started === false && state?.match(/idle|active/)) {
 			state = 'ready';
@@ -50,6 +66,9 @@ class Player {
 	private setRoomStatus(status: State, name: string): void {
 		const state = this._rooms.get(name);
 		if (state) {
+			if (status === 'left' && state.status === 'disconnected') {
+				return;
+			}
 			state.status = status;
 			this._rooms.set(name, state);
 		}

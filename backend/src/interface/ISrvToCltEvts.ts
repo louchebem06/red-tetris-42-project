@@ -1,3 +1,4 @@
+import IGameStartPayload from './IGameStartPayload';
 import { IMessageOutgoingPayload } from './IMessagePayload';
 import IPlayerJSON from './IPlayerJSON';
 import IPlayerPayload from './IPlayerPayload';
@@ -16,4 +17,5 @@ export default interface ISrvToCltEvts {
 	roomInfo: (room: IRoomJSON) => void;
 	message: (payload: IMessageOutgoingPayload) => void;
 	error: (message: string) => void;
+	gameStart: (payload: IGameStartPayload) => void;
 }

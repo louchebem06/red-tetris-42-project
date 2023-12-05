@@ -10,6 +10,8 @@ import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 import { Payload } from '../type/PayloadsTypes';
 import { eventEmitter } from '../model/EventEmitter';
 import timer from '../model/Timer';
+import IGameStartPayload from 'interface/IGameStartPayload';
+import IPlayerPayload from 'interface/IPlayerPayload';
 
 export default class RoomController {
 	private _ss: ServerService;
@@ -17,6 +19,7 @@ export default class RoomController {
 
 	public constructor(serverService: ServerService) {
 		this._ss = serverService;
+
 		this.log = this.log.bind(this);
 		this.getRoom = this.getRoom.bind(this);
 		this.getRoomJSON = this.getRoomJSON.bind(this);
@@ -27,10 +30,35 @@ export default class RoomController {
 		this.broadcast = this.broadcast.bind(this);
 		this.broadcastAll = this.broadcastAll.bind(this);
 		this.broadcastRoom = this.broadcastRoom.bind(this);
+		this.onRoomEmpty = this.onRoomEmpty.bind(this);
+		this.onReadyTimer = this.onReadyTimer.bind(this);
+		this.readyTimer = this.readyTimer.bind(this);
+		this.close = this.close.bind(this);
+		this.create = this.create.bind(this);
+		this.join = this.join.bind(this);
+		this.leave = this.leave.bind(this);
+		this.emitLeaveRoomEvents = this.emitLeaveRoomEvents.bind(this);
+		this.removePlayer = this.removePlayer.bind(this);
+		this.playerChange = this.playerChange.bind(this);
+		this.disconnectPlayer = this.disconnectPlayer.bind(this);
 
-		eventEmitter.onRoomEmpty((room: IRoomJSON, lastPlayer: IPlayerJSON) => {
-			// console.log('roomEmpty, room controller', room, lastPlayer);
-			this.close(room, lastPlayer);
+		this.onRoomEmpty();
+		this.onReadyTimer();
+	}
+
+	private onRoomEmpty(): void {
+		eventEmitter.onRoomEmpty(this.close.bind(this));
+	}
+	private onReadyTimer(): void {
+		eventEmitter.onReadyTimer(this.readyTimer.bind(this));
+	}
+
+	private readyTimer(data: IGameStartPayload): void {
+		this.broadcast({
+			event: 'gameStart',
+			data,
+			sid: '',
+			room: data.roomName,
 		});
 	}
 
@@ -107,15 +135,18 @@ export default class RoomController {
 			const room = new Room(name, player);
 			this.roomStore.save(name, room);
 
-			this.broadcastAll('roomOpened', {
-				room: room.toJSON() as IRoomJSON,
-				player: player.toJSON() as IPlayerJSON,
-			});
-			this.broadcastAll('roomChange', {
+			const roomJSON = room.toJSON() as IRoomJSON;
+			const playerJSON = player.toJSON() as IPlayerJSON;
+			const payloadOpen: Payload = {
+				room: roomJSON,
+				player: playerJSON,
+			};
+			const payloadChange: Payload = {
 				reason: 'new leader',
-				room: room.toJSON() as IRoomJSON,
-				player: player.toJSON() as IPlayerJSON,
-			});
+				...payloadOpen,
+			};
+			this.broadcastAll('roomOpened', payloadOpen);
+			this.broadcastAll('roomChange', payloadChange);
 			setTimeout(() => {
 				if (room.empty) {
 					eventEmitter.emit('roomEmpty', room.toJSON(), player.toJSON());
@@ -148,60 +179,69 @@ export default class RoomController {
 		try {
 			// on ne peut leave la room que si le jeu est pas demarre
 			// ou si le jeu est demarré et le state est idle!
-			logger.log(`[ROOMCONTROLLER (begin scope)]: player ${player} try left room ${name}`);
-			const room = this.getRoom(name);
-			if (!room) {
-				logger.log(`[ROOMCONTROLLER] room ${name} does not exist`);
-				throw new Error(`room ${name} does not exist`);
-			}
-			const leader = room.leader;
-			room.removePlayer(player);
+			const {
+				room,
+				leader,
+			}: {
+				room: Room | undefined;
+				leader: Player;
+			} = this.removePlayer(name, player);
 
-			this._ss.changeRoom(player.sessionID, name, 'leave');
-			logger.log(`[ROOMCONTROLLER (room.remove + ss.changeRoom)]: ${name}`);
-			this.broadcastAll('playerChange', {
-				reason: 'ready',
-				player: player.toJSON() as IPlayerJSON,
-			});
-			if (room.totalPlayers > 0) {
-				this.broadcastAll('roomChange', {
-					reason: 'player outgoing',
-					room: room.toJSON() as IRoomJSON,
-					player: player.toJSON() as IPlayerJSON,
-				});
-
-				if (!room.isLeader(leader)) {
-					this.broadcastAll('roomChange', {
-						reason: 'new leader',
-						room: room.toJSON() as IRoomJSON,
-						player: player.toJSON() as IPlayerJSON,
-					});
-				}
-				logger.log(`[ROOMCONTROLLER (il reste encore des joueurs)]: room ${name}`);
-			} else {
-				const state = player.roomState(name);
-				if (state?.status !== 'disconnected') {
-					this.broadcastAll('roomChange', {
-						reason: 'new winner',
-						room: room.toJSON() as IRoomJSON,
-						player: player.toJSON() as IPlayerJSON,
-					});
-				}
-				logger.log(`[ROOMCONTROLLER (il n'y a plus de joueurs)]:  ${name}`);
-				eventEmitter.emit('roomEmpty', room.toJSON(), player.toJSON());
-			}
+			this.emitLeaveRoomEvents(room, leader, player, name);
 			return player;
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 
+	private emitLeaveRoomEvents(room: Room, leader: Player, player: Player, name: string): void {
+		const playerPayload: Payload = this.playerChange('ready', player);
+		const roomPayload = { ...playerPayload, room: room.toJSON() as IRoomJSON };
+		if (room.totalPlayers > 0) {
+			roomPayload.reason = 'player outgoing';
+			this.broadcastAll('roomChange', roomPayload);
+
+			if (!room.isLeader(leader)) {
+				roomPayload.reason = 'new leader';
+				this.broadcastAll('roomChange', roomPayload);
+			}
+		} else {
+			const status = player.status(name);
+			if (!status?.includes('disconnected')) {
+				roomPayload.reason = 'new winner';
+				this.broadcastAll('roomChange', roomPayload);
+			}
+			eventEmitter.emit('roomEmpty', room.toJSON(), player.toJSON());
+		}
+	}
+
+	private removePlayer(name: string, player: Player): { room: Room; leader: Player } {
+		const room = this.getRoom(name);
+		if (!room) {
+			throw new Error(`room ${name} does not exist`);
+		}
+		const leader = room.leader;
+		room.removePlayer(player);
+
+		this._ss.changeRoom(player.sessionID, name, 'leave');
+		return { room, leader };
+	}
+
+	private playerChange(reason: string, player: Player): IPlayerPayload {
+		const payloadPlayer: Payload = {
+			reason,
+			player: player.toJSON() as IPlayerJSON,
+		};
+		this.broadcastAll('playerChange', payloadPlayer);
+		return payloadPlayer;
+	}
+
 	public disconnectPlayer(player: Player): void {
 		player?.roomsState?.forEach((state) => {
 			const isPlayerDisconnected = state.status?.match(/left|disconnect/);
 			const room = this.getRoom(state.name);
-			if (!isPlayerDisconnected && room) {
-				room.updatePlayer(player, 'disconnected', room.hasPlayer(player));
+			if (!isPlayerDisconnected && room?.hasPlayer(player)) {
+				room.updatePlayer(player, 'disconnected');
 				this.leave(room.name, player);
 			}
 		});

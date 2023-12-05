@@ -1,3 +1,4 @@
+import IGameStartPayload from '../interface/IGameStartPayload';
 import { IMessageIncomingPayload, IMessageOutgoingPayload } from '../interface/IMessagePayload';
 import IPlayerJSON from '../interface/IPlayerJSON';
 import IPlayerPayload from '../interface/IPlayerPayload';
@@ -10,6 +11,8 @@ export type MessagePayload = IMessageOutgoingPayload | IMessageIncomingPayload;
 export type StringPayload = string | string[];
 export type MainPayload = IRoomPayload | IPlayerPayload | MessagePayload | StringPayload;
 
-export type Payload = JSONPayload | MainPayload;
+export type GamePayload = IGameStartPayload;
+
+export type Payload = JSONPayload | MainPayload | GamePayload;
 export type IMIP = IMessageIncomingPayload;
 export type IMOP = IMessageOutgoingPayload;

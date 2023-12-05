@@ -1,3 +1,4 @@
+import IPlayerJSON from '../interface/IPlayerJSON';
 import IStore from '../interface/IStore';
 import Player from '../model/Player';
 
@@ -26,5 +27,9 @@ export default class PlayerStore implements IStore<Player> {
 
 	public get total(): number {
 		return this.players.size;
+	}
+
+	public toJSON(): IPlayerJSON[] {
+		return [...this.players.values()].map((p: Player) => p.toJSON() as IPlayerJSON);
 	}
 }

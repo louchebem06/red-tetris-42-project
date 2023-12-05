@@ -976,3 +976,23 @@ Les différents motifs possibles implémentés sont:
 	}
 }
 ```
+
+### gameStart
+
+Quand tous les joueurs sont readys, un compte à rebours est démarré, au bout duquel le jeu commence.
+
+Ce compte à rebours est transmis au travers de cet event:
+
+-   **reason**:
+    -   **time**: le compte à rebours est en cours,
+    -   **start**: la partie commence
+-   **message**: Contient un descriptif du compte a rebours
+-   **roomName**: nom de la room
+
+```js
+{
+	roomName: string, // nom de la room concernée
+	reason: Reason, // time ou start
+	message?: string // Contient un descriptif du compte a rebours
+}
+```
