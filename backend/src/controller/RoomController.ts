@@ -55,6 +55,7 @@ export default class RoomController {
 				} else {
 					timer.resetCountdown();
 				}
+				timer.lock = !timer.lock;
 			} else {
 				throw new Error(`Countdown can only be toggled by the room leader`);
 			}
@@ -85,7 +86,6 @@ export default class RoomController {
 			});
 		} catch (e) {
 			this.broadcastAll('error', `RoomController readyTimer Error: ${(<Error>e).message}`);
-			// throw new Error(`RoomController readyTimer Error: ${(<Error>e).message}`);
 		}
 	}
 
