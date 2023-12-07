@@ -80,8 +80,8 @@
 			}
 		});
 		io.on('gameStart', (data: GameStart) => {
+			// console.log(data);
 			if (data.roomName != room) return;
-			console.log(data);
 			if (data.reason === 'start') {
 				game = true;
 			} else {
@@ -102,6 +102,7 @@
 		io.off('roomInfo');
 		io.off('roomChange');
 		io.off('roomClosed');
+		io.off('gameStart');
 	});
 
 	$: if ($page.url.hash) {
