@@ -26,6 +26,7 @@
 		"logs:rm": "rm -rf ./logs/*.txt",
 		"tests:rm": "rm -rf ./src/tests/output.txt",
 		"rm": " npm run env:rm && npm run tests:rm ",
+		"test:noCov": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts",
 		"test": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --no-cache --forceExit > src/tests/output.txt",
 		"test:rm": "npm run test && npm run tests:rm",
 		"test:dev": "jest --coverage --detectOpenHandles --watchAll --no-cache",
