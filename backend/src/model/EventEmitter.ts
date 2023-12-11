@@ -32,6 +32,7 @@ class MyEventEmitter extends EventEmitter {
 				const total = room.totalPlayers;
 				const ready = room.totalReady;
 				if (total > 0 && total === ready) {
+					console.log(`starting countdown`, timer.countdown, room.name);
 					timer.startCountdown(eventEmitter)(player, room);
 				} else {
 					timer.resetCountdown();
@@ -51,7 +52,7 @@ class MyEventEmitter extends EventEmitter {
 				throw new Error(`Event Emitter Error: ${(<Error>e).message}`);
 			}
 		};
-		eventEmitter.on('roomReady', roomReady);
+		this.on('roomReady', roomReady);
 	}
 
 	public onSessionEmpty(clean: (sid: string) => void): void {

@@ -11,6 +11,7 @@ import { PC } from './PlayerController';
 import { RC } from './RoomController';
 import { sessionController } from './SessionController';
 import { logger } from './LogController';
+import IPlayerJSON from '../interface/IPlayerJSON';
 
 export default class SocketController {
 	public constructor(
@@ -63,23 +64,23 @@ export default class SocketController {
 					console.log(log);
 				});
 
-				setInterval(() => {
-					const player = this.socket.data.player;
-					const sid = player?.sessionID;
-					const u = player?.username;
-					const _sid = this.socket.id;
-					const log = `\x1b[34m[${u}, ${sid} (socket: ${_sid})]\x1b[0m\n`;
-					const llog = `[${u}, ${sid} (socket: ${_sid})]\n`;
-					logger.log(llog);
-					console.log(log);
+				// setInterval(() => {
+				// 	const player = this.socket.data.player;
+				// 	const sid = player?.sessionID;
+				// 	const u = player?.username;
+				// 	const _sid = this.socket.id;
+				// 	const log = `\x1b[34m[${u}, ${sid} (socket: ${_sid})]\x1b[0m\n`;
+				// 	const llog = `[${u}, ${sid} (socket: ${_sid})]\n`;
+				// 	logger.log(llog);
+				// 	console.log(log);
 
-					pc.log();
-					rc.log();
-					this.io.log();
-					sessionController.log();
-					console.log(`End logging: ${Date.now()}`);
-					logger.log(`End logging: ${Date.now()}`);
-				}, 10000);
+				// 	pc.log();
+				// 	rc.log();
+				// 	this.io.log();
+				// 	sessionController.log();
+				// 	console.log(`End logging: ${Date.now()}`);
+				// 	logger.log(`End logging: ${Date.now()}`);
+				// }, 10000);
 			}
 		} catch (e) {
 			this.emitError(`${(<Error>e).message}`);
@@ -180,9 +181,27 @@ export default class SocketController {
 						sid: '',
 						room: room,
 					});
+					this.io.emit(player.sessionID, 'playerChange', {
+						reason: 'ready',
+						player: player.toJSON() as IPlayerJSON,
+					});
+					console.log(
+						'event playerChange ready emit',
+						room,
+						player,
+						// this.io.broadcast({
+						// 	event: 'playerChange',
+						// 	data: {
+						// 		reason: 'ready',
+						// 		player: player.toJSON(),
+						// 	} as Payload,
+						// 	sid: '',
+						// 	room: room,
+						// }),
+					);
 				}
 			} catch (e) {
-				this.emitError(`${(<Error>e).message}`);
+				this.emitError(`SocketController ready error: ${(<Error>e).message}`);
 			}
 		};
 	}
@@ -192,7 +211,7 @@ export default class SocketController {
 			try {
 				rc.create(name, this.socket.data.player);
 			} catch (e) {
-				this.emitError(`${(<Error>e).message}`);
+				this.emitError(`SocketController createRoom error: ${(<Error>e).message}`);
 			}
 		};
 	}
@@ -202,7 +221,7 @@ export default class SocketController {
 			try {
 				rc.join(name, this.socket.data.player);
 			} catch (e) {
-				this.emitError(`${(<Error>e).message}`);
+				this.emitError(`SocketController joinRoom error: ${(<Error>e).message}`);
 			}
 		};
 	}
@@ -211,7 +230,7 @@ export default class SocketController {
 			try {
 				rc.leave(name, this.socket.data.player);
 			} catch (e) {
-				this.emitError(`${(<Error>e).message}`);
+				this.emitError(`SocketController leaveRoom error: ${(<Error>e).message}`);
 			}
 		};
 	}

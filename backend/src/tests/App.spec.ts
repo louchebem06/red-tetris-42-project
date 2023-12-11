@@ -2,6 +2,10 @@ import request from 'supertest';
 import { Socket, io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 
+import { expect } from '@jest/globals';
+import type { MatcherFunction } from 'expect';
+import { diff } from 'jest-diff';
+
 import app from '../app';
 import App from '../model/App';
 import IPlayerJSON from '../interface/IPlayerJSON';
@@ -70,49 +74,176 @@ const socketsClients: Socket[] = [];
 const players: IPlayerJSON[] = [];
 const roomsJSON: IRoomJSON[] = [];
 
-// const checkRoomProperties = (room: IRoomJSON, name: string, t: number, l: IPlayerJSON): void => {
-// 	expect(room).toHaveProperty('name');
-// 	expect(room).toHaveProperty('dateCreated');
-// 	expect(room).toHaveProperty('leader');
-// 	expect(room).toHaveProperty('gameState');
-// 	expect(room).toHaveProperty('usernames');
-// 	expect(room).toHaveProperty('totalusernames');
+function isPlayerJSON(player: unknown): player is IPlayerJSON {
+	const _player = player as IPlayerJSON;
+	return (
+		'username' in _player &&
+		'sessionID' in _player &&
+		'dateCreated' in _player &&
+		'connected' in _player &&
+		'leads' in _player &&
+		'wins' in _player &&
+		'games' in _player &&
+		'roomsState' in _player
+	);
+}
 
-// 	expect(room.name).toBeDefined();
-// 	expect(room.dateCreated).toBeDefined();
-// 	expect(room.leader).toBeDefined();
-// 	expect(room.gameState).toBeDefined();
-// 	expect(room.usernames).toBeDefined();
-// 	expect(room.totalusernames).toBeDefined();
+const toBeIPlayerJSON: MatcherFunction<[unknown]> = function (received: unknown, expected: unknown) {
+	if (!isPlayerJSON(received) || !isPlayerJSON(expected)) {
+		throw new Error('toBeIPlayerJSON matcher expects an IPlayerJSON');
+	}
+	const roomsRec = received.roomsState;
 
-// 	if (name) {
-// 		expect(room.name).toBe(name);
-// 	}
-// 	if (t) {
-// 		expect(room.totalusernames).toBe(t);
-// 		expect(room.usernames.length).toBe(t);
-// 		if (t === 0) {
-// 			expect(room.winner).toBeNull();
-// 			expect(room.gameState).toBeFalsy();
-// 		}
-// 		if (t > 0) {
-// 			expect(room.usernames).toContainEqual(room.leader);
-// 			expect(room.usernames).toContainEqual(l);
-// 		}
-// 	}
-// 	if (l) {
-// 		expect(room.leader.username).toBe(l.username);
-// 		expect(room.leader.sessionID).toBe(l.sessionID);
-// 		expect(room.leader.dateCreated).toBe(l.dateCreated);
-// 		expect(room.leader.connected).toBe(l.connected);
-// 		expect(room.leader.wins).toStrictEqual(l.wins);
-// 		expect(room.leader.games).toStrictEqual(l.games);
-// 		expect(room.leader.leads).toStrictEqual(l.leads);
-// 		expect(room.leader.connected).toBeTruthy();
-// 	}
-// };
+	roomsRec.forEach((room) => {
+		if (received.leads.includes(room.name)) {
+			expect(room.leads).toBeTruthy();
+		}
+		if (received.wins.includes(room.name)) {
+			expect(room.wins).toBeTruthy();
+		}
+		if (room.started) {
+			expect(room.status).toBe(expect.arrayContaining(['ready', 'idle']));
+			expect(room.readys).toBeGreaterThanOrEqual(1);
+		}
+	});
+	const roomsExp = received.roomsState;
 
-const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: string): void => {
+	const pass = this.equals(received, expected) && this.equals(roomsRec, roomsExp);
+	const printExp = `\x1b[32m${this.utils.printExpected(expected)}\x1b[0m`;
+	const printRec = `\x1b[33m${this.utils.printReceived(received)}\x1b[0m`;
+	const msgExp = `Expected: ${pass ? 'not' : ''} ${printExp}\n`;
+	const msgRec = `Received: ${printRec}\n`;
+	const matcher = `${this.utils.matcherHint('toBeIRoomJSON')}\n\n${msgExp}${msgRec}`;
+	const message = pass
+		? (): string => {
+				return matcher;
+		  }
+		: (): string => {
+				const regex = /(\+(?:[\s\S\w\W])+,{1})/g;
+				const strRepl = `\x1b[31m$1\x1b[0m`;
+				const diffStr = diff(expected, received)?.replace(regex, strRepl);
+				return matcher + '\n\n' + diffStr;
+		  };
+	return { actual: received, expected, message, pass };
+};
+
+function isIRoomJSON(room: unknown): room is IRoomJSON {
+	const _room = room as IRoomJSON;
+	return (
+		'leader' in _room &&
+		'name' in _room &&
+		'dateCreated' in _room &&
+		'players' in _room &&
+		'gameState' in _room &&
+		'totalPlayers' in _room &&
+		'readys' in _room &&
+		'totalReady' in _room
+	);
+}
+
+const toBeIRoomJSON: MatcherFunction<[unknown]> = function (received: unknown, expected: unknown) {
+	if (!isIRoomJSON(received) || !isIRoomJSON(expected)) {
+		throw new Error('toBeIRoomJSON matcher expects an IRoomJSON');
+	}
+
+	const pass = this.equals(received, expected);
+	const printExp = `\x1b[32m${this.utils.printExpected(expected)}\x1b[0m`;
+	const printRec = `\x1b[33m${this.utils.printReceived(received)}\x1b[0m`;
+
+	const msgExp = `Expected: ${pass ? 'not' : ''} ${printExp}\n`;
+	const msgRec = `Received: ${printRec}\n`;
+	const matcher = `${this.utils.matcherHint('toBeIRoomJSON')}\n\n${msgExp}${msgRec}`;
+	const message = pass
+		? (): string => {
+				return matcher;
+		  }
+		: (): string => {
+				const regex = /(\+(?:[\s\S\w\W])+,{1})/g;
+				const strRepl = `\x1b[31m$1\x1b[0m`;
+				const diffStr = diff(expected, received)?.replace(regex, strRepl);
+				return matcher + '\n\n' + diffStr;
+		  };
+	return { actual: received, expected, message, pass };
+};
+
+const toBeArrayOfIRoomJSON: MatcherFunction<[unknown]> = function (received: unknown, expected: unknown) {
+	if (
+		!Array.isArray(received) ||
+		!Array.isArray(expected) ||
+		received.length !== expected.length ||
+		!received.every(isIRoomJSON) ||
+		!expected.every(isIRoomJSON)
+	) {
+		throw new Error(`toBeArrayOfIRoomJSON matcher expects an array
+!Array.isArray(received): ${!Array.isArray(received)}
+!Array.isArray(expected): ${!Array.isArray(expected)}
+r.length !== e.length: ${(<IRoomJSON[]>received).length !== (<IRoomJSON[]>expected).length}
+!received.every(isIRoomJSON): ${!(<IRoomJSON[]>received).every(isIRoomJSON)}
+!expected.every(isIRoomJSON): ${!(<IRoomJSON[]>received).every(isIRoomJSON)}`);
+	}
+	const pass = this.equals(received, expected);
+	const printExp = `\x1b[32m${this.utils.printExpected(expected)}\x1b[0m`;
+	const printRec = `\x1b[33m${this.utils.printReceived(received)}\x1b[0m`;
+	const msgExp = `Expected: ${pass ? 'not' : ''} ${printExp}\n`;
+	const msgRec = `Received: ${printRec}\n`;
+	const matcher = `${this.utils.matcherHint('toBeArrayOfIRoomJSON')}\n\n${msgExp}${msgRec}`;
+	const message = pass
+		? (): string => {
+				return matcher;
+		  }
+		: (): string => {
+				const regex = /(\+(?:[\s\S\w\W])+,{1})/g;
+				const strRepl = `\x1b[31m$1\x1b[0m`;
+				const diffStr = diff(expected, received)?.replace(regex, strRepl);
+				return matcher + '\n\n' + diffStr;
+		  };
+	return { actual: received, expected, message, pass };
+};
+
+// const toBeLeaderOfRoom: MatcherFunction<[unknown]> = function (received: unknown, expected: unknown) {
+// 	if (!isPlayerJSON(expected)) {
+// 		throw new Error('toBeLeaderOfRoom matcher expects an IPlayerJSON');
+// 	}
+// 	const pass = this.equals(received, expected);
+// 	const printExp = `\x1b[32m${this.utils.printExpected(expected)}\x1b[0m`;
+// 	const printRec = `\x1b[33m${this.utils.printReceived(received)}\x1b[0m`;
+// 	const msgExp = `Expected: ${pass ? 'not' : ''} ${printExp}\n`;
+// 	const msgRec = `Received: ${printRec}\n`;
+// 	const matcher = `${this.utils.matcherHint('toBeLeaderOfRoom')}\n\n${msgExp}${msgRec}`;
+// 	const message = pass
+// 		? (): string => {
+// 				return matcher;
+// 		  }
+// 		: (): string => {
+// 				const regex = /(\+(?:[\s\S\w\W])+,{1})/g;
+// 				const strRepl = `\x1b[31m$1\x1b[0m`;
+// 				const diffStr = diff(expected, received)?.replace(regex, strRepl);
+// 				return matcher + '\n\n' + diffStr;
+// 		  };
+// 	return { actual: received, expected,
+// }
+
+expect.extend({
+	toBeIRoomJSON,
+	toBeIPlayerJSON,
+	toBeArrayOfIRoomJSON,
+	// toBeLeaderOfRoom,
+});
+
+declare module 'expect' {
+	interface Matchers<R> {
+		toBeIRoomJSON(room: IRoomJSON): R;
+		toBeArrayOfIRoomJSON(rooms: IRoomJSON[]): R;
+		toBeIPlayerJSON(player: IPlayerJSON): R;
+	}
+	interface AsymmetricMatchers {
+		toBeIRoomJSON(room: IRoomJSON): void;
+		toBeArrayOfIRoomJSON(rooms: IRoomJSON[]): void;
+		toBeIPlayerJSON(player: IPlayerJSON): void;
+	}
+}
+
+const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string | null, i: string): void => {
 	expect(player).toHaveProperty('username');
 	expect(player).toHaveProperty('sessionID');
 	expect(player).toHaveProperty('dateCreated');
@@ -139,11 +270,17 @@ const checkPlayerProperties = (player: IPlayerJSON, u: string, r: string, i: str
 		expect(player.sessionID).toBe(i);
 	}
 	if (r) {
-		expect(player.leads).toContainEqual(r);
+		const namesState = player.roomsState.map((room) => room.name);
+		expect(namesState).toContainEqual(r);
+		const lead = player.roomsState.find((room) => room.name === r)?.leads;
+		expect(lead).toBeTruthy();
+		if (lead) {
+			expect(player.leads).toContainEqual(r);
+		}
 	}
 };
 
-const createClient = (username: string): Socket => {
+const createClient = (username: string, connect: boolean = true): Socket => {
 	let playerJSON: IPlayerJSON;
 	const socket: Socket = io(`${protocol}://${host}:${serverPort}`, {
 		forceNew: true,
@@ -154,71 +291,174 @@ const createClient = (username: string): Socket => {
 		},
 		autoConnect: false,
 	});
-	socket.connect();
 
-	socket.onAny((event, data) => {
-		console.log(
-			event,
-			// data,
-		);
-		if (data?.player?.sessionID === playerJSON?.sessionID) {
-			playerJSON = data.player;
-			console.log('update player: ', playerJSON);
+	const updatePlayer = (player: IPlayerJSON): void => {
+		if ((playerJSON && playerJSON.sessionID === player.sessionID) || !playerJSON) {
+			playerJSON = player;
+			expect(player).toBeIPlayerJSON(playerJSON);
 		}
-		if (data?.room) {
-			let roomJSON: IRoomJSON = roomsJSON.find((r) => r.name === data.room.name) as IRoomJSON;
-			console.log('update room: ', data.room);
-			if (!roomsJSON.includes(data.room)) {
-				roomJSON = data.room;
-				roomsJSON.push(roomJSON);
+	};
+
+	const initPlayer = (data: IPlayerJSON): void => {
+		updatePlayer(data);
+		console.log('player join: ', playerJSON, data);
+		const u = data?.username;
+		const i = data?.sessionID;
+		socket.auth = { username: u, sessionID: i };
+		sessions.push({ username: u, id: i });
+		socketsClients.push(socket);
+		players.push(playerJSON);
+		expect(data).toBeIPlayerJSON(playerJSON);
+		checkPlayerProperties(data, u, null, i);
+		checkPlayerProperties(playerJSON, u, null, i);
+	};
+
+	const removePlayer = (player: IPlayerJSON): void => {
+		if (players.includes(player)) {
+			players.splice(players.indexOf(player), 1);
+			expect(player).toBeIPlayerJSON(playerJSON);
+		}
+	};
+
+	const addRoom = (room: IRoomJSON): void => {
+		if (!roomsJSON.includes(room)) {
+			roomsJSON.push(room);
+			expect(roomsJSON[roomsJSON.length - 1]).toBeIRoomJSON(room);
+
+			console.log('add room: ', room, roomsJSON[roomsJSON.length - 1]);
+		}
+	};
+
+	const updateRoom = (room: IRoomJSON): void => {
+		const idx = roomsJSON.findIndex((r) => r.name === room.name);
+		if (idx !== -1) {
+			roomsJSON.fill(room, idx, idx + 1);
+			expect(roomsJSON[idx]).toBeIRoomJSON(room);
+			console.log('update room: ', room, roomsJSON[roomsJSON.indexOf(room)]);
+		}
+	};
+
+	const removeRoom = (room: IRoomJSON): void => {
+		const idx = roomsJSON.findIndex((r) => r.name === room.name);
+		if (roomsJSON.includes(room)) {
+			if (idx !== -1) {
+				expect(roomsJSON[idx]).toBeIRoomJSON(room);
+				roomsJSON.splice(roomsJSON.indexOf(room), 1);
+				console.log('remove room: ', room, roomsJSON[idx]);
 			}
 		}
-		switch (event) {
-			case 'join': {
-				const u = data?.username;
-				const i = data?.sessionID;
-				socket.auth = { username: u, sessionID: i };
-				sessions.push({ username: u, id: i });
-				socketsClients.push(socket);
-				players.push(playerJSON);
-				checkPlayerProperties(data, u, '', i);
-				playerJSON = data;
-				break;
-			}
-			case 'error':
-				break;
-			case 'playerChange': {
-				break;
-			}
-			case 'roomChange':
-				break;
-			case 'roomOpened':
-				{
-					const r = data?.room;
-					const p = data?.player;
-					if (!roomsJSON.includes(r)) {
-						roomsJSON.push(r);
-					}
-					console.log('new room: ', r, p, playerJSON);
+	};
+	if (connect) {
+		socket.connect();
+
+		socket.onAny((event, ...data) => {
+			console.log(`event: ${event}`, data);
+			switch (event) {
+				case 'join': {
+					initPlayer(data[0]);
+					break;
 				}
-				break;
-			case 'roomClosed':
-				{
-					const r = data?.room;
-					const p = data?.player;
-					if (roomsJSON.includes(r)) {
-						roomsJSON.splice(rooms.indexOf(r), 1);
+				case 'playerChange': {
+					const { reason, player } = data[0];
+					const old = player.username !== playerJSON.username ? playerJSON.username : '';
+					updatePlayer(player);
+					console.log(`reason of player change: ${reason}`, player, playerJSON, data);
+					switch (reason) {
+						case 'ready':
+							break;
+						case 'change username':
+							expect(playerJSON.username).not.toBe(old);
+							break;
 					}
-					console.log('close room: ', r, p, playerJSON);
+					// change username
+					// ready
+					// connecting player
+					// left
+					break;
 				}
-				break;
-		}
-	});
-	socket.on('disconnect', () => {
-		if (players.includes(playerJSON)) {
-			players.splice(players.indexOf(playerJSON), 1);
-		}
-	});
+				case 'roomChange': {
+					const { reason, room, player } = data[0];
+					updateRoom(room);
+					updatePlayer(player);
+					console.log(`reason of room change: ${reason}`, room, player);
+					switch (reason) {
+						case 'new leader':
+							break;
+						case 'player incoming':
+							break;
+						case 'player outgoing':
+							break;
+						case 'new winner':
+							break;
+					}
+					// new leader
+					// player incoming
+					// player outgoing
+					// new winner
+					break;
+				}
+				case 'roomOpened':
+					{
+						const r = data[0]?.room;
+						const p = data[0]?.player;
+						addRoom(r);
+						updatePlayer(p);
+						console.log('new room: ', r, p, playerJSON);
+					}
+					break;
+				case 'roomClosed':
+					{
+						const r = data[0]?.room;
+						const p = data[0]?.player;
+						removeRoom(r);
+						updatePlayer(p);
+						console.log('close room: ', r, p, playerJSON);
+					}
+					break;
+				case 'message':
+					// message {date, message, emitter, receiver}
+					console.log('message: ', data[0]);
+					break;
+				case 'gameStart':
+					// {roomName, reason: time|start, message}
+					console.log('gameStart: ', data[0]);
+					break;
+				case 'error':
+					// Invalid new room a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;a&;: name can only contain letters, numbers, hyphens and underscores
+					// Invalid new room 6LVhbUGtnt2P7QFEAAAB: private room
+					// Invalid new room 36a708cf-cafb-42bf-a3d7-4fe1667b7603: already in use
+					// Invalid new room aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: name must be at most 256 characters long
+					// Invalid new room aa: name must be at least 3 characters long
+					// receiver not found
+					console.log('error: ', data);
+					break;
+				case 'getRooms':
+					console.log('getRooms: ', JSON.stringify({ data }), JSON.stringify({ roomsJSON }));
+					data[0].forEach((room: IRoomJSON) => {
+						updateRoom(room);
+					});
+
+					expect(data[0]).toBeArrayOfIRoomJSON(roomsJSON);
+					break;
+				case 'getRoom':
+					console.log('getRoom: ', JSON.stringify({ data }));
+					break;
+				case 'getRoomsPlayer':
+					console.log('getRoomsPlayer: ', data, playerJSON);
+					// data.forEach((room: IRoomJSON) => {
+					// 	updateRoom(room);
+					// });
+					// names roomState === aux nomes des rooms renvoyees. Si le leader c'est le player, le roomsState correspondant doit etre set a true pour la prop leader
+					break;
+				case 'roomInfo':
+					console.log('roomInfo: ', data);
+			}
+		});
+		socket.on('disconnect', () => {
+			removePlayer(playerJSON);
+			console.log('disconnect: ', playerJSON, roomsJSON, players);
+		});
+	}
 	return socket;
 };
 
@@ -264,109 +504,297 @@ describe('Home page', () => {
 	});
 });
 
+let socket: Socket;
 describe(`New Client ${usernames[indexPlayer]}`, () => {
-	beforeEach((done) => {
-		createClient(usernames[indexPlayer]);
+	beforeAll((done) => {
+		socket = createClient(usernames[indexPlayer]);
 
 		setTimeout(() => {
 			done();
-		}, 500);
-	}, 1000);
+		}, 1500);
+	}, 2000);
+
+	test(`socketClients has 1 element`, (done) => {
+		expect(socketsClients).toHaveLength(1);
+		done();
+	});
+
 	test('join room', (done) => {
 		try {
-			expect(socketsClients).toHaveLength(1);
-			const socket = socketsClients[0];
-
-			socket.emit('createRoom', rooms[indexRoom]);
-			socket.emit('createRoom', rooms[indexRoom]);
-			socket.emit('createRoom', usernames[indexPlayer]);
-			socket.emit('createRoom', sessions[indexPlayer].id);
-			socket.emit('createRoom', socket.id);
-			socket.emit('createRoom', 'a&;'.repeat(25));
-			socket.emit('createRoom', 'a'.repeat(300));
-			socket.emit('createRoom', 'a'.repeat(2));
-			socket.emit('joinRoom', rooms[indexRoom]);
-			socket.emit('joinRoom', rooms[indexRoom]);
-			socket.emit('joinRoom', socket.id);
-			socket.emit('joinRoom', 'a&;'.repeat(25));
-			socket.emit('joinRoom', 'a'.repeat(300));
-			socket.emit('joinRoom', 'a'.repeat(2));
-			socket.emit('changeUsername', 'a&;'.repeat(25));
-			socket.emit('changeUsername', 'a'.repeat(25));
-			socket.emit('changeUsername', usernames[indexPlayer]);
-			socket.emit('getRooms');
-			socket.emit('getRoomsPlayer');
-			socket.emit('getRoom', rooms[indexRoom]);
-			socket.emit('message', {
-				message: 'Hello Room!',
-				receiver: rooms[indexRoom],
-			});
-			socket.emit('message', {
-				message: 'Hello Nawak!',
-				receiver: 'Nawak',
-			});
-			socket.emit('message', {
-				message: 'Hello Player!',
-				receiver: sessions[indexPlayer].id,
-			});
-			let i = 0;
-			setTimeout(() => {
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-				socket.emit('ready', rooms[indexRoom]);
-			}, 500);
-
 			socket.onAny((event, ...args) => {
+				console.log('ca me pete les bonbons', event);
 				switch (event) {
 					case 'playerChange':
 						{
-							console.log('test playerChange', i, event, args, args[0]?.reason);
-							args[0]?.reason === 'ready' && i++;
-							if (i === 9) {
-								socket.emit('leave', rooms[indexRoom]);
-								socket.emit('leaveRoom', rooms[indexRoom]);
-								socket.emit('leaveRoom', rooms[indexRoom]);
-								setTimeout(() => {
-									try {
-										done();
-									} catch (e) {
-										console.log('settimeout try/catch done', e);
-									}
-								}, 2000);
-							}
+							console.log('test playerChange', event, args[0]?.reason, args);
+							// console.log('test playerChange', i, event, args, args[0]?.reason);
+							// args[0]?.reason === 'ready' && i++;
+							// if (i === 9) {
+							// 	setTimeout(() => {
+							// 		try {
+							// 			socket.emit('leave', rooms[indexRoom]);
+							// 			socket.emit('leaveRoom', rooms[indexRoom]);
+							// 			socket.emit('leaveRoom', rooms[indexRoom]);
+							// 			done();
+							// 		} catch (e) {
+							// 			console.log('settimeout try/catch done', e);
+							// 		}
+							// 	}, timer.destroySession * 5);
+							// }
 						}
 
 						break;
 				}
 			});
 
-			setTimeout(() => {
-				try {
-					done();
-				} catch (e) {
-					console.log('settimeout try/catch done', e);
-				}
-			}, 3000);
+			// setTimeout(() => {
+			// 	try {
+			done();
+			// 	} catch (e) {
+			// 		console.log('settimeout try/catch done', e);
+			// 	}
+			// }, timer.destroySession * 10);
 		} catch (e) {
 			console.log('join room', e);
 			done(e);
 		}
-	}, 3200);
-	afterEach((done) => {
-		for (const socket of socketsClients) {
-			socket.disconnect();
-		}
-		indexPlayer = ++indexPlayer % usernames.length;
-		indexRoom = ++indexRoom % rooms.length;
+	});
+	// timer.destroySession * 10 + 100,
 
+	// test(`create room`, (done) => {
+	// 	[
+	// 		rooms[indexRoom],
+	// 		rooms[indexRoom],
+	// 		usernames[indexPlayer],
+	// 		sessions[indexPlayer].id,
+	// 		socket?.id,
+	// 		'a&;'.repeat(25),
+	// 		'a'.repeat(300),
+	// 		'a'.repeat(2),
+	// 	].forEach((room) => {
+	// 		socket.emit('createRoom', room);
+	// 	});
+	// 	done();
+	// });
+	test(`join room `, (done) => {
+		[
+			rooms[indexRoom],
+			rooms[indexRoom],
+			usernames[indexPlayer],
+			sessions[indexPlayer].id,
+			socket?.id,
+			'a&;'.repeat(25),
+			'a'.repeat(300),
+			'a'.repeat(2),
+		].forEach((room) => {
+			socket.emit('joinRoom', room);
+		});
 		done();
 	});
+
+	test(`change username `, (done) => {
+		[
+			rooms[indexRoom],
+			rooms[indexRoom],
+			usernames[indexPlayer],
+			sessions[indexPlayer].id,
+			socket?.id,
+			'a&;'.repeat(25),
+			'a'.repeat(300),
+			'a'.repeat(2),
+			usernames[indexPlayer],
+		].forEach((username) => {
+			socket.emit('changeUsername', username);
+		});
+		done();
+	});
+
+	test(`get rooms`, (done) => {
+		socket.emit('getRooms');
+		done();
+	});
+
+	test(`get rooms player`, (done) => {
+		socket.emit('getRoomsPlayer');
+		done();
+	});
+
+	test(`getRoom`, (done) => {
+		[
+			rooms[indexRoom],
+			rooms[indexRoom],
+			usernames[indexPlayer],
+			sessions[indexPlayer].id,
+			socket?.id,
+			'a&;'.repeat(25),
+			'a'.repeat(300),
+			'a'.repeat(2),
+			usernames[indexPlayer],
+		].forEach((username) => {
+			socket.emit('getRoom', username);
+		});
+		done();
+	});
+
+	test(`message`, (done) => {
+		[
+			{
+				message: 'Hello Room!',
+				receiver: rooms[indexRoom],
+			},
+			{
+				message: 'Hello Nawak!',
+				receiver: 'Nawak',
+			},
+			{
+				message: 'Hello Player!',
+				receiver: sessions[indexPlayer].id,
+			},
+		].forEach((message) => {
+			socket.emit('message', message);
+		});
+		done();
+	});
+	// HERE
+
+	// test(`set ready`, (done) => {
+	// 	[
+	// 		rooms[indexRoom],
+	// 		rooms[indexRoom],
+	// 		usernames[indexPlayer],
+	// 		sessions[indexPlayer].id,
+	// 		socket?.id,
+	// 		'a&;'.repeat(25),
+	// 		'a'.repeat(300),
+	// 		'a'.repeat(2),
+	// 		usernames[indexPlayer],
+	// 	].forEach((room, idx, arr) => {
+	// 		let i = -1;
+	// 		// let timerId: NodeJS.Timeout | null = null;
+	// 		function update(): void {
+	// 			socket.on('playerChange', (data) => {
+	// 				console.log('playerChange event received: ', data);
+	// 			});
+	// 			while (++i < 9) {
+	// 				console.log('set/unset ready emit', i, room);
+	// 				socket.emit('ready', room);
+	// 				if (idx === arr.length - 1 && i === 8) {
+	// 					done();
+	// 				}
+	// 				// timerId = setTimeout(update, 100);
+	// 			} //else {
+	// 			// 	if (timerId) {
+	// 			// 		i = -1;
+	// 			// 		clearTimeout(timerId);
+	// 			// 		if (idx === arr.length - 1) {
+	// 			// 			done();
+	// 			// 		}
+	// 			// 	}
+	// 			// }
+	// 		}
+	// 		setTimeout(() => {
+	// 			update();
+	// 		}, 500);
+	// 	});
+	// }, 10000);
+
+	test('leave room', (done) => {
+		setTimeout(() => {
+			try {
+				[
+					rooms[indexRoom],
+					rooms[indexRoom],
+					usernames[indexPlayer],
+					sessions[indexPlayer].id,
+					socket?.id,
+					'a&;'.repeat(25),
+					'a'.repeat(300),
+					'a'.repeat(2),
+					usernames[indexPlayer],
+				].forEach((room) => {
+					console.log('leave room ouou ', room);
+					socket.emit('leave', room);
+					socket.emit('leaveRoom', room);
+					socket.emit('leaveRoom', room);
+				});
+				done();
+			} catch (e) {
+				console.log('leave room error', e);
+				done(e);
+			}
+		});
+	});
+
+	afterAll((done) => {
+		setTimeout(() => {
+			for (const socket of socketsClients) {
+				socket.disconnect();
+			}
+			indexPlayer = ++indexPlayer % usernames.length;
+			indexRoom = ++indexRoom % rooms.length;
+
+			done();
+		}, 90000);
+	}, 91000);
+});
+
+describe.only('Set Ready', () => {
+	const sockets: Record<string, Socket> = {};
+	beforeAll(() => {
+		usernames.forEach((username) => {
+			sockets[username] = createClient(username, false);
+		})
+	})
+	Object.keys(sockets).forEach((username) => {
+		test(`${username} is connected`, () => {
+			sockets[username]
+				.connect()
+				.on('connect', () => {
+					expect(sockets[username].connected).toBe(true);
+				})
+		}, 2000)
+	})
+	// [
+	// 	rooms[indexRoom],
+	// 	rooms[indexRoom],
+	// 	usernames[indexPlayer],
+	// 	sessions[indexPlayer].id,
+	// 	socket?.id,
+	// 	'a&;'.repeat(25),
+	// 	'a'.repeat(300),
+	// 	'a'.repeat(2),
+	// ].forEach((room, idx, arr) => {
+	// 	test(`Create Room: ${room}`, () => {
+	// 		socket.emit('createRoom', room);
+	// 	})
+	// });
+	// [
+	// 	rooms[indexRoom],
+	// 	rooms[indexRoom],
+	// 	usernames[indexPlayer],
+	// 	sessions[indexPlayer].id,
+	// 	socket?.id,
+	// 	'a&;'.repeat(25),
+	// 	'a'.repeat(300),
+	// 	'a'.repeat(2),
+	// ].forEach((room) => {
+	// 	socket.emit('joinRoom', room);
+	// });
+	// [
+	// 	rooms[indexRoom],
+	// 	rooms[indexRoom],
+	// 	usernames[indexPlayer],
+	// 	sessions[indexPlayer].id,
+	// 	socket?.id,
+	// 	'a&;'.repeat(25),
+	// 	'a'.repeat(300),
+	// 	'a'.repeat(2),
+	// 	usernames[indexPlayer],
+	// ].forEach((room, idx, arr) => {
+	// 	test(`Set Ready ${room}`, () => {
+	// 		socket.emit('ready', room);
+	// 	})
+	// })
 });
 
 describe('Reconnect', () => {

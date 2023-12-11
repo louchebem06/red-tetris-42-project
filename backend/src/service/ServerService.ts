@@ -39,7 +39,7 @@ export default class ServerService {
 		return this.isRoom(room) && !this.isSid(room) && !this.isSession(room);
 	}
 
-	public throwError(message: string): never {
+	private throwError(message: string): never {
 		// console.trace('server Service throwError:', message);
 		throw new Error(message);
 	}
@@ -54,7 +54,7 @@ export default class ServerService {
 	public broadcast(datas: IBrodacastFormat): void {
 		try {
 			const { event, data, sid, room } = datas;
-			// console.log('SService', event, data, sid, room);
+			console.log('SService', event, data, sid, room);
 			if (room) {
 				// broadcast to room
 				if (!this.isPublicRoom(room)) {
@@ -76,7 +76,12 @@ export default class ServerService {
 					}
 				} else {
 					// send to all
-					this.io.in(room).emit(event, data);
+					console.log(
+						`SService send to all (no sid)', event: ${event}, data: ${JSON.stringify(
+							data,
+						)}, sid: ${sid}, room: ${room}`,
+						this.io.in(room).emit(event, data),
+					);
 				}
 			} else {
 				// broadcast to all
@@ -98,7 +103,7 @@ export default class ServerService {
 				}
 			}
 		} catch (e) {
-			// console.log('SService broadcast error', e);
+			console.log('SService broadcast error', e);
 			this.throwError(`${e instanceof Error && e.message}`);
 		}
 	}
@@ -129,9 +134,10 @@ export default class ServerService {
 				break;
 
 			case 'join':
+				console.log('ServerService, changeRoom, -> case join', sids, self), room, sessionID;
 				self.forEach((socket) => {
 					if (sids?.has(socket.id)) {
-						this.throwError(`Session ${sessionID} already found in room ${room}`);
+						this.throwError(`ServerService Session ${sessionID} already found in room ${room}`);
 					}
 				});
 				this.io.in(sessionID).socketsJoin(room);

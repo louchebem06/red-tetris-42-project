@@ -66,9 +66,9 @@ class Player {
 	private setRoomStatus(status: State, name: string): void {
 		const state = this._rooms.get(name);
 		if (state) {
-			if (status === 'left' && state.status === 'disconnected') {
-				return;
-			}
+			// if (status === 'left' && state.status === 'disconnected') {
+			// 	return;
+			// }
 			state.status = status;
 			this._rooms.set(name, state);
 		}

@@ -21,6 +21,7 @@ export default class Room {
 		this._name = name;
 		leader.leads = this.name;
 		this._leader = leader;
+		this.addPlayer(leader);
 		this._game = new Game(this._name);
 
 		this.canStartGame = this.canStartGame.bind(this);
@@ -63,7 +64,7 @@ export default class Room {
 	}
 
 	public get gameState(): boolean {
-		return this._game.isStarted();
+		return this._game?.isStarted() ?? false;
 	}
 
 	// accessors for handling players
@@ -106,7 +107,7 @@ export default class Room {
 	}
 
 	public get winner(): Player | null {
-		return this._game.winner;
+		return this._game?.winner ?? null;
 	}
 
 	private set winner(player: Player) {
@@ -128,7 +129,7 @@ export default class Room {
 			leads: this.isLeader(player),
 			readys: this.totalReady,
 			wins: this.winner?.username === player.username ?? false,
-			started: this._game.isStarted(),
+			started: this.gameState,
 		};
 		player.addRoomState(state);
 		return player;

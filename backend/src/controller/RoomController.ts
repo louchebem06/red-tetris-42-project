@@ -160,6 +160,7 @@ export default class RoomController {
 			this._ss.createRoom(name);
 
 			const room = new Room(name, player);
+			// console.log(`check du roomState:`, room, player)
 			this.roomStore.save(name, room);
 
 			const roomJSON = room.toJSON() as IRoomJSON;
@@ -198,7 +199,7 @@ export default class RoomController {
 				});
 			}
 		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
+			throw new Error(`RoomController join Error: ${(<Error>e).message}`);
 		}
 	}
 
@@ -209,20 +210,27 @@ export default class RoomController {
 			const {
 				room,
 				leader,
+				playerPayload,
 			}: {
 				room: Room | undefined;
 				leader: Player;
+				playerPayload: IPlayerPayload;
 			} = this.removePlayer(name, player);
 
-			this.emitLeaveRoomEvents(room, leader, player, name);
+			this.emitLeaveRoomEvents(room, leader, player, name, playerPayload);
 			return player;
 		} catch (e) {
-			throw new Error(`${(<Error>e).message}`);
+			throw new Error(`RoomController leave Error: ${(<Error>e).message}`);
 		}
 	}
 
-	private emitLeaveRoomEvents(room: Room, leader: Player, player: Player, name: string): void {
-		const playerPayload: Payload = this.playerChange('ready', player);
+	private emitLeaveRoomEvents(
+		room: Room,
+		leader: Player,
+		player: Player,
+		name: string,
+		playerPayload: IPlayerPayload,
+	): void {
 		const roomPayload = { ...playerPayload, room: room.toJSON() as IRoomJSON };
 		if (room.totalPlayers > 0) {
 			roomPayload.reason = 'player outgoing';
@@ -242,16 +250,46 @@ export default class RoomController {
 		}
 	}
 
-	private removePlayer(name: string, player: Player): { room: Room; leader: Player } {
-		const room = this.getRoom(name);
-		if (!room) {
-			throw new Error(`room ${name} does not exist`);
-		}
-		const leader = room.leader;
-		room.removePlayer(player);
+	private removePlayer(
+		name: string,
+		player: Player,
+	): {
+		room: Room;
+		leader: Player;
+		playerPayload: IPlayerPayload;
+	} {
+		try {
+			const room = this.getRoom(name);
+			if (!room) {
+				throw new Error(`room ${name} does not exist`);
+			}
+			const leader = room.leader;
+			const status = player.status(name);
 
-		this._ss.changeRoom(player.sessionID, name, 'leave');
-		return { room, leader };
+			let reason: string;
+			if (status?.includes('ready')) {
+				reason = 'ready';
+			} else {
+				reason = 'left';
+			}
+			room.removePlayer(player);
+
+			this._ss
+				.changeRoom(player.sessionID, name, 'leave')
+				.then(() => {
+					console.log('changeRoom ca passe la pronise');
+					const playerPayload: Payload = this.playerChange(reason, player);
+					return { room, leader, playerPayload };
+				})
+				.catch((e) => {
+					console.log('changeRoom error', e);
+					// throw new Error(`RoomController: removePlayer error: ${(<Error>e).message}`);
+				});
+			const playerPayload: Payload = this.playerChange(reason, player);
+			return { room, leader, playerPayload };
+		} catch (e) {
+			throw new Error(`RoomController: removePlayer error: ${(<Error>e).message}`);
+		}
 	}
 
 	private playerChange(reason: string, player: Player): IPlayerPayload {
@@ -264,14 +302,18 @@ export default class RoomController {
 	}
 
 	public disconnectPlayer(player: Player): void {
-		player?.roomsState?.forEach((state) => {
-			const isPlayerDisconnected = state.status?.match(/left|disconnect/);
-			const room = this.getRoom(state.name);
-			if (!isPlayerDisconnected && room?.hasPlayer(player)) {
-				room.updatePlayer(player, 'disconnected');
-				this.leave(room.name, player);
-			}
-		});
+		try {
+			player?.roomsState?.forEach((state) => {
+				const isPlayerDisconnected = state.status?.match(/left|disconnect/);
+				const room = this.getRoom(state.name);
+				if (!isPlayerDisconnected && room?.hasPlayer(player)) {
+					room.updatePlayer(player, 'disconnected');
+					this.leave(room.name, player);
+				}
+			});
+		} catch (e) {
+			throw new Error(`RoomController: disconnectPlayer error: ${(<Error>e).message}`);
+		}
 	}
 	public log(): void {
 		const total = this.roomStore.total;
