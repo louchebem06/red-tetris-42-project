@@ -743,17 +743,15 @@ describe.only('Set Ready', () => {
 	beforeAll(() => {
 		usernames.forEach((username) => {
 			sockets[username] = createClient(username, false);
-		})
-	})
+		});
+	});
 	Object.keys(sockets).forEach((username) => {
 		test(`${username} is connected`, () => {
-			sockets[username]
-				.connect()
-				.on('connect', () => {
-					expect(sockets[username].connected).toBe(true);
-				})
-		}, 2000)
-	})
+			sockets[username].connect().on('connect', () => {
+				expect(sockets[username].connected).toBe(true);
+			});
+		}, 2000);
+	});
 	// [
 	// 	rooms[indexRoom],
 	// 	rooms[indexRoom],
