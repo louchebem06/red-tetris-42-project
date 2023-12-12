@@ -218,7 +218,6 @@ describe('E2E Set Ready', () => {
 		// 	sockets[usernames[0]].off('roomClosed');
 		// 	sockets[usernames[0]].off('error');
 		// }, 2000);
-
 		// afterAll((done) => {
 		// 	usernames.forEach((username) => {
 		// 		sockets[username].disconnect();

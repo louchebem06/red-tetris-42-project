@@ -24,10 +24,73 @@ const createClient = (username: string): Socket => {
 	return socket;
 };
 
+let sessionId: string;
+
+async function testPromise<T>(
+	client: Socket,
+	eventListener: string,
+	emit: { name: string; value?: unknown } | undefined,
+	checkIsRoom: boolean,
+	roomName: string | undefined,
+	connect: boolean = false,
+): Promise<T> {
+	const promise = new Promise<T>((resolve, reject) => {
+		if (connect) client.connect();
+		client.on(eventListener, (data: T) => {
+			if (data && connect) {
+				sessionId = (data as unknown as IPlayerJSON).sessionID;
+				resolve(data);
+			} else if (!checkIsRoom || (checkIsRoom && (data as unknown as IRoomPayload).room.name == roomName)) {
+				resolve(data);
+			}
+		});
+		client.on('error', (msg) => {
+			reject(msg);
+		});
+		if (typeof emit != 'undefined') {
+			emit?.value ? client.emit(emit.name, emit?.value) : client.emit(emit.name);
+		}
+	});
+	return promise;
+}
+
+async function testValuePromise<T>(
+	client: Socket,
+	promise: Promise<T>,
+	value: {
+		reason?: boolean;
+		reasonValue?: string;
+		room?: boolean;
+		roomValue?: Object;
+		player?: boolean;
+		playerValue?: Object;
+	},
+	eventListener: string,
+) {
+	const [reason, room, player] = await promise
+		.then((data: T) => {
+			return [
+				value?.reason ? ((data as IRoomPayload).reason as string) : undefined,
+				value?.room ? ((data as IRoomPayload).room as IRoomJSON) : undefined,
+				value?.player ? ((data as IPlayerPayload).player as IPlayerJSON) : undefined,
+			];
+		})
+		.catch(() => {
+			expect(false).toBe(true);
+			return [undefined, undefined, undefined];
+		})
+		.finally(() => {
+			client.off(eventListener);
+			client.off('error');
+		});
+	if (typeof reason != 'undefined') expect(reason).toBe(value.reasonValue);
+	if (typeof room != 'undefined') expect(room).toMatchObject<IRoomJSON>(value.roomValue as IRoomJSON);
+	if (typeof player != 'undefined') expect(player).toMatchObject<IPlayerJSON>(value.playerValue as IPlayerJSON);
+}
+
 describe('all Events', () => {
 	let app: App;
 	let client: Socket;
-	let sessionId: string;
 
 	const roomName = 'Loulouville';
 	const roomName2 = 'Loulouville2';
@@ -73,102 +136,70 @@ describe('all Events', () => {
 	});
 	describe('join', () => {
 		test('join allEventsCreateClient', async () => {
-			const promise = new Promise<IPlayerJSON>((resolve, reject) => {
-				client.connect();
-				client.on('join', (data: IPlayerJSON) => {
-					if (data) sessionId = data.sessionID;
-					resolve(data);
-				});
-				client.on('error', (msg) => {
-					reject(msg);
-				});
-			});
-			const player = await promise.then((data: IPlayerJSON) => data);
-
-			expect(player).toMatchObject<IPlayerJSON>({
+			const promise = testPromise<IPlayerJSON>(client, 'join', undefined, false, undefined, true);
+			const playerValue = {
+				...playerExpect,
 				username: 'allEventsCreateClient',
 				sessionID: sessionId,
-				dateCreated: expect.any(String),
-				leads: [],
-				wins: [],
-				connected: true,
-				games: [],
-				roomsState: [],
-			});
-			client.off('join');
-			client.off('error');
+			};
+			await testValuePromise<IPlayerJSON>(
+				client,
+				promise,
+				{
+					player: true,
+					playerValue,
+				},
+				'join',
+			);
 		});
 	});
 
 	describe('create room', () => {
 		test(`allEventsCreateClient create room : ${roomName}, roomOpened event`, async () => {
-			const promise = new Promise<IRoomPayload>((resolve, reject) => {
-				client.on('roomOpened', (data: IRoomPayload) => {
-					if (data.room.name === roomName) resolve(data);
-				});
-
-				client.on('error', (msg) => {
-					reject(msg);
-				});
-				client.emit('createRoom', roomName);
-			});
-			const [room, player] = await promise
-				.then((data: IRoomPayload) => {
-					return [data.room, data.player];
-				})
-				.catch(() => {
-					return [undefined, undefined];
-				})
-				.finally(() => {
-					client.off('roomOpened');
-					client.off('error');
-				});
-			expect(room).toMatchObject<IRoomJSON>({
-				...roomExpect,
-				name: roomName,
-				leader: player as IPlayerJSON,
-			});
-
-			expect(player).toMatchObject<IPlayerJSON>({
+			const promise = testPromise<IRoomPayload>(
+				client,
+				'roomOpened',
+				{ name: 'createRoom', value: roomName },
+				true,
+				roomName,
+			);
+			const playerValue = {
 				...playerExpect,
 				sessionID: sessionId,
 				leads: [roomName],
-			});
+			};
+			const roomValue = {
+				...roomExpect,
+				name: roomName,
+				leader: playerValue,
+			};
+			await testValuePromise<IRoomPayload>(
+				client,
+				promise,
+				{ room: true, player: true, roomValue, playerValue },
+				'roomOpened',
+			);
 		});
 		test(`allEventsCreateClient create room : ${roomName2}, roomChange event`, async () => {
-			const promise = new Promise<IRoomPayload>((resolve, reject) => {
-				client.on('roomChange', (data: IRoomPayload) => {
-					if (data.room.name === roomName2) resolve(data);
-				});
-
-				client.on('error', (msg) => {
-					reject(msg);
-				});
-				client.emit('createRoom', roomName2);
-			});
-			const [reason, room, player] = await promise
-				.then((data: IRoomPayload) => {
-					return [data.reason, data.room, data.player];
-				})
-				.catch(() => {
-					return [undefined, undefined, undefined];
-				})
-				.finally(() => {
-					client.off('roomChange');
-					client.off('error');
-				});
-			expect(reason).toBe('new leader');
-			expect(room).toMatchObject<IRoomJSON>({
-				...roomExpect,
-				name: roomName2,
-				leader: player as IPlayerJSON,
-			});
-
-			expect(player).toMatchObject<IPlayerJSON>({
+			const promise = testPromise<IRoomPayload>(
+				client,
+				'roomChange',
+				{ name: 'createRoom', value: roomName2 },
+				true,
+				roomName2,
+			);
+			const reasonValue = "new leader";
+			const playerValue = {
 				...playerExpect,
 				sessionID: sessionId,
 				leads: [roomName, roomName2],
-			});
+			}
+			const roomValue = {
+				...roomExpect,
+				name: roomName2,
+				leader: playerValue
+			}
+			await testValuePromise<IRoomPayload>(client, promise, {reason: true, player: true, room: true, reasonValue, playerValue, roomValue}, 'createRoom')
 		});
 	});
 	describe(`join room and change username AllEventsChangeUsername`, () => {
@@ -184,78 +215,64 @@ describe('all Events', () => {
 		];
 		describe('join room', () => {
 			test(`allEventsCreateClient join room : ${roomName}, roomChange event`, async () => {
-				const promise = new Promise<IRoomPayload>((resolve, reject) => {
-					client.on('roomChange', (data: IRoomPayload) => {
-						if (data.room.name === roomName) resolve(data);
-					});
-
-					client.on('error', (msg) => {
-						reject(msg);
-					});
-					client.emit('joinRoom', roomName);
-				});
-				const [reason, room, player] = await promise
-					.then((data: IRoomPayload) => {
-						return [data.reason, data.room, data.player];
-					})
-					.catch(() => {
-						return [undefined, undefined, undefined];
-					})
-					.finally(() => {
-						client.off('roomChange');
-						client.off('error');
-					});
-				expect(reason).toBe('player incoming');
-				expect(room).toMatchObject<IRoomJSON>({
-					...roomExpect,
-					name: roomName,
-					players: [player as IPlayerJSON],
-					totalPlayers: 1,
-					leader: player as IPlayerJSON,
-				});
-
-				expect(player).toMatchObject<IPlayerJSON>({
+				const promise = testPromise<IRoomPayload>(
+					client,
+					'roomChange',
+					{ name: 'joinRoom', value: roomName },
+					true,
+					roomName,
+				);
+				const reasonValue = 'player incoming';
+				const playerValue = {
 					...playerExpect,
 					sessionID: sessionId,
 					leads: [roomName, roomName2],
 					roomsState,
-				});
+				}
+				const roomValue = {
+					...roomExpect,
+					name: roomName,
+					players: [playerValue],
+					totalPlayers: 1,
+					leader: playerValue,
+				}
+				await testValuePromise<IRoomPayload>(client, promise, {
+					reason: true,
+					player: true,
+					room: true,
+					reasonValue,
+					playerValue,
+					roomValue
+				}, 'roomChange')
 			});
 		});
 		describe('change username', () => {
 			const username = 'AllEventsChangeUsername';
 			test(`allEventsCreateClient change username : \
 ${username}, playerChange event`, async () => {
-				const promise = new Promise<IPlayerPayload>((resolve, reject) => {
-					client.on('playerChange', (data: IPlayerPayload) => {
-						resolve(data);
-					});
+				const promise = testPromise<IPlayerPayload>(
+					client,
+					'playerChange',
+					{ name: 'changeUsername', value: 'AllEventsChangeUsername' },
+					false,
+					roomName,
+				);
 
-					client.on('error', (msg) => {
-						reject(msg);
-					});
-					client.emit('changeUsername', username);
-				});
-				const [reason, player] = await promise
-					.then((data: IPlayerPayload) => {
-						return [data.reason, data.player];
-					})
-					.catch(() => {
-						return [undefined, undefined];
-					})
-					.finally(() => {
-						client.off('playerChange');
-						client.off('error');
-					});
-				expect(reason).toBe('change username');
-
-				expect(player).toMatchObject<IPlayerJSON>({
+				const reasonValue = 'change username';
+				const playerValue = {
 					...playerExpect,
 					username: username,
 					sessionID: sessionId,
 					leads: [roomName, roomName2],
 					roomsState,
-				});
+				}
+
+				await testValuePromise<IPlayerPayload>(client, promise, {
+					reason: true,
+					player: true,
+					reasonValue,
+					playerValue
+				}, 'playerChange');
 			});
 		});
 	});

@@ -291,7 +291,7 @@ export default class Room extends Timer {
 			dateCreated: this._dateCreated,
 			leader: this.leader.toJSON() as IPlayerJSON,
 			gameState: this.gameState,
-			winner: this.winner?.toJSON() as IPlayerJSON ?? null,
+			winner: (this.winner?.toJSON() as IPlayerJSON) ?? null,
 			players: this._players.toJSON(),
 			totalPlayers: this.totalPlayers,
 			readys: this.readyJSON,
