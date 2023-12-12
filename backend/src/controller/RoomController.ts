@@ -187,25 +187,25 @@ export default class RoomController {
 	public join(name: string, player: Player): void {
 		try {
 			const room = this.getRoom(name);
+			// if (!)
 			if (room && room.canJoin(player)) {
-				this._ss
-					.changeRoom(player.sessionID, name, 'join')
-					.then(() => {
-						console.log('changeRoom join ca passe la promise', player.sessionID, name);
-						room.addPlayer(player);
-						this.roomStore.save(name, room);
-						this.broadcastAll('roomChange', {
-							reason: 'player incoming',
-							room: room.toJSON() as IRoomJSON,
-							player: player.toJSON() as IPlayerJSON,
-						});
-					})
-					.catch((e) => {
-						// TODO: rediriger vers  event error
-						const msg = `${(<Error>e).message}`;
-						this._ss.emit(player.sessionID, 'error', msg);
-						console.log('changeRoom join error', e);
-					});
+				this._ss.changeRoom(player.sessionID, name, 'join');
+				// .then(() => {
+				// 	console.log('changeRoom join ca passe la promise', player.sessionID, name);
+				// 	room.addPlayer(player);
+				// 	this.roomStore.save(name, room);
+				// 	this.broadcastAll('roomChange', {
+				// 		reason: 'player incoming',
+				// 		room: room.toJSON() as IRoomJSON,
+				// 		player: player.toJSON() as IPlayerJSON,
+				// 	});
+				// })
+				// .catch((e) => {
+				// 	// TODO: rediriger vers  event error
+				// 	const msg = `${(<Error>e).message}`;
+				// 	this._ss.emit(player.sessionID, 'error', msg);
+				// 	console.log('changeRoom join error', e);
+				// });
 				room.addPlayer(player);
 				this.roomStore.save(name, room);
 				this.broadcastAll('roomChange', {
@@ -290,19 +290,18 @@ export default class RoomController {
 			}
 			room.removePlayer(player);
 
-			this._ss
-				.changeRoom(player.sessionID, name, 'leave')
-				.then(() => {
-					console.log('changeRoom leave ca passe la promise', player.sessionID, name);
-					const playerPayload: Payload = this.playerChange(reason, player);
-					return { room, leader, playerPayload };
-				})
-				.catch((e) => {
-					// TODO: rediriger vers  event error
-					console.log('changeRoom leave error', e);
-					const msg = `${(<Error>e).message}`;
-					this._ss.emit(player.sessionID, 'error', msg);
-				});
+			this._ss.changeRoom(player.sessionID, name, 'leave');
+			// .then(() => {
+			// 	console.log('changeRoom leave ca passe la promise', player.sessionID, name);
+			// 	const playerPayload: Payload = this.playerChange(reason, player);
+			// 	return { room, leader, playerPayload };
+			// })
+			// .catch((e) => {
+			// 	// TODO: rediriger vers  event error
+			// 	console.log('changeRoom leave error', e);
+			// 	const msg = `${(<Error>e).message}`;
+			// 	this._ss.emit(player.sessionID, 'error', msg);
+			// });
 			const playerPayload: Payload = this.playerChange(reason, player);
 			return { room, leader, playerPayload };
 		} catch (e) {

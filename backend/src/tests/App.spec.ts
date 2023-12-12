@@ -413,6 +413,7 @@ beforeAll(async () => {
 	});
 });
 
+// TODO app tout seul a tester
 afterAll(
 	(done) => {
 		app.stop();

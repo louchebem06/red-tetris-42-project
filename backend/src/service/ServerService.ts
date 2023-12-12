@@ -16,10 +16,32 @@ export default class ServerService {
 	}
 
 	private get sids(): Map<string, Set<string>> {
+		/*
+		 * key: socket id
+		 * value: set of rooms which socket.id is in
+		 * Map(1) {
+		 *	'62mwJK-wkNinwAKSAAAB' => Set(3) {
+		 *		'3eda937c-f71d-401c-9e54-df71d498fa19',
+		 *		'62mwJK-wkNinwAKSAAAB',
+		 *		'Donaldville'
+		 *	}
+		 * }
+		 */
 		return this.io.sockets.adapter.sids;
 	}
 
 	private get rooms(): Map<string, Set<string>> {
+		/*
+		 * key: room name
+		 * value: set of socket ids that are in the room
+		 * Map(5) {
+		 * '3eda937c-f71d-401c-9e54-df71d498fa19' => Set(1) { '62mwJK-wkNinwAKSAAAB' },
+		 * '62mwJK-wkNinwAKSAAAB' => Set(1) { '62mwJK-wkNinwAKSAAAB' },
+		 * 'Donaldville' => Set(1) { '62mwJK-wkNinwAKSAAAB' },
+		 * 'Minnie' => Set(0) {},
+		 * 'aaaaaaaaaaaaaaaaaaaaaaaaa' => Set(0) {}
+		 * }
+		 */
 		return this.io.sockets.adapter.rooms;
 	}
 
@@ -119,37 +141,56 @@ export default class ServerService {
 		}
 	}
 
-	public async changeRoom(sid: string, room: string, change: ChangeRoom): Promise<void> {
+	/**
+	 * Change the room for a given session.
+	 *
+	 * @param {string} sid - The session ID.
+	 * 					-> expected like cb3334ef-a7ca-428f-8589-849823de80c9
+	 * @param {string} room - The name of the room to change to.
+	 * 					-> expected like room-1
+	 * @param {ChangeRoom} change - The type of change to make (leave or join).
+	 * @return {Promise<void>} A Promise that resolves once the room change is complete.
+	 */
+	public changeRoom(sid: string, name: string, change: ChangeRoom): void {
+		// public async changeRoom(sid: string, room: string, change: ChangeRoom): Promise<void> {
 		// tableau de socket de la session
-		const self = await this.io.in(sid).fetchSockets();
+		const self = this.rooms.get(sid);
+		if (!self) {
+			this.throwError(`Session ${sid} not found`);
+		}
+		// const self = await this.io.in(sid).fetchSockets();
 
 		// les sids (Set sid socket) de la room demandee
-		const sids = this.io.sockets.adapter.rooms.get(room);
+		// const sids = this.io.sockets.adapter.rooms.get(room);
+		const room = this.rooms.get(name);
 		switch (change) {
-			case 'leave':
-				self.forEach((socket) => {
-					if (!sids?.has(socket.id)) {
+			case 'leave': {
+				if (!room) {
+					this.throwError(`Cannot leave room that does not exist: ${name}`);
+				}
+				self.forEach((sid) => {
+					if (!room.has(sid)) {
 						this.throwError(`Session ${sid} not found in room ${room}`);
 					}
 				});
-				this.io.in(sid).socketsLeave(room);
+				this.io.in(sid).socketsLeave(name);
+				// this.io.in(sid).socketsLeave(room);
 				break;
+			}
 
-			case 'join':
-				// console.log(
-				// 	'ServerService, changeRoom, -> case join',
-				// sids,
-				// self,
-				// room,
-				// sid;
-				self.forEach((socket) => {
-					if (sids?.has(socket.id)) {
-						const msg = `ServerService Session ${sid} already found in room ${room}`;
-						this.throwError(msg);
+			case 'join': {
+				if (!room) {
+					this.throwError(`Cannot join room that does not exist: ${name}`);
+				}
+				self.forEach((sid) => {
+					if (room.has(sid)) {
+						this.throwError(`Cannot join room which you already are in: ${name}`);
 					}
 				});
-				this.io.in(sid).socketsJoin(room);
+				this.io.in(sid).socketsJoin(name);
+				// this.io.in(sid).socketsLeave(room);
 				break;
+			}
 		}
 	}
 

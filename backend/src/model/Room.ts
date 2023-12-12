@@ -23,7 +23,7 @@ export default class Room extends Timer {
 		this._name = name;
 		leader.leads = this.name;
 		this._leader = leader;
-		this.addPlayer(leader);
+		// this.addPlayer(leader);
 		this._game = new Game(this._name);
 
 		this.canStartGame = this.canStartGame.bind(this);
@@ -157,7 +157,7 @@ export default class Room extends Timer {
 	}
 
 	public canJoin(player: Player): boolean {
-		return (this.isLeader(player) && this.totalPlayers === 1) || !this.hasPlayer(player);
+		return !this.hasPlayer(player);
 	}
 
 	public removePlayer(player: Player): Player {
@@ -291,7 +291,7 @@ export default class Room extends Timer {
 			dateCreated: this._dateCreated,
 			leader: this.leader.toJSON() as IPlayerJSON,
 			gameState: this.gameState,
-			winner: this.winner?.toJSON() as IPlayerJSON,
+			winner: this.winner?.toJSON() as IPlayerJSON ?? null,
 			players: this._players.toJSON(),
 			totalPlayers: this.totalPlayers,
 			readys: this.readyJSON,
