@@ -54,7 +54,7 @@ export default class ServerService {
 	public broadcast(datas: IBrodacastFormat): void {
 		try {
 			const { event, data, sid, room } = datas;
-			console.log('SService', event, data, sid, room);
+			// console.log('SService', event, data, sid, room);
 			if (room) {
 				// broadcast to room
 				if (!this.isPublicRoom(room)) {
@@ -76,12 +76,14 @@ export default class ServerService {
 					}
 				} else {
 					// send to all
-					console.log(
-						`SService send to all (no sid)', event: ${event}, data: ${JSON.stringify(
-							data,
-						)}, sid: ${sid}, room: ${room}`,
-						this.io.in(room).emit(event, data),
-					);
+					// console.log(
+					// 	`SService send to all (no sid)', event: ${event}, data: ${JSON.stringify(
+					// 		data,
+					// 	)}, sid: ${sid}, room: ${room}`,
+					// 	`sids: ${JSON.stringify(this.io.sockets.adapter.sids)}`,
+					// 	`rooms: ${JSON.stringify(this.io.sockets.adapter.rooms)}`,
+					// );
+					this.io.in(room).emit(event, data);
 				}
 			} else {
 				// broadcast to all
@@ -117,9 +119,9 @@ export default class ServerService {
 		}
 	}
 
-	public async changeRoom(sessionID: string, room: string, change: ChangeRoom): Promise<void> {
+	public async changeRoom(sid: string, room: string, change: ChangeRoom): Promise<void> {
 		// tableau de socket de la session
-		const self = await this.io.in(sessionID).fetchSockets();
+		const self = await this.io.in(sid).fetchSockets();
 
 		// les sids (Set sid socket) de la room demandee
 		const sids = this.io.sockets.adapter.rooms.get(room);
@@ -127,20 +129,26 @@ export default class ServerService {
 			case 'leave':
 				self.forEach((socket) => {
 					if (!sids?.has(socket.id)) {
-						this.throwError(`Session ${sessionID} not found in room ${room}`);
+						this.throwError(`Session ${sid} not found in room ${room}`);
 					}
 				});
-				this.io.in(sessionID).socketsLeave(room);
+				this.io.in(sid).socketsLeave(room);
 				break;
 
 			case 'join':
-				console.log('ServerService, changeRoom, -> case join', sids, self), room, sessionID;
+				// console.log(
+				// 	'ServerService, changeRoom, -> case join',
+				// sids,
+				// self,
+				// room,
+				// sid;
 				self.forEach((socket) => {
 					if (sids?.has(socket.id)) {
-						this.throwError(`ServerService Session ${sessionID} already found in room ${room}`);
+						const msg = `ServerService Session ${sid} already found in room ${room}`;
+						this.throwError(msg);
 					}
 				});
-				this.io.in(sessionID).socketsJoin(room);
+				this.io.in(sid).socketsJoin(room);
 				break;
 		}
 	}

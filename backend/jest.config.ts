@@ -11,6 +11,7 @@ const config: Config = {
 		'<rootDir>/dist/',
 		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
+		'<rootDir>/src/tests/SetReady.spec.ts§',
 		'<rootDir>/src/tests/coverage-reports/',
 	],
 	coverageThreshold: {

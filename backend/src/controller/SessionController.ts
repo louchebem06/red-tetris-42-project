@@ -11,12 +11,10 @@ import { PC } from './PlayerController';
 import { RC } from './RoomController';
 import { logger } from './LogController';
 import { eventEmitter } from '../model/EventEmitter';
-import timer from '../model/Timer';
 import SessionStore from '../store/SessionStore';
 
 class SessionController {
 	private sessionStore = new SessionStore();
-	// private _sessions: Map<string, Session> = new Map();
 	// <sid, <session, player>>
 	// TODO A VIRER _leftTooSoon une fois que la bdd sera installée
 	private _leftTooSoon: Map<string, { s: Session; p: Player }> = new Map();
@@ -120,14 +118,17 @@ class SessionController {
 				if (session && session.sockets.length === 0) {
 					rc.disconnectPlayer(player);
 
-					setTimeout(() => {
-						if (session && session.sockets.length === 0) {
-							this.sessionStore.delete(sid);
-							this._leftTooSoon.set(sid, { s: session, p: player });
-							logger.log(`[LEFT TOO SOON] - ${JSON.stringify({ player, sid })}`);
-							pc.removePlayer(sid);
-						}
-					}, timer.destroySession);
+					setTimeout(
+						() => {
+							if (session && session.sockets.length === 0) {
+								this.sessionStore.delete(sid);
+								this._leftTooSoon.set(sid, { s: session, p: player });
+								logger.log(`[LEFT TOO SOON] - ${JSON.stringify({ player, sid })}`);
+								pc.removePlayer(sid);
+							}
+						},
+						parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000,
+					);
 				}
 			} catch (e) {
 				const msg = `[SESSION EMPTY] - Something has disturbed: ${(<Error>e).message}`;

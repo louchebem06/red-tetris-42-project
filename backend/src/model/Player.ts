@@ -2,6 +2,7 @@ import { State } from '../type/PlayerWaitingRoomState';
 import { logger } from '../controller/LogController';
 import { IRoomState } from '../interface/IRoomState';
 import { eventEmitter } from './EventEmitter';
+import IPlayerJSON from 'interface/IPlayerJSON';
 class Player {
 	private _dateCreated: Date = new Date();
 
@@ -173,7 +174,7 @@ class Player {
 		logger.log(llog);
 	}
 
-	public toJSON(): object {
+	public toJSON(): IPlayerJSON {
 		return {
 			username: this.username,
 			sessionID: this.sessionID,
@@ -181,7 +182,7 @@ class Player {
 			connected: this.connected,
 			leads: this.leads,
 			wins: this.wins,
-			games: this.games,
+			games: this.games, // TODO: change to IGame
 			roomsState: this.rooms,
 		};
 	}

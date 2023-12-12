@@ -9,8 +9,9 @@ import IPlayerJSON from '../interface/IPlayerJSON';
 import { IRoomState } from '../interface/IRoomState';
 import IRoomJSON from '../interface/IRoomJSON';
 import { State } from '../type/PlayerWaitingRoomState';
+import { Timer } from './Timer';
 
-export default class Room {
+export default class Room extends Timer {
 	private _players: PlayerStore = new PlayerStore();
 	private _name: string;
 	private _leader: Player;
@@ -18,6 +19,7 @@ export default class Room {
 	private _dateCreated: Date = new Date();
 
 	public constructor(name: string, leader: Player) {
+		super();
 		this._name = name;
 		leader.leads = this.name;
 		this._leader = leader;
@@ -152,6 +154,10 @@ export default class Room {
 			.forEach((p) => {
 				this.updatePlayer(p, p.roomState(this.name)?.status ?? 'idle');
 			});
+	}
+
+	public canJoin(player: Player): boolean {
+		return (this.isLeader(player) && this.totalPlayers === 1) || !this.hasPlayer(player);
 	}
 
 	public removePlayer(player: Player): Player {

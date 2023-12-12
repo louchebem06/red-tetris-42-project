@@ -1,7 +1,6 @@
 import EventEmitter from 'events';
 import Room from './Room';
 import Player from './Player';
-import timer from './Timer';
 import IRoomJSON from '../interface/IRoomJSON';
 import IPlayerJSON from '../interface/IPlayerJSON';
 import { State } from '../type/PlayerWaitingRoomState';
@@ -32,10 +31,10 @@ class MyEventEmitter extends EventEmitter {
 				const total = room.totalPlayers;
 				const ready = room.totalReady;
 				if (total > 0 && total === ready) {
-					console.log(`starting countdown`, timer.countdown, room.name);
-					timer.startCountdown(eventEmitter)(player, room);
+					console.log(`starting countdown`, room.countdown, room.name);
+					room.startCountdown(eventEmitter)(player, room);
 				} else {
-					timer.resetCountdown();
+					room.resetCountdown();
 				}
 			} catch (e) {
 				throw new Error(`Event Emitter Error: ${(<Error>e).message}`);

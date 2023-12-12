@@ -9,7 +9,6 @@ import IPlayerJSON from '../interface/IPlayerJSON';
 import { IBrodacastFormat } from '../interface/IBrodacastFormat';
 import { Payload } from '../type/PayloadsTypes';
 import { eventEmitter } from '../model/EventEmitter';
-import timer from '../model/Timer';
 import IGameStartPayload from 'interface/IGameStartPayload';
 import IPlayerPayload from 'interface/IPlayerPayload';
 
@@ -50,17 +49,16 @@ export default class RoomController {
 		try {
 			const room = this.getRoom(name);
 			if (room?.isLeader(player)) {
-				if (timer.countdown === parseInt(process.env.START_GAME_TIMER ?? '60', 10)) {
-					timer.startCountdown(eventEmitter)(player, room);
+				if (room.countdown === parseInt(process.env.START_GAME_TIMER ?? '60', 10)) {
+					room.startCountdown(eventEmitter)(player, room);
 				} else {
-					timer.resetCountdown();
+					room.resetCountdown();
 				}
-				timer.lock = !timer.lock;
+				room.lock = !room.lock;
 			} else {
 				throw new Error(`Countdown can only be toggled by the room leader`);
 			}
 		} catch (e) {
-			// this.broadcastAll('error', `RoomController startGame Error: ${(<Error>e).message}`);
 			throw new Error(`RoomController toggleCountdownGame Error: ${(<Error>e).message}`);
 		}
 	}
@@ -78,6 +76,7 @@ export default class RoomController {
 
 	private readyTimer(data: IGameStartPayload): void {
 		try {
+			// console.log('Event Emitter: readyTimer', data);
 			this.broadcast({
 				event: 'gameStart',
 				data,
@@ -179,7 +178,7 @@ export default class RoomController {
 				if (room.empty) {
 					eventEmitter.emit('roomEmpty', room.toJSON(), player.toJSON());
 				}
-			}, timer.disconnectSession);
+			}, room.disconnectSession);
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);
 		}
@@ -188,8 +187,25 @@ export default class RoomController {
 	public join(name: string, player: Player): void {
 		try {
 			const room = this.getRoom(name);
-			if (room && !room.hasPlayer(player)) {
-				this._ss.changeRoom(player.sessionID, name, 'join');
+			if (room && room.canJoin(player)) {
+				this._ss
+					.changeRoom(player.sessionID, name, 'join')
+					.then(() => {
+						console.log('changeRoom join ca passe la promise', player.sessionID, name);
+						room.addPlayer(player);
+						this.roomStore.save(name, room);
+						this.broadcastAll('roomChange', {
+							reason: 'player incoming',
+							room: room.toJSON() as IRoomJSON,
+							player: player.toJSON() as IPlayerJSON,
+						});
+					})
+					.catch((e) => {
+						// TODO: rediriger vers  event error
+						const msg = `${(<Error>e).message}`;
+						this._ss.emit(player.sessionID, 'error', msg);
+						console.log('changeRoom join error', e);
+					});
 				room.addPlayer(player);
 				this.roomStore.save(name, room);
 				this.broadcastAll('roomChange', {
@@ -277,13 +293,15 @@ export default class RoomController {
 			this._ss
 				.changeRoom(player.sessionID, name, 'leave')
 				.then(() => {
-					console.log('changeRoom ca passe la pronise');
+					console.log('changeRoom leave ca passe la promise', player.sessionID, name);
 					const playerPayload: Payload = this.playerChange(reason, player);
 					return { room, leader, playerPayload };
 				})
 				.catch((e) => {
-					console.log('changeRoom error', e);
-					// throw new Error(`RoomController: removePlayer error: ${(<Error>e).message}`);
+					// TODO: rediriger vers  event error
+					console.log('changeRoom leave error', e);
+					const msg = `${(<Error>e).message}`;
+					this._ss.emit(player.sessionID, 'error', msg);
 				});
 			const playerPayload: Payload = this.playerChange(reason, player);
 			return { room, leader, playerPayload };

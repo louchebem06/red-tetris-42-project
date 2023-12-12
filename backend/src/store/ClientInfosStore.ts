@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 import IStore from '../interface/IStore';
 import { ClientInfos } from '../type/ClientInfosTypes';
 import { eventEmitter } from '../model/EventEmitter';
-import timer from '../model/Timer';
+// import timer from '../model/Timer';
 
 export default class ClientInfosStore implements IStore<ClientInfos> {
 	private clientsInfos: Map<string, ClientInfos> = new Map();
@@ -47,7 +47,7 @@ export default class ClientInfosStore implements IStore<ClientInfos> {
 						eventEmitter.emit('sessionEmpty', sid);
 					}
 				},
-				timer.disconnectSession / (this.total + 1),
+				(parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000) / (this.total + 1),
 			);
 			clientInfos.disconnectTimer = disconnectTimer;
 		}

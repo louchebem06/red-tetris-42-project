@@ -2,22 +2,14 @@ import EventEmitter from 'events';
 import Player from './Player';
 import Room from './Room';
 
-export interface Timer {
-	destroySession: number;
-	disconnectSession: number;
-	timerId: NodeJS.Timeout | null;
-	countdown: number;
-	lock: boolean;
-	startCountdown(eventEmitter: EventEmitter): (player: Player, room: Room) => void;
-	resetCountdown(): void;
-}
-const timer: Timer = {
-	destroySession: parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000,
-	disconnectSession: parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000,
-	timerId: null,
-	countdown: parseInt(process.env.START_GAME_TIMER ?? '60', 10),
-	lock: false,
-	startCountdown: function (eventEmitter: EventEmitter): (player: Player, room: Room) => void {
+export class Timer {
+	public destroySession: number = parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000;
+	public disconnectSession: number = parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000;
+	public timerId: NodeJS.Timeout | null = null;
+	public countdown: number = parseInt(process.env.START_GAME_TIMER ?? '60', 10);
+	public lock: boolean = false;
+
+	public startCountdown(eventEmitter: EventEmitter): (player: Player, room: Room) => void {
 		return (player: Player, room: Room): void => {
 			if (!this.lock) {
 				this.resetCountdown();
@@ -42,14 +34,13 @@ const timer: Timer = {
 				updateCountdown();
 			}
 		};
-	},
-	resetCountdown: function (): void {
+	}
+	public resetCountdown(): void {
 		if (!this.lock) {
 			this.countdown = parseInt(process.env.START_GAME_TIMER ?? '60', 10);
 			if (this.timerId) {
 				clearTimeout(this.timerId);
 			}
 		}
-	},
-};
-export default timer;
+	}
+}

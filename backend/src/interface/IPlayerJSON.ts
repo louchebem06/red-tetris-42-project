@@ -9,6 +9,6 @@ export default interface IPlayerJSON {
 	leads: string[];
 	wins: string[];
 	connected: boolean;
-	games: Map<string, object>;
+	games: object[]; // TODO: change to IGame
 	roomsState: IRoomState[];
 }

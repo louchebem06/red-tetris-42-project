@@ -11,7 +11,6 @@ import { PC } from './PlayerController';
 import { RC } from './RoomController';
 import { sessionController } from './SessionController';
 import { logger } from './LogController';
-import IPlayerJSON from '../interface/IPlayerJSON';
 
 export default class SocketController {
 	public constructor(
@@ -181,24 +180,6 @@ export default class SocketController {
 						sid: '',
 						room: room,
 					});
-					this.io.emit(player.sessionID, 'playerChange', {
-						reason: 'ready',
-						player: player.toJSON() as IPlayerJSON,
-					});
-					console.log(
-						'event playerChange ready emit',
-						room,
-						player,
-						// this.io.broadcast({
-						// 	event: 'playerChange',
-						// 	data: {
-						// 		reason: 'ready',
-						// 		player: player.toJSON(),
-						// 	} as Payload,
-						// 	sid: '',
-						// 	room: room,
-						// }),
-					);
 				}
 			} catch (e) {
 				this.emitError(`SocketController ready error: ${(<Error>e).message}`);
