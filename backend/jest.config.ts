@@ -11,7 +11,7 @@ const config: Config = {
 		'<rootDir>/dist/',
 		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
-		'<rootDir>/src/tests/SetReady.spec.ts§',
+		'<rootDir>/src/tests/SetReady.spec.ts',
 		'<rootDir>/src/tests/coverage-reports/',
 	],
 	coverageThreshold: {
@@ -29,6 +29,15 @@ const config: Config = {
 	},
 	testTimeout: 1000,
 	roots: ['<rootDir>/src/'],
+	setupFilesAfterEnv: [
+		'<rootDir>/src/tests/utils/expect.ts',
+		'<rootDir>/src/tests/utils/typeGuards.ts',
+		'<rootDir>/src/tests/client/outgoingPayload/types.ts',
+		'<rootDir>/src/tests/client/outgoingPayload/handlers.ts',
+		'<rootDir>/src/tests/client/outgoingPayload/typeGuard/validation.ts',
+		'<rootDir>/src/tests/client/utils/creation.ts',
+	],
+	injectGlobals: true,
 };
 
 export default config;

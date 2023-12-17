@@ -1,0 +1,19 @@
+import IRoomJSON from '../../../interface/IRoomJSON';
+import IPlayerJSON from '../../../interface/IPlayerJSON';
+
+function createRoom(overrides: Partial<IRoomJSON> = {}): IRoomJSON {
+	return {
+		name: undefined as unknown as string,
+		dateCreated: expect.any(String) as unknown as Date,
+		leader: undefined as unknown as IPlayerJSON,
+		winner: null,
+		gameState: false,
+		players: [],
+		totalPlayers: 0,
+		readys: [],
+		totalReady: 0,
+		...overrides,
+	};
+}
+
+export { createRoom };

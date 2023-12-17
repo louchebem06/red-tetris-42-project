@@ -27,6 +27,15 @@ const config: Config = {
 		color: 'cyan',
 	},
 	roots: ['<rootDir>/src/'],
+	setupFilesAfterEnv: [
+		'<rootDir>/src/tests/utils/expect.ts',
+		'<rootDir>/src/tests/utils/typeGuards.ts',
+		'<rootDir>/src/tests/client/outgoingPayload/types.ts',
+		'<rootDir>/src/tests/client/outgoingPayload/handlers.ts',
+		'<rootDir>/src/tests/client/outgoingPayload/typeGuard/validation.ts',
+		'<rootDir>/src/tests/client/utils/creation.ts',
+	],
+	injectGlobals: true,
 };
 
 export default config;
