@@ -35,7 +35,7 @@
 		"@typescript-eslint/parser": "^6.18.0",
 		"concurrently": "^8.2.2",
 		"eslint": "^8.54.0",
-		"eslint-config-prettier": "^9.0.0",
+		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prefer-arrow-functions": "^3.2.4",
 		"eslint-plugin-svelte": "^2.35.1",
 		"jsdom": "^23.2.0",
