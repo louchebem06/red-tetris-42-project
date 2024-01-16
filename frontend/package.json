@@ -28,7 +28,7 @@
 		"test:coverage:web": "npm run test:coverage && open coverage/index.html"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.40.0",
+		"@playwright/test": "^1.40.1",
 		"@sveltejs/adapter-static": "^2.0.3",
 		"@sveltejs/kit": "^1.27.6",
 		"@typescript-eslint/eslint-plugin": "^6.19.0",
