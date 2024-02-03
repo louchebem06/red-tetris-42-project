@@ -10,12 +10,24 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 10000
+    reviewers:
+      - "louchebem06"
+    assignees:
+      - "louchebem06"
       
   - package-ecosystem: "npm"
     # Files stored in `app` directory
     directory: "/backend"
     schedule:
       interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 10000
+    reviewers:
+      - "AudeizReading"
+    assignees:
+      - "AudeizReading"
 
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
@@ -23,3 +35,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 10000
+    reviewers:
+      - "louchebem06"
+      - "AudeizReading"
+    assignees:
+      - "louchebem06"
+      - "AudeizReading"
