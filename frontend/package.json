@@ -46,7 +46,7 @@
 		"svelte-check": "^3.6.2",
 		"tslib": "^2.4.1",
 		"typescript": "^5.3.3",
-		"vite": "^4.5.1",
+		"vite": "^4.5.2",
 		"vite-plugin-istanbul": "^5.0.0"
 	},
 	"type": "module",
