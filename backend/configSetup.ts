@@ -13,20 +13,27 @@ const env: Env[] = [
 	{ key: 'PORT', value: '8080' },
 	{ key: 'HOST', value: 'localhost' },
 	{ key: 'PROTOCOL', value: 'ws' },
+	{ key: 'TICKS', value: '128' },
+	{ key: 'TICKS_INTERVAL_MS', value: '1000' },
+	{ key: 'DESTROY_TIMER', value: '3600' },
+	{ key: 'DISCO_TIMER', value: '60' },
+	{ key: 'START_GAME_TIMER', value: '60' },
 ];
 
+function replace(key: string, value: string): void {
+	const elt = env.find((e) => e.key === key);
+	if (elt) elt.value = value;
+}
+
 if (process.env.UNITSTESTS) {
-	env.push({ key: 'DESTROY_TIMER', value: '9' });
-	env.push({ key: 'DISCO_TIMER', value: '5' });
-	env.push({ key: 'START_GAME_TIMER', value: '5' });
+	replace('DESTROY_TIMER', '9');
+	replace('DISCO_TIMER', '5');
+	replace('START_GAME_TIMER', '5');
+	replace('TICKS', '128');
 } else if (process.env.DEV) {
-	env.push({ key: 'DESTROY_TIMER', value: '60' });
-	env.push({ key: 'DISCO_TIMER', value: '30' });
-	env.push({ key: 'START_GAME_TIMER', value: '15' });
-} else {
-	env.push({ key: 'DESTROY_TIMER', value: '3600' });
-	env.push({ key: 'DISCO_TIMER', value: '60' });
-	env.push({ key: 'START_GAME_TIMER', value: '60' });
+	replace('DESTROY_TIMER', '20');
+	replace('DISCO_TIMER', '15');
+	replace('START_GAME_TIMER', '10');
 }
 
 const body = env

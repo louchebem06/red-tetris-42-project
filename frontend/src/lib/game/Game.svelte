@@ -2,82 +2,70 @@
 	import Grid from './Grid.svelte';
 	import Controller from './Controller.svelte';
 	import KeysGame from './keyboard/KeysGame.svelte';
-	// import Sound from './Sound.svelte';
+	import Sound from './Sound.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { io } from '$lib/socket';
 	import type { TetriminosArrayType } from './gameUtils';
 	import NextPiece from './NextPiece.svelte';
+	import Score from './Score.svelte';
 
-	const up = (): void => {};
+	export let room: string;
 
-	const down = (): void => {};
+	const up = (): void => {
+		io.emit('gameChange', {action: "up", room})
+	};
 
-	const left = (): void => {};
+	const down = (): void => {
+		io.emit('gameChange', {action: "down", room})
+	};
 
-	const right = (): void => {};
+	const left = (): void => {
+		io.emit('gameChange', {action: "left", room})
+	};
 
-	const space = (): void => {};
+	const right = (): void => {
+		io.emit('gameChange', {action: "right", room})
+	};
 
-	let tab: TetriminosArrayType = [
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-		['I', '', '', '', '', 'I', '', '', '', ''],
-	];
-	let nextPiece: TetriminosArrayType = [
-		['', 'I', '', ''],
-		['', 'I', '', ''],
-		['', 'I', '', ''],
-		['', 'I', '', ''],
-	];
+	const space = (): void => {
+		io.emit('gameChange', {action: "space", room})
+	};
+
+	let tab: TetriminosArrayType = [];
+
+	let nextPiece: TetriminosArrayType = [];
 
 	const controller = { up, down, left, right, space };
 
-	// let effects: { [key: string]: HTMLAudioElement };
+	let effects: { [key: string]: HTMLAudioElement };
+
+	let level: number = 0;
+	let score: number = 0;
 
 	onMount(() => {
-		io.on('connect', () => {
-			console.log('Connected to socket');
-		});
-		io.on('disconnect', () => {
-			console.log('Disconect to socket');
-		});
-		io.on('connect_error', () => {
-			console.log('Error connection socket');
-		});
-		io.on('reconnecting', () => {
-			console.log('Reconnecting to socket');
-		});
-		io.on('reconnect', () => {
-			console.log('reconnect to socket');
+		io.on('gameChange', (data: any) => {
+			tab = data.map;
+			nextPiece = data.nextPiece;
+			if (data?.soundEffect) {
+				data.soundEffect.forEach((effect) => {
+					effects[effect].play();
+				});
+			}
+			level = data.level;
+			score = data.score;
 		});
 	});
 
 	onDestroy(() => {
-		io.close();
-	});
+		io.off('gameChange');
+	})
 </script>
 
 <Controller {...controller} />
 <KeysGame />
 <NextPiece bind:nextPiece />
-<!-- <Sound bind:effects /> -->
+<Sound bind:effects />
+<Score bind:score bind:level />
 
 <div class="content">
 	<div class="game">

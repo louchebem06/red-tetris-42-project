@@ -3,7 +3,6 @@ import Room from './Room';
 import Player from '../players/Player';
 import { Change, IGameStartPayload, OAPM } from '../eventsIO/payloads/types/IPayload';
 import { PayloadFactory } from '../eventsIO/payloads/PayloadFactory';
-//
 import { ServerService } from '../infra/io';
 
 type PublishArgs = { room: Room; player: Player; event: keyof OAPM; reason?: Change };
@@ -15,8 +14,19 @@ export class RoomService extends ServerService {
 		super(io);
 	}
 
+	public get server(): Server {
+		return this.io;
+	}
+
 	public isConnectedOnServer(): boolean {
 		return !!this.isPublicRoom(this.name);
+	}
+
+	public isEmpty(): boolean {
+		const room = this.getRoom(this.name);
+		const roomSids = room && [...room.values()];
+
+		return !!roomSids && roomSids.length === 0;
 	}
 
 	public hasPlayer(player: Player): boolean {
@@ -46,6 +56,7 @@ export class RoomService extends ServerService {
 		const payload = PayloadFactory.createBroadcastFormat(event, data, '', this.name);
 		this.broadcast(payload);
 	}
+
 	// open
 	public create(room: Room, player: Player): void {
 		try {
@@ -57,6 +68,7 @@ export class RoomService extends ServerService {
 			this.throwError((<Error>e).message);
 		}
 	}
+
 	// join
 	public join(room: Room, player: Player): void {
 		try {
@@ -110,6 +122,7 @@ export class RoomService extends ServerService {
 	public close(room: Room, player: Player): void {
 		this.publish({ room, player, event: 'roomClosed' });
 	}
+
 	// ready timer
 	// game start
 	public timer(data: IGameStartPayload): void {
@@ -119,9 +132,6 @@ export class RoomService extends ServerService {
 			this.throwError((<Error>e).message);
 		}
 	}
-
-	// info room
-	// infos du jeu
 
 	// error
 	public error(message: string): void {

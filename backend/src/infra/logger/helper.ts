@@ -29,9 +29,6 @@ ${colors.fMagenta}${lead}${colors.reset}
 ${colors.fCyan}${winner}${colors.reset}
 `;
 	});
-	if (player.games.length > 0) {
-		pLog += dotSeparator;
-	}
 	if (player.wins.length > 0) {
 		pLog += dotSeparator;
 	}
@@ -113,7 +110,6 @@ export function logSocket(socket: Socket): StringsLoggingFormat {
 			sessionID: player.sessionID,
 			leads: [...player.leads],
 			wins: [...player.wins],
-			games: player.games,
 			roomsState: [...player.roomsState.values()],
 		},
 	};

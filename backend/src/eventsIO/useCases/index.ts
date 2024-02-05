@@ -13,6 +13,7 @@ import { LeaveRoom } from './LeaveRoom';
 import { LogOnAnyEvents } from './LogOnAnyEvents';
 import { Ready } from './Ready';
 import { ToggleCountDown } from './ToggleCountDown';
+import { GameChange } from './GameChange';
 
 export {
 	EventCommand,
@@ -30,4 +31,5 @@ export {
 	LogOnAnyEvents,
 	Ready,
 	ToggleCountDown,
+	GameChange,
 };

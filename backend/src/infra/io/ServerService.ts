@@ -55,19 +55,25 @@ export class ServerService {
 	}
 
 	protected throwError(message: string): never {
-		// console.trace('server Service throwError:', message);
+		console.trace('server Service throwError:', message);
 		throw new Error(message);
 	}
 
+	protected get hasClients(): boolean {
+		return !!(this.io.sockets.sockets.size > 0);
+	}
+
 	public emit(sid: string, event: string, data: OAPM[keyof OAPM]): void {
-		this.io.to(sid).emit(event, data);
+		if (this.hasClients) {
+			this.io.to(sid).emit(event, data);
+		}
 	}
 
 	public broadcast(datas: IBrodacastFormat): void {
 		try {
 			const { event, data, sid, room } = datas;
 			// console.log('SService', event, data, sid, room);
-			if (room) {
+			if (room && this.hasClients) {
 				// broadcast to room
 				if (!this.isPublicRoom(room)) {
 					// console.error(``, this.rooms, this.sids, this.io, this.io.sockets, this.io.sockets.adapter)
@@ -111,7 +117,8 @@ export class ServerService {
 				}
 			}
 		} catch (e) {
-			this.throwError(`${e instanceof Error && e.message}`);
+			console.log('SService broadcast error', e);
+			if (this.hasClients) this.throwError(`${e instanceof Error && e.message}`);
 		}
 	}
 

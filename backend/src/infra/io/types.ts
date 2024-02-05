@@ -1,3 +1,4 @@
+import { IStatePlayer, TypeAction } from '../../games/GameLogic';
 import {
 	ISrvToCltPayload,
 	IPlayerPayload,
@@ -35,6 +36,7 @@ interface ISrvToCltEvts {
 	message: (payload: IMOP) => void;
 	error: (message: string) => void;
 	gameStart: (payload: IGameStartPayload) => void;
+	gameChange: (payload: IStatePlayer) => void;
 }
 
 interface ICltToSrvEvts {
@@ -49,6 +51,7 @@ interface ICltToSrvEvts {
 	changeUsername: (username: string) => void;
 	getRoom: (roomName: string) => void;
 	getRoomsPlayer: () => void;
+	gameChange: (data: { action: TypeAction; room: string }) => void;
 	disconnect: (reason: string) => void;
 }
 

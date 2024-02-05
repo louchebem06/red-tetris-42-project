@@ -140,6 +140,7 @@ socketClient.emit('ready', roomName);
 
 ### gameStart
 
+_(pas encore mis en place, sorry)_
 Le leader d'une room peut envoyer cet event afin de demarrer le compte à rebours pour démarrer la partie. Si le leader renvoie cet event, le compte à rebours est arrêté. (fonctionnement en _toggle_)
 
 Le serveur repond avec un event **gameStart** (payload détaillé plus bas), lorsque le compte à rebours est lancé (meme conditions que si tous les joueurs d'une room sont readys, la game start au bout du décompte):
@@ -147,6 +148,16 @@ Le serveur repond avec un event **gameStart** (payload détaillé plus bas), lor
 ```js
 socketClient.emit('gameStart', roomName);
 ```
+
+### gameChange
+
+Évènement émis par le client lorsqu'un joueur fait une action de jeu
+
+```js
+socketClient.emit('gameChange', { action: TypeAction, room: string }); // action -> mouvement du player, room -> nom de la room
+```
+
+Le serveur ne repond pas à cet event
 
 ## on (Server -> Client)
 
@@ -1005,4 +1016,19 @@ Ce compte à rebours est transmis au travers de cet event:
 	reason: Reason, // time ou start
 	message?: string // Contient un descriptif du compte a rebours
 }
+```
+
+### gameChange
+
+Évènement émis par le serveur lorsqu'une partie est démarrée: diffuse les éléments de jeu à chaque player individuellement tous les (env.process.TICKS_INTERVAL_MS / env.process.TICKS) intervalles de temps. Ces paramètres d'intervalles sont configurables au démarrage du serveur.
+
+```js
+socketClient.emit('gameChange', {
+	level: number;
+	score: number;
+	map: TetriminosArrayType;
+	nextPiece: TetriminosArrayType;
+	soundEffect?: SoundEffectType;
+} as IStatePlayer); // IStatePlayer
+
 ```

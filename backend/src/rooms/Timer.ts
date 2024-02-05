@@ -28,6 +28,12 @@ export class Timer extends Observer<Observable> {
 					}
 					break;
 				}
+				break;
+			}
+
+			case 'LeaderStartGame': {
+				// TODO demarrer la game si le leader le demande
+				break;
 			}
 		}
 	}

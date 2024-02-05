@@ -10,11 +10,12 @@ import { RoomService } from './RoomService';
 import Game from '../games/Game';
 import { RoomEventsManager } from './events/manager';
 import { AddPlayerCommand, RemovePlayerCommand } from './useCases';
-import { StartGameCommand, StopGameCommand } from './useCases';
 import { RoomPropsBase } from './RoomPropsBase';
+import { PlayGameCommand, StartGameCommand, StartedState, StopGameCommand } from '../games';
+import { TypeAction } from '../games/GameLogic';
 
 export default class Room extends RoomPropsBase {
-	private _game: Game;
+	private _games: Record<string, Game> = {};
 
 	public constructor(
 		name: string,
@@ -23,7 +24,6 @@ export default class Room extends RoomPropsBase {
 		public events: RoomEventsManager = new RoomEventsManager(),
 	) {
 		super(name, service, leader);
-		this._game = new Game(name);
 
 		this.service.create(this, leader);
 		this.timer.room = this;
@@ -45,19 +45,6 @@ export default class Room extends RoomPropsBase {
 
 	public isReadytoPlay(player: Player): boolean {
 		return !this.gameState && this.has(player.sessionID) && this.canStartGame(player);
-	}
-
-	public get gameState(): boolean {
-		return this._game?.isStarted() ?? false;
-	}
-
-	public get winner(): Player | null {
-		return this._game?.winner ?? null;
-	}
-
-	public set winner(player: Player) {
-		player.wins = this.name;
-		this._game.winner = player;
 	}
 
 	public addPlayer(player: Player): void {
@@ -93,8 +80,31 @@ export default class Room extends RoomPropsBase {
 	}
 
 	// Methods related to the game
+
+	public get gameState(): boolean {
+		return this.game ? true : false;
+	}
+
+	public get winner(): Player | null {
+		return this.game?.winner ?? null;
+	}
+
+	public set winner(player: Player) {
+		player.wins = this.name;
+
+		if (this.game) {
+			this.game.winner = player;
+		}
+	}
+
 	public startGame(player: Player): void {
-		new StartGameCommand(this, this.service, this._game).execute(player);
+		try {
+			new StartGameCommand(this, player).execute();
+		} catch (e) {
+			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
+				throw new Error((<Error>e).message);
+			}
+		}
 	}
 
 	public stopGame(player: Player): void {
@@ -102,12 +112,41 @@ export default class Room extends RoomPropsBase {
 		// et que le joueur est le leader ou que la room est vide
 		// et que le player a la status 'left' pour la room
 		// alors on autorise l'arret du jeu
-		new StopGameCommand(this, this.service, this._game).execute(player);
+		try {
+			new StopGameCommand(this, player).execute();
+		} catch (e) {
+			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
+				throw new Error((<Error>e).message);
+			}
+		}
+	}
+
+	public addGame(game: Game): void {
+		this._games[game.id] = game;
+	}
+
+	public play(player: Player, action: TypeAction): Room {
+		try {
+			if (this.has(player.sessionID) && this.gameState) {
+				// this.game?.play(player, action);
+				new PlayGameCommand(this, player, action).execute();
+			} else {
+				throw new Error(`Room: play: player ${player.username}(${player.sessionID}) not in room ${this.name}`);
+			}
+		} catch (e) {
+			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
+				throw new Error((<Error>e).message);
+			}
+		}
+		return this;
+	}
+
+	public get game(): Game | undefined {
+		return this.games?.find((game) => game.state instanceof StartedState);
 	}
 
 	public get games(): Game[] | null {
-		// TODO: return the list of games!
-		return [this._game];
+		return Object.values(this._games);
 	}
 
 	public log(ctx: string): void {

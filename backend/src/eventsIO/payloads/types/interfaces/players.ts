@@ -1,4 +1,3 @@
-import { IGameJSON } from '../../../../games/Game';
 import { IRoomState } from '../../../../rooms/roomState/IRoomState';
 import { Change, ISrvToCltPayload } from './base';
 
@@ -9,7 +8,6 @@ interface IPlayerJSON extends ISrvToCltPayload {
 	leads: string[];
 	wins: string[];
 	connected: boolean;
-	games: IGameJSON[] | null; // TODO: change to IGame
 	roomsState: IRoomState[];
 }
 

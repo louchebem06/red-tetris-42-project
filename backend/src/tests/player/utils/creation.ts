@@ -8,7 +8,6 @@ function createPlayer(overrides: Partial<IPlayerJSON> = {}): IPlayerJSON {
 		leads: [],
 		wins: [],
 		connected: true,
-		games: [],
 		roomsState: [],
 		...overrides,
 	};

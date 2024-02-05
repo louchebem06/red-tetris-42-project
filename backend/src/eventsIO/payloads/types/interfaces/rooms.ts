@@ -1,5 +1,5 @@
-import { IGameJSON } from '../../../../games/Game';
 import { ISrvToCltPayload } from './base';
+import { IGameJSON } from './games';
 import { IPlayerJSON, IPlayerPayload } from './players';
 
 interface IRoomJSON extends ISrvToCltPayload {

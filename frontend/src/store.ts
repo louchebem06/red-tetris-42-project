@@ -19,7 +19,7 @@ sessionID.subscribe((value: string) => {
 	}
 });
 
-const persitedMusic: string = browser ? localStorage.getItem('music') ?? 'song BR' : 'song BR';
+const persitedMusic: string = browser ? localStorage.getItem('music') ?? 'soundBR' : 'soundBR';
 export const music: Writable<string> = writable(persitedMusic);
 
 music.subscribe((value: string) => {

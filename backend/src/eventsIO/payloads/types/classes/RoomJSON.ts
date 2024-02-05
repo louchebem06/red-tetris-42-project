@@ -1,7 +1,7 @@
 import Room from '../../../../rooms/Room';
-import { IRoomJSON, IPlayerJSON } from '../IPayload';
+import { IRoomJSON, IPlayerJSON, IGameJSON } from '../IPayload';
 import Player from '../../../../players/Player';
-import Game, { IGameJSON } from '../../../../games/Game';
+import Game from '../../../../games/Game';
 
 class RoomJSON {
 	public name: string;
