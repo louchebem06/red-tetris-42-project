@@ -32,7 +32,7 @@ export default class Game {
 		return this._started;
 	}
 
-	public get id(): string { 
+	public get id(): string {
 		return this._id;
 	}
 

@@ -50,7 +50,6 @@ export class RoomService extends ServerService {
 		this.broadcast(payload);
 	}
 
-
 	// open
 	public create(room: Room, player: Player): void {
 		try {
@@ -73,7 +72,6 @@ export class RoomService extends ServerService {
 			this.throwError((<Error>e).message);
 		}
 	}
-
 
 	// roomChange "new leader"
 	// roomChange "new winner"
