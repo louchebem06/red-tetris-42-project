@@ -1,4 +1,4 @@
-import Player from '../model/Player';
+import Player from '../players/Player';
 
 let player: Player;
 

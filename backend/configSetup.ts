@@ -19,12 +19,15 @@ const env: Env[] = [
 if (process.env.UNITSTESTS) {
 	env.push({ key: 'DESTROY_TIMER', value: '9' });
 	env.push({ key: 'DISCO_TIMER', value: '5' });
+	env.push({ key: 'START_GAME_TIMER', value: '5' });
 } else if (process.env.DEV) {
 	env.push({ key: 'DESTROY_TIMER', value: '60' });
 	env.push({ key: 'DISCO_TIMER', value: '30' });
+	env.push({ key: 'START_GAME_TIMER', value: '15' });
 } else {
 	env.push({ key: 'DESTROY_TIMER', value: '3600' });
 	env.push({ key: 'DISCO_TIMER', value: '60' });
+	env.push({ key: 'START_GAME_TIMER', value: '60' });
 }
 
 const body = env

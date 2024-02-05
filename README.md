@@ -143,7 +143,7 @@ npm run ibt
 
 ### .env file
 
-The mandatory environment variables needed to be set are:
+The mandatory environment variables needed to be set are (prod mode):
 
 ```sh
 HOST=localhost
@@ -151,6 +151,7 @@ PORT=8080
 PROTOCOL=ws
 DESTROY_TIMER=3600
 DISCO_TIMER=60
+START_GAME_TIMER=60
 ```
 
 _The timers variables are set in seconds. Then, into codebase, it will be converted into milliseconds._
@@ -158,16 +159,29 @@ _The timers variables are set in seconds. Then, into codebase, it will be conver
 #### DEV
 
 If the `DEV` variable is set to `1` the server will run in development mode.
-The timers are decreased to 60s for DESTROY_TIMER and 30s for DISCO_TIMER.
-The .env file is automatically created.
+The timers are decreased to:
+
+- 60s for DESTROY_TIMER
+- 30s for DISCO_TIMER
+- 15s for START_GAME_TIMER
+  The .env file is automatically created.
 
 #### UNITSTESTS
 
 If the `UNITSTESTS` variable is set to `1` the server will run in unit tests mode
-The timers are decreased to 60s for DESTROY_TIMER and 30s for DISCO_TIMER.
-The .env file is automatically created.
+The timers are decreased to:
+
+- 9s for DESTROY_TIMER
+- 5s for DISCO_TIMER
+- 5s for START_GAME_TIMER
+  The .env file is automatically created.
 
 ### PROD
 
 If the `DEV` and the `UNITSTESTS` variables are unset, we are in production mode.
-The .env file should be handled by the provider.
+The timers are decreased to:
+
+- 3600s for DESTROY_TIMER
+- 60s for DISCO_TIMER
+- 60s for START_GAME_TIMER
+  The .env file should be handled by the provider.

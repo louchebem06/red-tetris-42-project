@@ -1,6 +1,6 @@
 import { Server as ServerHttp } from 'http';
 import { Server as ServerIO } from 'socket.io';
-import App from '../model/App';
+import { App } from '../infra';
 
 const app: App = new App();
 
