@@ -15,6 +15,7 @@ type IncomingActionPayloadMap = {
 	changeUsername: (username: string) => void;
 	getRoom: (room: string) => void;
 	getRoomsPlayer: () => void;
+	gameChange: (data: any) => void;
 	disconnect: (reason: string) => void;
 };
 
@@ -36,6 +37,7 @@ type OutgoingActionPayloadMap = {
 	message: IMOP;
 	error: string;
 	gameStart: IGameStartPayload;
+	gameChange: any;
 };
 
 type OAPM = OutgoingActionPayloadMap;

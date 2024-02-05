@@ -78,6 +78,9 @@ export default class Room extends RoomPropsBase {
 
 		return player;
 	}
+	public get game(): Game {
+		return this._game;
+	}
 
 	public updatePlayers(player?: Player): void {
 		this.all

@@ -1,5 +1,7 @@
+// import Room from '../rooms/Room';
 import { logger } from '../infra';
 import Player from '../players/Player';
+// import { RoomService } from '../rooms/RoomService';
 
 export default class Game {
 	private _started: boolean = false;
@@ -28,6 +30,10 @@ export default class Game {
 
 	public isStarted(): boolean {
 		return this._started;
+	}
+
+	public get id(): string { 
+		return this._id;
 	}
 
 	public log(): void {
