@@ -16,7 +16,6 @@
 	const resetUsername = (): void => {
 		username.set('');
 		sessionID.set('');
-		io.close();
 	};
 
 	onMount(() => {

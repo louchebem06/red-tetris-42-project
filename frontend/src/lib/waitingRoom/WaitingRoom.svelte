@@ -93,7 +93,7 @@
 					removeAfter: 1000,
 				});
 			}
-		})
+		});
 		io.on('roomClosed', (data: { room: RoomType }) => {
 			if (data.room.name == room) goto('/');
 		});
