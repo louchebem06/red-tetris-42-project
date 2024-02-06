@@ -57,6 +57,10 @@
 		io.close();
 	});
 
+	$: if ($username == '' && $sessionID == '' && io.active) {
+		io.close();
+	}
+
 	$: if (($username != '' || $sessionID != '') && !io.active) {
 		io.auth = $sessionID != '' ? { sessionID: $sessionID } : { username: $username };
 		io.connect();
