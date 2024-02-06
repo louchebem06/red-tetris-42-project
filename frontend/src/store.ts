@@ -39,9 +39,7 @@ musicLevel.subscribe((value: number) => {
 	}
 });
 
-const persitedMusicMute: boolean = browser
-	? localStorage.getItem('musicMute') == 'true' ?? false
-	: false;
+const persitedMusicMute: boolean = browser ? localStorage.getItem('musicMute') == 'true' : false;
 export const musicMute: Writable<boolean> = writable(persitedMusicMute);
 
 musicMute.subscribe((value: boolean) => {
@@ -61,9 +59,7 @@ effectLevel.subscribe((value: number) => {
 	}
 });
 
-const persitedEffectMute: boolean = browser
-	? localStorage.getItem('effectMute') == 'true' ?? false
-	: false;
+const persitedEffectMute: boolean = browser ? localStorage.getItem('effectMute') == 'true' : false;
 export const effectMute: Writable<boolean> = writable(persitedEffectMute);
 
 effectMute.subscribe((value: boolean) => {
