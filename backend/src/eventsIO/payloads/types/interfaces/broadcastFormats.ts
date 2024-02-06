@@ -32,7 +32,7 @@ type OutgoingActionPayloadMap = {
 	roomChange: IRoomPayload;
 	roomOpened: IRoomPayload;
 	roomClosed: IRoomPayload;
-	roomInfo: IRoomJSON;
+	roomInfo: IRoomJSON | null;
 	message: IMOP;
 	error: string;
 	gameStart: IGameStartPayload;
