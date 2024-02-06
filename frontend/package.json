@@ -31,6 +31,7 @@
 		"@playwright/test": "^1.41.2",
 		"@sveltejs/adapter-static": "^3.0.0",
 		"@sveltejs/kit": "^2.5.0",
+		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@typescript-eslint/eslint-plugin": "^6.20.0",
 		"@typescript-eslint/parser": "^6.20.0",
 		"concurrently": "^8.2.2",
@@ -47,12 +48,11 @@
 		"tslib": "^2.4.1",
 		"typescript": "^5.3.3",
 		"vite": "^5.0.3",
-		"vite-plugin-istanbul": "^5.0.0",
-		"@sveltejs/vite-plugin-svelte": "^3.0.0"
+		"vite-plugin-istanbul": "^5.0.0"
 	},
 	"type": "module",
 	"dependencies": {
 		"socket.io-client": "^4.7.4",
-		"svelte-notifications": "^0.9.98"
+		"svelte-notifications": "github:louchebem06/svelte-notifications#fix-warn-vite-plugin-svelte"
 	}
 }
