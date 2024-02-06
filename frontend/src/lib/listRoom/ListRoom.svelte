@@ -12,6 +12,7 @@
 	let myRooms: RoomType[] = [];
 	let showModal = false;
 	let roomName: string = '';
+	let modalInput: HTMLElement;
 
 	const resetUsername = (): void => {
 		username.set('');
@@ -93,6 +94,10 @@
 		});
 	};
 
+	$: if (showModal && modalInput) {
+		modalInput.focus();
+	}
+
 	$: if (rooms) {
 		for (const e of rooms) {
 			for (const p of e.players) {
@@ -130,7 +135,7 @@
 <Modal bind:show={showModal}>
 	<form on:submit={createRoom}>
 		<p>Room Name:</p>
-		<input type="text" bind:value={roomName} />
+		<input type="text" bind:this={modalInput} bind:value={roomName} />
 		<button type="submit">send</button>
 	</form>
 </Modal>
