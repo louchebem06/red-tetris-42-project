@@ -5,7 +5,6 @@ import {
 	NewSessionStrategy,
 	SessionCreationStrategy,
 } from './strategy/SessionCreationStrategy';
-// import { ClientInfos, IoMiddleware, NextIoFunction } from './types/types';
 import { ClientInfos, IoMiddleware, NextIoFunction, isSessionClass } from './types/types';
 import { Session } from './Session';
 import { SessionManager } from './SessionManager';

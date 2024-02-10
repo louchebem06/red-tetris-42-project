@@ -17,6 +17,7 @@ export class LogOnAnyEvents extends EventCommand {
 
 	public execute(): void {
 		this.base.emit('join', this.base.getSocketData().player.toJSON());
+
 		(this.base.getSocket() as Socket).onAny((event, ...args) => {
 			const ctx = `on ${event}`;
 			const _args = JSON.stringify({ ...args });

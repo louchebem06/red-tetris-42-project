@@ -1,4 +1,4 @@
-import { repeatTab } from '.';
+import { dashSeparator, dotSeparator, repeatTab } from '.';
 import { colors } from '..';
 
 export type StyleConfig = {
@@ -35,7 +35,6 @@ export class Styler {
 	public setConfig(config: StyleConfig): void {
 		this.config = { ...this.config, ...config };
 		this.setThresold();
-		// console.error('setConfig', config, this.config);
 	}
 
 	public getConfig(): StyleConfig {
@@ -216,10 +215,90 @@ export class Styler {
 	}
 
 	public getStyledText(text: string): { raw: string; pretty: string } {
-		// console.error('getStyledText ', this.applyStyle(text, 'raw'), this.applyStyle(text, 'raw'));
 		return {
 			raw: this.applyStyle(text, 'raw'),
 			pretty: this.applyStyle(text, 'pretty'),
+		};
+	}
+}
+
+export class KeyStyler extends Styler {
+	public constructor() {
+		super({
+			padding: 5,
+			paddingSide: 'right',
+			wrap: { right: ':' },
+			indentation: 1,
+			italic: true,
+		});
+	}
+}
+
+export class ValueStyler extends Styler {
+	public constructor() {
+		super({
+			padding: 10,
+			paddingSide: 'left',
+			wrap: { open: '<', close: '>' },
+			color: colors.fBlue,
+		});
+	}
+}
+
+export class TextStyler extends Styler {
+	public constructor() {
+		super({
+			paddingSide: 'left',
+			wrap: { right: ':' },
+			indentation: 1,
+			backgroundColor: colors.bBlue,
+			color: colors.fBlack,
+		});
+	}
+}
+
+export class ArrayStyler extends Styler {
+	public constructor() {
+		super({
+			indentation: 1,
+			listString: '+ ',
+			separator: dashSeparator,
+		});
+	}
+
+	public get internalArrayStyler(): Styler {
+		return new Styler({
+			indentation: 2,
+			listString: '- ',
+			separator: dotSeparator,
+			padding: 5,
+			paddingSide: 'left',
+		});
+	}
+}
+
+export class BasicDataStylers {
+	private keyStyler: KeyStyler;
+	private valueStyler: ValueStyler;
+	private textStyler: TextStyler;
+	private firstLevelStyler: ArrayStyler;
+	private seconLevelStyler: Styler;
+
+	public constructor() {
+		this.keyStyler = new KeyStyler();
+		this.valueStyler = new ValueStyler();
+		this.textStyler = new TextStyler();
+		this.firstLevelStyler = new ArrayStyler();
+		this.seconLevelStyler = this.firstLevelStyler.internalArrayStyler;
+	}
+
+	public get stylers(): { [key: string]: Styler } {
+		return {
+			keyStyler: this.keyStyler,
+			valueStyler: this.valueStyler,
+			textStyler: this.textStyler,
+			firstLevelStyler: this.firstLevelStyler,
+			seconLevelStyler: this.seconLevelStyler,
 		};
 	}
 }

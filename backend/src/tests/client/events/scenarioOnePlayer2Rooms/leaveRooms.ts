@@ -1,3 +1,4 @@
+import { createGames } from '../../../game/utils/creation';
 import {
 	IPlayerJSON,
 	IRoomJSON,
@@ -24,7 +25,6 @@ export async function leaveFirstRoomJoined(data: {
 		...playerExpect,
 		sessionID: sessionId,
 		leads: [roomName, roomName2],
-		// wins: [roomName],
 		username: username,
 		roomsState: [
 			...roomsState,
@@ -34,6 +34,9 @@ export async function leaveFirstRoomJoined(data: {
 			}),
 		],
 	};
+
+	const games = createGames([{ id: roomName }]);
+
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('leaveRoom', roomName),
@@ -42,6 +45,9 @@ export async function leaveFirstRoomJoined(data: {
 				...roomExpect,
 				name: roomName,
 				leader: player,
+				games,
+				totalPlayers: 0,
+				players: [],
 			},
 			player,
 		}),
@@ -71,6 +77,7 @@ export async function leaveSecondRoomJoined(data: {
 			}),
 		],
 	};
+	const games = createGames([{ id: roomName2 }]);
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('leaveRoom', roomName2),
@@ -80,6 +87,9 @@ export async function leaveSecondRoomJoined(data: {
 				...roomExpect,
 				name: roomName2,
 				leader: player,
+				totalPlayers: 0,
+				players: [],
+				games,
 			},
 			player,
 		}),

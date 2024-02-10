@@ -1,3 +1,4 @@
+import { IGameJSON } from '../../../../games/Game';
 import { ISrvToCltPayload } from './base';
 import { IPlayerJSON, IPlayerPayload } from './players';
 
@@ -11,6 +12,7 @@ interface IRoomJSON extends ISrvToCltPayload {
 	totalPlayers: number;
 	readys: IPlayerJSON[];
 	totalReady: number;
+	games: IGameJSON[] | null;
 }
 
 interface IRoomPayload extends IPlayerPayload {

@@ -17,6 +17,7 @@ export async function changeUsername(data: {
 	roomsState: IRoomState[];
 }): Promise<void> {
 	const { client, roomName, roomName2, playerExpect, username, roomsState } = data;
+
 	const player = {
 		...playerExpect,
 		username: username,

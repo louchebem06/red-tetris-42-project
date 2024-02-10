@@ -1,3 +1,4 @@
+import { createGames } from '../../../game/utils/creation';
 import {
 	IPlayerJSON,
 	IRoomJSON,
@@ -16,11 +17,17 @@ export async function createdRoomToBeOpened(data: {
 	roomExpect: IRoomJSON;
 }): Promise<void> {
 	const { client, roomName, playerExpect, roomExpect } = data;
+
+	roomExpect.name = roomName;
+	if (roomExpect.games) {
+		roomExpect.games[0].id = roomName;
+	}
 	const player = {
 		...playerExpect,
 		sessionID: sessionId,
 		leads: [roomName],
 	};
+	roomExpect.leader = player;
 
 	await testOutgoingEventWithIncomingAct({
 		client,
@@ -28,8 +35,6 @@ export async function createdRoomToBeOpened(data: {
 		expected: createOutgoingAction('roomOpened', {
 			room: {
 				...roomExpect,
-				name: roomName,
-				leader: player,
 			},
 			player,
 		}),
@@ -45,11 +50,16 @@ export async function createdRoomToBeChanged(data: {
 }): Promise<void> {
 	const { client, roomName, roomName2, playerExpect, roomExpect } = data;
 
+	roomExpect.name = roomName2;
+	if (roomExpect.games) {
+		roomExpect.games[0].id = roomName2;
+	}
 	const player = {
 		...playerExpect,
 		sessionID: sessionId,
 		leads: [roomName, roomName2],
 	};
+	roomExpect.leader = player;
 
 	await testOutgoingEventWithIncomingAct({
 		client: client as Socket,
@@ -58,8 +68,6 @@ export async function createdRoomToBeChanged(data: {
 			reason: 'new leader',
 			room: {
 				...roomExpect,
-				name: roomName2,
-				leader: player,
 			},
 			player,
 		}),
@@ -82,6 +90,7 @@ export async function createdRoomToBeClosedNobodyIn(data: {
 		roomsState,
 		username: 'allEventsChangeUsername',
 	};
+	const games = createGames([{ id: roomName + 'Closed' }]);
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('createRoom', roomName + 'Closed'),
@@ -90,6 +99,9 @@ export async function createdRoomToBeClosedNobodyIn(data: {
 				...roomExpect,
 				name: roomName + 'Closed',
 				leader: player,
+				players: [],
+				totalPlayers: 0,
+				games,
 			},
 			player,
 		}),

@@ -42,7 +42,6 @@ export default class SocketController extends SocketBase {
 			getRooms: new GetRooms(this, pm, rm).execute(),
 			getRoomsPlayer: new GetRoomsPlayer(this, pm, rm).execute(),
 			changeUsername: new ChangeUsername(this, pm, rm).execute(),
-			// gameStart: this.toggleCountDownGame(rm),
 			error: new ErrorClient(this, pm, rm).execute(),
 		};
 		this.listen();

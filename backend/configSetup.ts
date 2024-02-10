@@ -10,7 +10,6 @@ type Env = {
 };
 
 const env: Env[] = [
-	// { key: 'PORT', value: '32769' },
 	{ key: 'PORT', value: '8080' },
 	{ key: 'HOST', value: 'localhost' },
 	{ key: 'PROTOCOL', value: 'ws' },

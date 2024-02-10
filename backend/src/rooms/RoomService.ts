@@ -16,7 +16,6 @@ export class RoomService extends ServerService {
 	}
 
 	public isConnectedOnServer(): boolean {
-		// console.error(!!this.isPublicRoom(this.name), this.rooms, this.sids);
 		return !!this.isPublicRoom(this.name);
 	}
 
@@ -26,7 +25,6 @@ export class RoomService extends ServerService {
 		const playerRoom = this.getRoom(player.sessionID);
 		const playerSids = playerRoom && [...playerRoom.values()];
 		const isInRoom = playerSids && roomSids && playerSids.some((sid) => roomSids.includes(sid));
-		// console.error(!!isInRoom);
 		return !!isInRoom;
 	}
 
@@ -62,10 +60,8 @@ export class RoomService extends ServerService {
 	// join
 	public join(room: Room, player: Player): void {
 		try {
-			// this.changeRoom(room.name, player.sessionID, 'join');
 			this.changeRoom(player.sessionID, room.name, 'join');
 			this.publish({ room, player, event: 'roomChange', reason: 'player incoming' });
-			// console.error("c'est toi tu m'embetes?", player, room)
 		} catch (e) {
 			this.throwError((<Error>e).message);
 		}
@@ -118,11 +114,8 @@ export class RoomService extends ServerService {
 	// game start
 	public timer(data: IGameStartPayload): void {
 		try {
-			// console.error(data);
 			this.publishInternal({ event: 'gameStart', data: data });
 		} catch (e) {
-			// this.error((<Error>e).message);
-			// console.error(data);
 			this.throwError((<Error>e).message);
 		}
 	}

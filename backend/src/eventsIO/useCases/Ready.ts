@@ -28,11 +28,8 @@ export class Ready extends EventCommand {
 								'',
 								room,
 							);
-							// console.error(player.roomState(room));
 						})
 						.catch((e) => {
-							// console.error('error ready', e, this.base);
-
 							this.base.emit(
 								'error',
 								`Ready error: \

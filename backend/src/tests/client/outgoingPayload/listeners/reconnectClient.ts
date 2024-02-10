@@ -10,7 +10,6 @@ export async function reconnectClient(client: Socket, username: string): Promise
 		const errorHandler = outgoingBasicHandler<'error'>({ resolve: reject });
 
 		const sid = datasClients.find((d) => d.clients.some((cl) => cl.id === old))?.sessionID ?? '';
-		// console.error(sid, datasClients);
 
 		client.on('error', errorHandler);
 		client.on('disconnect', () => {
@@ -20,7 +19,6 @@ export async function reconnectClient(client: Socket, username: string): Promise
 				sessionId: sid,
 			});
 
-			// console.error(client.auth, datasClients);
 			client.on(event, (payload: OPayload<typeof event>) => {
 				updateDatasClients(client, (<OPayload<typeof event>>payload).sessionID);
 				client.off(event);

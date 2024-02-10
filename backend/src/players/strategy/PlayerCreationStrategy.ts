@@ -36,7 +36,6 @@ export class ExistingPlayerStrategy<
 		// on remet le player dans ses rooms
 		roomsState.forEach((s) => {
 			if (s.status !== 'left') {
-				// console.error(`${player.username}, ${s.name} => ${s.status}`);
 				// si la room existe encore
 				if (this.rm.has(s.name)) {
 					const room = this.rm.get(s.name);

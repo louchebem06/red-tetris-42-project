@@ -19,7 +19,6 @@ export class RoomPropsBase extends RoomPlayersBase {
 		public dateCreated: Date = new Date(),
 		protected timer: Timer = new Timer(),
 	) {
-		// console.error(leader)
 		super(name);
 		this.leader.leads = this.name;
 

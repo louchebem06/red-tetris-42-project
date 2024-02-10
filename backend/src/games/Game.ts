@@ -1,27 +1,28 @@
-import { logger } from '../infra';
+import { IPlayerJSON } from '../eventsIO/payloads/types/IPayload';
 import Player from '../players/Player';
 
+export interface IGameJSON {
+	id: string;
+	dateCreated: Date | string;
+	dateStarted: Date | string | null;
+	dateStopped: Date | string | null;
+	winner: IPlayerJSON | null;
+}
 export default class Game {
 	private _started: boolean = false;
 	private _dateCreated: Date = new Date();
 	private _dateStarted: Date | null = null;
 	private _dateStopped: Date | null = null;
 	public winner: Player | null = null;
-	// public hasBeenStarted: boolean = false;
 
-	public constructor(private _id: string) {
-		// console.log('Game initialized');
-	}
+	public constructor(private _id: string) {}
 
 	public start(): void {
-		// console.log('Game started');
-		// if (!this.hasBeenStarted) this.hasBeenStarted = true;
 		this._started = true;
 		this._dateStarted = new Date();
 	}
 
 	public stop(): void {
-		// console.log('Game stopped');
 		this._started = false;
 		this._dateStopped = new Date();
 	}
@@ -30,34 +31,14 @@ export default class Game {
 		return this._started;
 	}
 
-	public log(): void {
-		const t = `\x1b[31m`;
-		const f = `\x1b[32m`;
-		const m = `\x1b[35m`;
-		const u = `\x1b[3m`;
-		const z = `\x1b[0m`;
-		let log = `Game ${m}${this._id}${z}\n`;
-		let llog = `Game ${this._id}\n`;
-		const show = (id: string | null | undefined): string => {
-			return ` ${u}${this._started ? t : f}${id}${z}`;
+	public toJSON(): IGameJSON {
+		// TODO PayloadFactory
+		return {
+			id: this._id,
+			dateCreated: this._dateCreated,
+			dateStarted: this._dateStarted,
+			dateStopped: this._dateStopped,
+			winner: this.winner?.toJSON() ?? null,
 		};
-
-		log += `\t-> created:${show(this._dateCreated.toDateString())}\n`;
-		log += `\t-> started:${show(this._dateStarted?.toDateString())}\n`;
-		log += `\t-> stopped:${show(this._dateStopped?.toDateString())}\n`;
-		llog += `\t-> created:${this._dateCreated.toDateString()}\n`;
-		llog += `\t-> started:${this._dateStarted?.toDateString()}\n`;
-		llog += `\t-> stopped:${this._dateStopped?.toDateString()}\n`;
-		console.log(log);
-		logger.log(llog);
-		log = '';
-		if (this.winner) {
-			log = `\t-> winner:${this.winner.username}\n`;
-			llog = `\t-> winner:${this.winner.username}\n`;
-			logger.log(llog);
-			console.log(log);
-			log = '';
-			this.winner.log(m);
-		}
 	}
 }

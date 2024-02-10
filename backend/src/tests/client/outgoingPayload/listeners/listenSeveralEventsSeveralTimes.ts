@@ -32,7 +32,6 @@ export async function listenSeveralEventsSeveralTimes<U extends keyof IAPM>(
 
 		const clientsToCheck = config && config?.toWatch.length > 0 ? config.toWatch : [client.id];
 		const data = datasClients.find((d) => d.clients.some((cl) => clientsToCheck.includes(cl.id)));
-		// const clients = data?.clients ?? [];
 
 		let sid = events['join'] ? data?.sessionID : '';
 
@@ -44,7 +43,6 @@ export async function listenSeveralEventsSeveralTimes<U extends keyof IAPM>(
 
 		let nbEvents = 0;
 		for (const event in events) {
-			// console.error(event);
 			if (Object.prototype.hasOwnProperty.call(events, event)) {
 				const times = events[event];
 				nbEvents += times;
@@ -55,19 +53,11 @@ export async function listenSeveralEventsSeveralTimes<U extends keyof IAPM>(
 							sid = (<OPayload<typeof event>>payload).sessionID;
 							updateDatasClients(client, sid);
 							client.off('join');
-							// console.error(datasClients);
 							break;
 						case 'playerChange':
-							// console.error(event, config, emit, client, payload, datasClients);
-							// console.error(payload.player.roomsState);
 							outgoingPlayerChangeRejectHandler({ resolve: reject, sessionId: sid })(payload);
 							// reason surveillée == payload.reason
 							// check les diff raisons
-							break;
-						case 'getRooms':
-							break;
-						case 'getRoomsPlayer':
-							// sessionId surveillé == payload.player.sessionId
 							break;
 						case 'roomInfo':
 							// nom de room surveillé == payload.room.name
@@ -75,18 +65,6 @@ export async function listenSeveralEventsSeveralTimes<U extends keyof IAPM>(
 								console.error(event, config, emit, client, payload);
 								reject(payload);
 							}
-							break;
-						case 'error':
-							break;
-						case 'message':
-							// sessionId surveillé == payload.player.sessionId
-							// nom de room surveillé == payload.room.name
-							// if (
-							// 	(<OPayload<typeof event>>payload).receiver
-							// !== sid || <OPayload<typeof event>>payload.receiver !== emit?.payload.receiver
-							// ) {
-							// 	reject(payload);
-							// }
 							break;
 						case 'roomOpened':
 							// nom de room surveillé == payload.room.name
@@ -103,20 +81,14 @@ export async function listenSeveralEventsSeveralTimes<U extends keyof IAPM>(
 							outgoingRoomClosedRejectHandler({ resolve: reject, data: name })(payload);
 							break;
 						case 'gameStart':
-							// console.error(event, config, emit, client, payload, datasClients);
-							// nom de room surveillé == payload.room.name
-							// client.off('gameStart');
 							outgoingGameStartRejectHandler({ resolve: reject, data: name })(payload);
-
 							// reason surveillée == payload.reason
 
 							break;
 						default:
 							break;
 					}
-					// for (let i = 0; i < times; ++i) {
 					payloads.push(payload);
-					// }
 					if (nbEvents === payloads.length) {
 						resolve(payloads);
 					}

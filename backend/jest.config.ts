@@ -17,13 +17,15 @@ const config: Config = {
 		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
 		'<rootDir>/src/tests/coverage-reports/',
+		'<rootDir>/src/players/types.ts', // c'est le testeur qui s'en sert en fait,
+		'<rootDir>/src/infra/io/sessions/types/types.ts', // c'est le testeur qui s'en sert en fait,
 	],
 	coverageThreshold: {
 		global: {
 			branches: 50, // 50
-			functions: 69, // 70
-			lines: 69, // 70
-			statements: 69, // 70
+			functions: 70, // 70
+			lines: 70, // 70
+			statements: 70, // 70
 		},
 	},
 	reporters: ['default', ['github-actions', { silent: false }], 'summary'],

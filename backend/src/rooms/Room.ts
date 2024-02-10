@@ -105,9 +105,10 @@ export default class Room extends RoomPropsBase {
 		new StopGameCommand(this, this.service, this._game).execute(player);
 	}
 
-	// public gameHasBeenStarted(): boolean {
-	// 	return this._game.hasBeenStarted;
-	// }
+	public get games(): Game[] | null {
+		// TODO: return the list of games!
+		return [this._game];
+	}
 
 	public log(ctx: string): void {
 		const { raw, pretty } = logRoom(this);

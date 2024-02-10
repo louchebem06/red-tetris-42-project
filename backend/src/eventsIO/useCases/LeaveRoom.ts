@@ -21,7 +21,6 @@ export class LeaveRoom extends EventCommand {
 					throw new Error(`room ${name} does not exist`);
 				}
 				room.removePlayer(this.base.getSocketData().player);
-				// this.rm.leave(name, this.base.getSocketData().player);
 			} catch (e) {
 				this.base.emit('error', `LeaveRoom error: ${(<Error>e).message}`);
 			}

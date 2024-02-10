@@ -1,6 +1,5 @@
 import { IRoomPayload, IRoomJSON, IGameStartPayload, IMOP } from '../../../../eventsIO/payloads/types/IPayload';
 import { IPlayerPayload } from '../../../../eventsIO/payloads/types/IPayload';
-// import { IMOP, IGameStartPayload } from '../../../../eventsIO/payloads/types/IPayload';
 
 import { Validator, isTypeOfUndefined } from '../../../../base/typeGuards';
 import { isPlayer } from '../../../player/utils/typeGuard/validation';
@@ -22,14 +21,6 @@ const isRoomPayload: Validator<IRoomPayload> = (value): value is IRoomPayload =>
 		return false;
 	}
 	const _value = value as IRoomPayload;
-	// console.error(
-	// 	'isRoomPayload',
-	// 	_value,
-	// 	value,
-	// 	'reason' in _value
-	// 		? isPlayerPayload(_value['player']) && isRoom(_value['room'])
-	// 		: isRoom(_value['room']) || isRoom(_value),
-	// );
 	return 'reason' in _value
 		? isPlayerPayload(_value['player']) && isRoom(_value['room'])
 		: isRoom(_value['room']) || isRoom(_value);
@@ -39,7 +30,6 @@ const isRoomArrayPayload: Validator<IRoomJSON[]> = (value): value is IRoomJSON[]
 	if (!Array.isArray(value)) {
 		return false;
 	}
-	// console.error('isRoomArrayPayload', value);
 	return isArrayOfRooms(value);
 };
 
@@ -70,7 +60,6 @@ const isIGameStartPayload: Validator<IGSP> = (value): value is IGSP => {
 
 // TODO handler pour IOutgoingMessage && IGameStart
 const isOutgoingPayload: Validator<OAPM[keyof OAPM]> = (value): value is OAPM[keyof OAPM] => {
-	// console.error('isOutgoingPayload', value);
 	return (
 		typeof value === 'string' ||
 		isPlayerPayload(value) ||

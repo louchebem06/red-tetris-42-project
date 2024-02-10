@@ -36,11 +36,11 @@ describe('* All Server IO Events', () => {
 	let { username } = clientConfig('allEventsCreateClient');
 	const { roomName, roomName2 } = clientConfig('allEventsCreateClient');
 	const { playerExpect, roomExpect, roomsState } = clientConfig('allEventsCreateClient');
+
 	handleAppLifeCycle();
 
 	describe('Create Socket Client', () => {
 		test(`client ${config(username).client} should be created`, () => {
-			// client = createClient(username);
 			client = createClient({ username });
 			expect(client).toBeInstanceOf(Socket);
 			expect(client).toBeDefined();
@@ -208,7 +208,7 @@ describe('* All Server IO Events', () => {
 		});
 	});
 
-	describe('Game start', () => {
+	describe('Game start room1 & join room 2', () => {
 		const roomsState: IRoomState[] = [
 			createRoomState({
 				name: roomName,
@@ -231,19 +231,19 @@ describe('* All Server IO Events', () => {
 			});
 		});
 
-		describe.skip('GameStart room 2', () => {
-			test(`${config(username).client} want to start game in room : ${config(roomName2).room}\
+		describe('GameStart room 1', () => {
+			test(`${config(username).client} want to start game in room : ${config(roomName).room}\
 , ${config('gameStart').eventI} -> ${config('gameStart').eventO} events`, async () => {
 				await testOutgoingEventWithIncomingAct({
 					client,
-					toSend: createIncomingAction('gameStart', roomName2),
+					toSend: createIncomingAction('gameStart', roomName),
 					expected: createOutgoingAction('gameStart', {
 						reason: 'time',
-						roomName: roomName2,
-						message: 'The game will start in 5 second${s}. ',
+						roomName: roomName,
+						message: `The game will start in 3 seconds.`,
 					}),
 				});
-			});
+			}, 1000);
 		});
 	});
 
@@ -252,11 +252,10 @@ describe('* All Server IO Events', () => {
 			createRoomState({
 				name: roomName,
 				status: 'left',
-				// wins: true,
 			}),
 		];
 
-		describe('Leave room 1', () => {
+		describe('Leave room 1 during countdown for playing has been triggered, just before game starting', () => {
 			test(`${config(username).client} leave room : ${config(roomName).room}\
 , ${config('leaveRoom').eventI} -> ${config('roomClosed').eventO} events`, async () => {
 				await leaveFirstRoomJoined({
@@ -265,7 +264,6 @@ describe('* All Server IO Events', () => {
 					roomName,
 					roomName2,
 					playerExpect,
-					// playerExpect: {...playerExpect, wins: [roomName]},
 					roomExpect,
 					roomsState,
 				});
@@ -315,7 +313,7 @@ describe('* All Server IO Events', () => {
 			}),
 		];
 
-		test.skip(
+		test(
 			`${config(username).client} create room and never enter in : \
 ${config(roomName + 'Closed').room}\
 , ${config('createRoom').eventI} -> ${config('roomClosed').eventO} events`,

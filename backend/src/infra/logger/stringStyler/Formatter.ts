@@ -1,5 +1,6 @@
 import { isMapIterator, isSetIterator } from 'util/types';
 import { StringsLoggingFormat, Styler } from '.';
+import { isTypeOfUndefined } from '../../../base/typeGuards';
 
 export class Formatter<T> {
 	private stylers: { [key: string]: Styler };
@@ -9,6 +10,9 @@ export class Formatter<T> {
 	}
 
 	public format(data: T | T[] | T[][] | { key: string; value: T }): StringsLoggingFormat {
+		if (data === null || data === undefined) {
+			return this.formatValue('There is no data to format' as T, this.stylers.textStyler);
+		}
 		if (Array.isArray(data)) {
 			if (Array.isArray(data[0])) {
 				return this.formatArrayOfArray(data as T[][], this.stylers);
@@ -22,22 +26,22 @@ export class Formatter<T> {
 		}
 	}
 
-	private incrementLevel(stylers: { [key: string]: Styler }): { [key: string]: Styler } {
-		// construit un nouveau stylers avec un level d'indentation en plus sans garder de reference sur l'ancien styler
-		const newStylers = { ...stylers };
+	// private incrementLevel(stylers: { [key: string]: Styler }): { [key: string]: Styler } {
+	// 	// construit un nouveau stylers avec un level d'indentation en plus sans garder de reference sur l'ancien styler
+	// 	const newStylers = { ...stylers };
 
-		for (const key in newStylers) {
-			if (newStylers.hasOwnProperty(key)) {
-				const styler = new Styler(newStylers[key].getConfig());
-				const lvlConfig = styler.getConfig();
-				lvlConfig.indentation = (lvlConfig.indentation ?? 0) + 1;
-				styler.setConfig({ ...lvlConfig });
-				newStylers[key] = styler;
-			}
-		}
+	// 	for (const key in newStylers) {
+	// 		if (newStylers.hasOwnProperty(key)) {
+	// 			const styler = new Styler(newStylers[key].getConfig());
+	// 			const lvlConfig = styler.getConfig();
+	// 			lvlConfig.indentation = (lvlConfig.indentation ?? 0) + 1;
+	// 			styler.setConfig({ ...lvlConfig });
+	// 			newStylers[key] = styler;
+	// 		}
+	// 	}
 
-		return newStylers;
-	}
+	// 	return newStylers;
+	// }
 
 	private formatArrayOfArray(
 		data: T[][],
@@ -103,6 +107,9 @@ export class Formatter<T> {
 	): StringsLoggingFormat {
 		// Appliquer les stylers à chaque élément du tableau
 		// let _stylers = this.incrementLevel(stylers);
+		if (isTypeOfUndefined(data) || data === null) {
+			return { raw: '', pretty: '' };
+		}
 		const _stylers = stylers;
 		const { keyStyler, valueStyler, textStyler } = _stylers;
 

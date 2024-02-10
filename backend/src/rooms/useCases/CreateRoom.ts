@@ -22,7 +22,6 @@ export class CreateRoom<
 	}
 	public execute(player: Player, name: string): void {
 		try {
-			// console.error(player)
 			if (!this.manager.has(name)) {
 				const room = new Room(name, player, new RoomService(this.io, name));
 				room.events.addObserver('roomEmpty', this.manager.roomEmptyListener);

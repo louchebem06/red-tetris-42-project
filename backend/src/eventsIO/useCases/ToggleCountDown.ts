@@ -16,35 +16,6 @@ export class ToggleCountDown extends EventCommand {
 
 	public execute(): IAPM[keyof IAPM] {
 		return (room: string): void => {
-			// 		(name: string, player: Player): void {
-			// 	try {
-			// 		const room = this.get(name);
-			// 		if (room?.isLeader(player)) {
-			// 			if (room.countdown === parseInt(process.env.START_GAME_TIMER ?? '60', 10)) {
-			// 				room.startCountdown(eventEmitter)(player, room);
-			// 			} else {
-			// 				room.resetCountdown();
-			// 			}
-			// 			room.lock = !room.lock;
-			// 		} else {
-			// 			throw new Error(`Countdown can only be toggled by the room leader`);
-			// 		}
-			// 	} catch (e) {
-			// 		throw new Error(`RoomController \
-			// toggleCountdownGame Error: ${ (<Error>e).message }`);
-			// 	}
-			// }
-			// public toggleCountDownGame(rc: RC): (name: string) => void {
-			// 	return (name: string): void => {
-			// 		try {
-			// 			// TODO a implementer depuis la room
-			// 			console.log('c kiki ', name, this.socket.data.player);
-			// 			// rc.toggleCountdownGame(name, this.socket.data.player);
-			// 		} catch (e) {
-			// 			this.emitError(`${(<Error>e).message}`);
-			// 		}
-			// 	};
-			// }
 			try {
 				if (this.rm.has(room)) {
 					this.pm
@@ -57,7 +28,6 @@ export class ToggleCountDown extends EventCommand {
 								'',
 								room,
 							);
-							// console.error(player.roomState(room));
 						})
 						.catch((e) =>
 							this.base.emit(

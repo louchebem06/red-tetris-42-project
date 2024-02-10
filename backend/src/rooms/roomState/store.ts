@@ -1,6 +1,5 @@
 import IStore from '../../base/IStore';
 import { RoomState } from './RoomState';
-// import { IRoomState } from "./IRoomState";
 
 export class RoomStateStore implements IStore<RoomState> {
 	private rooms: Map<string, RoomState> = new Map();

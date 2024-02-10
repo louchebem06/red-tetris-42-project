@@ -20,7 +20,6 @@ const isRoom: Validator<IRoomJSON> = (value): value is IRoomJSON => {
 
 const isArrayOfRooms: Validator<IRoomJSON[]> = (value): value is IRoomJSON[] => {
 	const _value = value as IRoomJSON[];
-	// console.error('isArrayOfRooms', _value, value);
 	return _value.every(isRoom);
 };
 
