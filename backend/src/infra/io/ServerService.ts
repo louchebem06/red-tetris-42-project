@@ -50,13 +50,8 @@ export class ServerService {
 		return this.sids.has(sid);
 	}
 
-	// protected isSession(sid: string): boolean {
-	// 	return session.hasSession(sid);
-	// }
-
 	protected isPublicRoom(room: string): boolean {
 		return this.isRoom(room) && !this.isSid(room);
-		// return this.isRoom(room) && !this.isSid(room) && !this.isSession(room);
 	}
 
 	protected throwError(message: string): never {
@@ -65,9 +60,6 @@ export class ServerService {
 	}
 
 	public emit(sid: string, event: string, data: OAPM[keyof OAPM]): void {
-		// if (!this.isSession(sid)) {
-		// 	this.throwError(`Session ${sid} not found`);
-		// }
 		this.io.to(sid).emit(event, data);
 	}
 
@@ -97,13 +89,6 @@ export class ServerService {
 					}
 				} else {
 					// send to all
-					// console.log(
-					// 	`SService send to all (no sid)', event: ${event}, data: ${JSON.stringify(
-					// 		data,
-					// 	)}, sid: ${sid}, room: ${room}`,
-					// 	`sids: ${JSON.stringify(this.io.sockets.adapter.sids)}`,
-					// 	`rooms: ${JSON.stringify(this.io.sockets.adapter.rooms)}`,
-					// );
 					this.io.in(room).emit(event, data);
 				}
 			} else {
@@ -126,7 +111,6 @@ export class ServerService {
 				}
 			}
 		} catch (e) {
-			// console.log('SService broadcast error', e);
 			this.throwError(`${e instanceof Error && e.message}`);
 		}
 	}
@@ -156,10 +140,7 @@ export class ServerService {
 		if (!self) {
 			this.throwError(`Session ${sid} not found`);
 		}
-		// const self = await this.io.in(sid).fetchSockets();
 
-		// les sids (Set sid socket) de la room demandee
-		// const sids = this.io.sockets.adapter.rooms.get(room);
 		const room = this.rooms.get(name);
 		switch (change) {
 			case 'leave': {
@@ -184,9 +165,7 @@ export class ServerService {
 						this.throwError(`Cannot join room which you already are in: ${name}`);
 					}
 				});
-				// console.error('join', sid, room, this.sids);
 				this.io.in(sid).socketsJoin(name);
-				// console.error('join', sid, room, this.sids);
 				break;
 			}
 		}

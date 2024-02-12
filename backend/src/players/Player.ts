@@ -6,6 +6,7 @@ import { PayloadFactory } from '../eventsIO/payloads/PayloadFactory';
 import { Observable } from '../base/Observer';
 import { RoomStateStore } from '../rooms/roomState/store';
 import { RoomState } from '../rooms/roomState/RoomState';
+import { IGameJSON } from 'games/Game';
 
 class Player extends Observable {
 	public get [Symbol.toStringTag](): string {
@@ -14,9 +15,7 @@ class Player extends Observable {
 	[key: string]: unknown;
 	private _dateCreated: Date = new Date();
 
-	// TODO definir autrement la partie object de ce Map
-	// qui est cense contenir toutes les datas des games
-	private _games: Map<string, object> = new Map<string, object>();
+	private _games: Map<string, IGameJSON> = new Map<string, IGameJSON>();
 	private _leads: string[] = [];
 	private _wins: string[] = [];
 	public connected: boolean = true;
@@ -67,7 +66,7 @@ class Player extends Observable {
 		return this._dateCreated;
 	}
 
-	public get games(): object[] {
+	public get games(): IGameJSON[] {
 		return [...this._games.values()];
 	}
 
@@ -87,7 +86,7 @@ class Player extends Observable {
 		this.wins.push(value);
 	}
 
-	public addGame(id: string, game: object): void {
+	public addGame(id: string, game: IGameJSON): void {
 		this._games.set(id, game);
 	}
 

@@ -5,7 +5,6 @@ import Room from './Room';
 import { IRoomJSON } from '../eventsIO/payloads/types/IPayload';
 import { RoomStore } from './stores';
 import { Server } from 'socket.io';
-import { RoomJSON } from '../eventsIO/payloads/types/Payloads';
 import { RoomEmptyEventListener } from './events/emptyRoom';
 import { CreateRoom } from './useCases';
 
@@ -23,8 +22,8 @@ export default class RoomManager extends RoomStore {
 		this.create = this.create.bind(this);
 	}
 
-	public getRoomJSON(roomName: string): Promise<RoomJSON> {
-		return new Promise<RoomJSON>((resolve, reject) => {
+	public getRoomJSON(roomName: string): Promise<IRoomJSON> {
+		return new Promise<IRoomJSON>((resolve, reject) => {
 			const room = this.get(roomName);
 			if (room) {
 				resolve(room.toJSON());
@@ -48,7 +47,6 @@ export default class RoomManager extends RoomStore {
 	}
 
 	public create(name: string, player: Player): void {
-		// console.error(player)
 		new CreateRoom<RoomManager>(this, this.io).execute(player, name);
 	}
 

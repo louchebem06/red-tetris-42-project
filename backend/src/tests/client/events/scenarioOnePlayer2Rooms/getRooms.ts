@@ -9,6 +9,7 @@ import {
 	sessionId,
 	testOutgoingEventWithIncomingAct,
 } from '..';
+import { createGames } from '../../../game/utils/creation';
 
 export async function getRoomsWithTwoRoomsCreated(data: {
 	client: Socket;
@@ -27,24 +28,32 @@ export async function getRoomsWithTwoRoomsCreated(data: {
 		leads: [roomName, roomName2],
 		roomsState,
 	};
+
+	const games = createGames([{ id: roomName }]);
+	const games2 = createGames([{ id: roomName2 }]);
+
 	const room = {
 		...roomExpect,
 		name: roomName,
 		players: [player],
 		totalPlayers: 1,
 		leader: player,
+		games,
 	};
+
+	const room2 = {
+		...roomExpect,
+		name: roomName2,
+		players: [],
+		totalPlayers: 0,
+		leader: player,
+		games: games2,
+	};
+
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('getRooms', undefined as never),
-		expected: createOutgoingAction('getRooms', [
-			room,
-			{
-				...roomExpect,
-				name: roomName2,
-				leader: player,
-			},
-		]),
+		expected: createOutgoingAction('getRooms', [room, room2]),
 	});
 }
 
@@ -65,13 +74,16 @@ export async function getRoomsPlayerWithTwoRoomsCreated(data: {
 		leads: [roomName, roomName2],
 		roomsState,
 	};
+	const games = createGames([{ id: roomName }]);
 	const room = {
 		...roomExpect,
 		name: roomName,
 		players: [player],
 		totalPlayers: 1,
 		leader: player,
+		games,
 	};
+
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('getRoomsPlayer', undefined as never),
@@ -96,12 +108,14 @@ export async function getRoomInfo(data: {
 		leads: [roomName, roomName2],
 		roomsState,
 	};
+	const games = createGames([{ id: roomName }]);
 	const room = {
 		...roomExpect,
 		name: roomName,
 		players: [player],
 		totalPlayers: 1,
 		leader: player,
+		games,
 	};
 	await testOutgoingEventWithIncomingAct({
 		client,
@@ -133,6 +147,7 @@ export async function getRoomsAfterLeavingFirstJoined(data: {
 			}),
 		],
 	};
+	const games = createGames([{ id: roomName2 }]);
 
 	await testOutgoingEventWithIncomingAct({
 		client,
@@ -144,6 +159,7 @@ export async function getRoomsAfterLeavingFirstJoined(data: {
 				players: [player],
 				totalPlayers: 1,
 				leader: player,
+				games,
 			},
 		]),
 	});

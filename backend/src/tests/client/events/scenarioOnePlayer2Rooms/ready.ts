@@ -1,3 +1,4 @@
+import { createGames } from '../../../game/utils/creation';
 import {
 	IPlayerJSON,
 	IRoomJSON,
@@ -35,6 +36,7 @@ export async function setAsReadyIntoOneRoomThenCheckRoomInfo(data: {
 		}),
 	});
 
+	const games = createGames([{ id: roomName }]);
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('getRoom', roomName),
@@ -46,6 +48,7 @@ export async function setAsReadyIntoOneRoomThenCheckRoomInfo(data: {
 			totalPlayers: 1,
 			readys: [player],
 			totalReady: 1,
+			games,
 		}),
 	});
 }

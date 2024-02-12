@@ -27,13 +27,9 @@ export { datasClients };
 
 export function updateDatasClients(client: Socket, sid: string): void {
 	const index = datasClients.findIndex((d) => d.sessionID === sid);
-	// si {sid, clients: [...clients, client]} existe, on update le client
 	if (index !== -1) {
 		const clientIndex = datasClients[index].clients.findIndex((cl) => cl.id === client.id);
-		// const clients = datasClients[index].clients.filter((cl) => {
-		// 	cl.connected;
-		// });
-		// datasClients[index].clients = clients;
+
 		// si la socket est deja connue, on update
 		if (clientIndex !== -1) {
 			datasClients[index].clients[clientIndex] = client;
@@ -41,7 +37,6 @@ export function updateDatasClients(client: Socket, sid: string): void {
 			// sinon on l'ajoute
 			datasClients[index].clients.push(client);
 		}
-		// console.error(clientIndex, datasClients[index].clients);
 	} else {
 		// sinon on le cree
 		datasClients.push({

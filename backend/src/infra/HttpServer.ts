@@ -39,11 +39,10 @@ class HttpServer {
 	public start(port?: number): void {
 		this.port = port || this.port;
 		const callback = (): void => {
-			logger.log(`Server is running at http://localhost:${this.port}`);
-			console.log(`Server is running at http://localhost:${this.port}`);
+			const log = `Server is running at http://localhost:${this.port}`;
+			logger.logContext(log, `Server is running at http://localhost:${this.port}`, log);
 		};
 		this.server.listen(this.port, callback);
-		// this.server.listen(this.port, '0.0.0.0', callback);
 	}
 
 	/**
@@ -82,9 +81,7 @@ class HttpServer {
 	 */
 	private setupCors(): void {
 		this.setCorsOpts();
-		// TODO remetre ancienne version * for testos
 		this.app.use(cors(this.getCorsOpts()));
-		// this.app.use(cors());
 	}
 
 	/**
@@ -124,8 +121,8 @@ class HttpServer {
 				if (this.whiteList.includes(orig || '') || !orig) {
 					cb(null, true);
 				} else {
-					logger.log(`${orig} not allowed by CORS`);
-					console.log(`${orig} not allowed by CORS`);
+					const log = `${orig} not allowed by CORS`;
+					logger.logContext(log, `${orig} not allowed by CORS`, log);
 					cb(new Error(`${orig} not allowed by CORS`));
 				}
 			},
@@ -148,7 +145,6 @@ class HttpServer {
 	 * @return {void} - This function does not return any value.
 	 */
 	private setupHttpRoutes(): void {
-		// TODO log error?
 		this.app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
 			const html = `<!DOCTYPE html>
 <html>
@@ -162,6 +158,7 @@ class HttpServer {
 		<p>Contact your administrator if it is not expected.</p>
 	</body>
 </html>`;
+			logger.logContext(err.message, 'error', err.message);
 			res.status(403).send(html);
 			next();
 		});

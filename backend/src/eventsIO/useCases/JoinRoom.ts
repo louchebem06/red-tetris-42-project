@@ -17,7 +17,6 @@ export class JoinRoom extends EventCommand {
 		return (name: string): void => {
 			try {
 				const room = this.rm.get(name);
-				// console.error('ca passe la', this.base.getSocketData().player);
 				if (room) {
 					room.addPlayer(this.base.getSocketData().player);
 					this.rm.save(name, room);

@@ -21,11 +21,12 @@ export class GetRoom extends EventCommand {
 					this.base.emit('roomInfo', payload);
 				})
 				.catch(() => {
-					// ici on renvoie null si aucune room, pas besoin de signaler l'erreur
-					// roomInfo est utilisé par le front pour savoir si il y a besoin de creer une room
-					// lorsqu'on utilise l'url /#room[user], le back peut pas accéder a cette partie de l'url
+					/* ici on renvoie null si aucune room,
+					 * pas besoin de signaler l'erreur roomInfo est utilisé par
+					 * le front pour savoir si il y a besoin de creer une room
+					 * lorsqu'on utilise l'url /#room[user], le back peut pas accéder a cette partie de l'url
+					 */
 					this.base.emit('roomInfo', null);
-					// this.base.emit('error', `GetRoom error: ${(<Error>e).message}`);
 				});
 		};
 	}

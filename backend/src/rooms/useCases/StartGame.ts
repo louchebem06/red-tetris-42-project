@@ -22,7 +22,7 @@ export class StartGameCommand extends RoomCommand {
 						// game started -> active status meaning "playing"
 						p.changeRoomStatus('active', this.room.name);
 					}
-					p.addGame(this.room.name, this.game);
+					p.addGame(this.room.name, this.game.toJSON());
 				});
 				this.room.updatePlayers();
 			}

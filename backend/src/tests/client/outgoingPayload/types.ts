@@ -22,7 +22,6 @@ type OutgoingActionPayloadMap = {
 	gameStart: IGameStartPayload;
 };
 
-// linter qui rale
 type OAPM = OutgoingActionPayloadMap;
 type OEvent = keyof OAPM;
 type OPayload<T extends OEvent> = T extends OEvent ? OAPM[T] : never;
@@ -32,9 +31,10 @@ type OutgoingAction<T extends OEvent> = {
 	payload: OPayload<T> | OutgoingActionPayloadMap[T];
 };
 
-// abstraction du callaback a utiliser dans l'event écouté
-// ex: OutgoingActionCallback['join] => (payload: OutgoingActionPayloadMap['join']) => void
-// ce qui "traduit", donne: IPlayerJSON => (payload: IPlayerJSON) => void
+/* abstraction du callaback a utiliser dans l'event écouté
+ * ex: OutgoingActionCallback['join] => (payload: OutgoingActionPayloadMap['join']) => void
+ * ce qui "traduit", donne: IPlayerJSON => (payload: IPlayerJSON) => void
+ */
 type OutgoingActionCallback<T extends OEvent> = (payload: OPayload<T>) => void;
 
 type OutgoingHandlerData<T extends OEvent> = {

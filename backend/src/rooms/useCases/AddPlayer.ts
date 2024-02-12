@@ -13,7 +13,6 @@ export class AddPlayerCommand extends RoomCommand {
 	}
 	public execute(player: Player): void {
 		if (!this.room.has(player.sessionID) && this.room.canJoin(player)) {
-			// console.error("ca passe la", player)
 			const event = new PlayerReady(player, this.room.name);
 			player.addObserver({ event, observer: this.room });
 			this.room.log('addPlayer');

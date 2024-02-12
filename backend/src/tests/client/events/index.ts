@@ -4,7 +4,6 @@ import { sessionId } from '../outgoingPayload/handlers';
 import { createClient } from '../utils/creation';
 import { createRoomState } from '../../room/roomState/utils/creation';
 import { createPlayer } from '../../player/utils/creation';
-// import { testOutgoingEventWithIncomingAct } from './handlers';
 import { createIncomingAction } from '../incomingPayload/creation';
 import { createOutgoingAction } from '../outgoingPayload/creation';
 

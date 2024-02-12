@@ -6,7 +6,6 @@ function createOutgoingPayload<T extends keyof OAPM>(settings: Partial<OAPM[T] |
 }
 
 function createOutgoingAction<T extends keyof OAPM>(event: T, payload: OAPM[T]): OutgoingAction<T> {
-	// if (event === 'getRooms') console.error('createOutgoingAction', event, payload);
 	return { event, payload: createOutgoingPayload<T>(payload) };
 }
 

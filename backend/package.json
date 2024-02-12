@@ -27,9 +27,9 @@
 		"tests:rm": "rm -rf ./src/tests/output.txt",
 		"rm": " npm run env:rm && npm run tests:rm ",
 		"test:noCovDebug": "export UNITSTESTS='1' && export DEBUG=engine,socket* && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts",
-		"test:noCov": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts",
-		"test:Cov": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --config jest.config.ts",
-		"test": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles > src/tests/output.txt --config jest.config.ts",
+		"test:noCov": "export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles --config jest.onlyTest.config.ts",
+		"test:Cov": "export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles --config jest.config.ts",
+		"test": "export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles > src/tests/output.txt --config jest.config.ts",
 		"test:rm": "npm run test && npm run tests:rm",
 		"test:dev": "jest --coverage --detectOpenHandles --watchAll --no-cache",
 		"test:open": "open src/tests/coverage-reports/lcov-report/index.html"

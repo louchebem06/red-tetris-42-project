@@ -9,6 +9,7 @@ import {
 	sessionId,
 	testOutgoingEventWithIncomingAct,
 } from '..';
+import { createGames } from '../../../game/utils/creation';
 
 export async function joinRoomToBePlayerIncoming(data: {
 	client: Socket;
@@ -51,12 +52,20 @@ export async function joinRoomWithLeadingTwoRoomsUnjoined(data: {
 	roomsState: IRoomState[];
 }): Promise<void> {
 	const { client, roomName, roomName2, playerExpect, roomExpect, roomsState } = data;
+
+	roomExpect.name = roomName;
+	if (roomExpect.games) {
+		roomExpect.games[0].id = roomName;
+	}
 	const player = {
 		...playerExpect,
 		sessionID: sessionId,
 		leads: [roomName, roomName2],
 		roomsState,
 	};
+	roomExpect.leader = player;
+	roomExpect.players = [player];
+	roomExpect.totalPlayers = 1;
 
 	await testOutgoingEventWithIncomingAct({
 		client,
@@ -65,10 +74,6 @@ export async function joinRoomWithLeadingTwoRoomsUnjoined(data: {
 			reason: 'player incoming',
 			room: {
 				...roomExpect,
-				name: roomName,
-				players: [player],
-				totalPlayers: 1,
-				leader: player,
 			},
 			player,
 		}),
@@ -99,6 +104,7 @@ export async function joinTheSecondRoomWithLeadingTwoRooms(data: {
 		],
 	};
 
+	const games = createGames([{ id: roomName2 }]);
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('joinRoom', roomName2),
@@ -110,6 +116,7 @@ export async function joinTheSecondRoomWithLeadingTwoRooms(data: {
 				players: [player],
 				totalPlayers: 1,
 				leader: player,
+				games,
 			},
 			player,
 		}),

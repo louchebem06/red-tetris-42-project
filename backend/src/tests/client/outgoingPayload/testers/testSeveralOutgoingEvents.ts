@@ -17,16 +17,12 @@ export async function testSeveralOutgoingEvents<U extends keyof IAPM>(
 	const events = expected.map((ex) => {
 		return ex.event;
 	});
-	// console.error(events, config);
 	return await validateSeveralPayloads(
 		client,
 		listenSeveralEvents<U>(client, events, toSend, config),
 		expected,
 		config,
 	);
-	// 	.catch((e) => {
-	// 	console.error(e);
-	// });
 }
 
 type Expected = {
@@ -54,14 +50,12 @@ export async function testSeveralOutgoingEventsSeveralTimes<U extends keyof IAPM
 			});
 		})
 		.flat();
-	// console.error(events, config);
 	return await validateSeveralPayloads(
 		client,
 		listenSeveralEventsSeveralTimes<U>(client, events, toSend, config),
 		payloads,
 		config,
-	);
-	// 	.catch((e) => {
-	// 	console.error(e);
-	// });
+	).catch((e) => {
+		console.error(e);
+	});
 }

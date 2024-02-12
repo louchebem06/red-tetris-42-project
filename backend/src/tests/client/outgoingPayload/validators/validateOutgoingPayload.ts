@@ -23,7 +23,6 @@ export async function validateOutgoingPayload<T extends keyof OAPM>(
 					};
 					expect(data).toBeOutgoingPayload(payload);
 				} else {
-					// console.error('promise', promise, expected, data);
 					expect(data).toBeOutgoingPayload(expected.payload);
 				}
 			}

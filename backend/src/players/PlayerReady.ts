@@ -12,6 +12,5 @@ export class PlayerReady implements IEvent {
 		this.player = player;
 		this.roomId = roomId;
 		this.name = this.constructor.name;
-		// console.error(this.name);
 	}
 }

@@ -20,7 +20,6 @@ export class ExistingSessionStrategy<
 	public async create(name: string, socket: Socket): Promise<Session> {
 		socket.join(name);
 		const session = await this.manager.getSessionById(name);
-		// console.error(session)
 		session.push(socket);
 		return session;
 	}

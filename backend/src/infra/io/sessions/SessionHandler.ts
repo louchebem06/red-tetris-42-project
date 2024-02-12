@@ -40,8 +40,7 @@ export class SessionHandler {
 	}
 
 	public run(socket: Socket, next: NextIoFunction): void {
-		let sid = socket.handshake.auth.sessionID;
-		// console.error(sid, socket.handshake.auth);
+		let sid = socket.handshake.auth.sessionId;
 		if (sid) {
 			const s = new ExistingSessionStrategy(this.sm);
 			const p = new ExistingPlayerStrategy(this.pm, this.rm);
@@ -65,17 +64,7 @@ export class SessionHandler {
 			.then((p) => {
 				const socketLogs = logSocket(socket);
 				logger.logContext(socketLogs.raw, 'NEW SOCKET CONNECTION', socketLogs.pretty);
-				// logger.logSocketIO(socket);
 				p.log(`starting session: generate player depending strategy`);
-				// console.error(p);
-				// p?.roomsState.forEach((s) => {
-				// 	if (s.status === 'disconnected') {
-				// 		socket.join(s.name);
-				// 		s.status = `active`;
-				// 		console.error(this.rm.get(s.name), p.sessionID);
-				// 		// this.rm.get(s.name)?.save(p.sessionID, p);
-				// 	}
-				// });
 				this.creationStrategy
 					.create(sid, socket)
 					.then((s) => {

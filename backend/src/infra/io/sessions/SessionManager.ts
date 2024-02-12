@@ -46,14 +46,9 @@ export class SessionManager {
 
 	public async close(session: Session): Promise<SessionManager> {
 		if (session.isEmpty()) {
-			// console.error(
-			// 	`session ${session.sid} is empty -> closing...`,
-			// 	parseInt(process.env.DESTROY_TIMER ?? '3600', 10),
-			// );
 			const sid = session.sid;
 			const player = await this.pm.getPlayerById(sid);
 			new DisconnectPlayer<RM>(this.rm).execute(player);
-			// this.rm.disconnectPlayer(player);
 			setTimeout(
 				() => {
 					if (session.isEmpty()) {

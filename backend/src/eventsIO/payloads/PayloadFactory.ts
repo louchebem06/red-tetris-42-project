@@ -24,7 +24,6 @@ import {
 import Room from '../../rooms/Room';
 import Player from '../../players/Player';
 
-// TODO refactorer ca! => DI?
 class PayloadFactory {
 	public static createRoomJSON(room: Room): IRoomJSON {
 		return RoomJSON.createPayload(room);

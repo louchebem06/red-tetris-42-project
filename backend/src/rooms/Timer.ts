@@ -1,4 +1,3 @@
-// import EventEmitter from 'events';
 import Player from '../players/Player';
 import Room from './Room';
 import { Observable, Observer } from '../base/Observer';
@@ -53,19 +52,15 @@ export class Timer extends Observer<Observable> {
 					room.startGame(player);
 					this.resetCountdown();
 				} else {
-					// console.error(payload);
 					this.timerId = setTimeout(updateCount, 1000);
 				}
 			} catch (e) {
 				this.timerId = null;
-				// this.resetCountdown();
 			}
 		};
 
-		// if (!this.lock) {
 		this.resetCountdown();
 		updateCount();
-		// }
 	}
 
 	public resetCountdown(): void {

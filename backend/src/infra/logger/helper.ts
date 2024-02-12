@@ -5,6 +5,7 @@ import { Session } from '..';
 import { colors } from '.';
 import { Formatter, StringsLoggingFormat, Styler, dashSeparator, dotSeparator } from './stringStyler';
 import { IPlayerJSON } from 'tests/client/events';
+import { BasicDataStylers } from './stringStyler/Styler';
 
 export function logPlayer(player: Player): StringsLoggingFormat {
 	const coCol = player.connected ? colors.fGreen : colors.fRed;
@@ -58,7 +59,6 @@ ${colors.fCyan}${value}${colors.reset}
 export function logRoom(room: Room): StringsLoggingFormat {
 	const leader = logPlayer(room.leader);
 	const players = room.all.map((p) => logPlayer(p));
-	// const players = room.players.map((p) => logPlayer(p));
 	const winner = room.winner ? logPlayer(room.winner) : { pretty: 'not yet' };
 
 	const pretty = `${colors.italic}[room ${room.name}${colors.reset} \
@@ -89,8 +89,6 @@ export function logSocket(socket: Socket): StringsLoggingFormat {
 	const player: IPlayerJSON = data.player;
 	const { sockets, adapter } = nsp;
 	const socketsIds = [...sockets.values()];
-	// const nspRooms = [...adapter.rooms.values()];
-	// const nspSids = [...adapter.sids.values()];
 	const logData = {
 		id,
 		state,
@@ -115,48 +113,27 @@ export function logSocket(socket: Socket): StringsLoggingFormat {
 			sessionID: player.sessionID,
 			leads: [...player.leads],
 			wins: [...player.wins],
-			games: [...player.games],
+			games: player.games,
 			roomsState: [...player.roomsState.values()],
 		},
 	};
 
-	const stylers = {
-		keyStyler: new Styler({ paddingSide: 'right', wrap: { right: ':' }, indentation: 1, italic: true, padding: 5 }),
-		valueStyler: new Styler({
-			color: colors.fBlue,
-			padding: 10,
-			paddingSide: 'left',
-			// indentation: 2,
-			wrap: { open: '<', close: '>' },
-		}),
-		textStyler: new Styler({
-			paddingSide: 'left',
-			wrap: { right: ':' },
-			backgroundColor: colors.bBlue,
-			indentation: 1,
-			color: colors.fBlack,
-		}),
+	return logFormattedNStyled(logData, new BasicDataStylers().stylers);
+}
 
-		firstLevelStyler: new Styler({ indentation: 1, listString: '+ ', separator: dashSeparator }),
-		seconLevelStyler: new Styler({
-			indentation: 2,
-			listString: '- ',
-			separator: dotSeparator,
-			padding: 5,
-			paddingSide: 'left',
-		}),
-	};
-	const socketFormatter = new Formatter(stylers);
-	const log = socketFormatter.format(logData);
-	// console.error('handshake', handshake);
-	// console.error('socketFormatter', adapter.rooms, adapter.sids);
-	return log;
+export function logFormattedNStyled(
+	data: unknown,
+	stylers: {
+		[key: string]: Styler;
+	},
+): StringsLoggingFormat {
+	const formatter = new Formatter(stylers);
+	return formatter.format(data);
 }
 
 export function logSession(session: Session): StringsLoggingFormat {
 	const { sid, player, sockets, nbClients, nbClientsConnected } = session.toJSON();
 
-	// console.error('log de session')
 	const pretty = `* Session ${colors.italic}${sid}${colors.reset} => player: ${player.username}
 \tsockets: ${colors.fGreen}${nbClients}${colors.reset} / \
 ${colors.bold}${nbClientsConnected}${colors.reset}

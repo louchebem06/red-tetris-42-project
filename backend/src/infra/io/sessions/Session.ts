@@ -35,7 +35,6 @@ export class Session {
 			this.clientsStore.disconnect(socket);
 			const disconnectTimer = setTimeout(() => {
 				if (this.clientsStore.total === 0) {
-					// console.error(`session ${this.sid} is empty`);
 					this.events.notifyObserver('sessionEmpty', this);
 				}
 				client.disconnectTimer = null;

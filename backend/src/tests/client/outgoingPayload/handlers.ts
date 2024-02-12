@@ -4,7 +4,7 @@ import {
 	OutgoingHandlerData,
 } from './types';
 
-// id unique du client (pas trop d'autres choix que de le mettre ici)
+// id unique du client
 let sessionId: string;
 const outgoingJoinHandler =
 	<T extends keyof OAPM>(data: OutgoingHandlerData<T>): OutgoingActionCallback<T> =>
@@ -42,7 +42,6 @@ const outgoingRoomChangeHandler =
 	<T extends keyof OAPM>(data: OutgoingHandlerData<T>): OutgoingActionCallback<T> =>
 	(payload) => {
 		if ((<OAPM['roomChange']>payload).room.name === data.data) {
-			// console.error(payload);
 			data.resolve(payload);
 		}
 	};
@@ -89,17 +88,15 @@ const outgoingGameStartHandler =
 const outgoingGameStartRejectHandler =
 	<T extends keyof OAPM>(data: OutgoingHandlerData<T>): OutgoingActionCallback<T> =>
 	(payload) => {
-		// console.error('outgoingGameStartRejectHandler', payload, data);
 		if ((<OAPM['gameStart']>payload).roomName !== data.data) {
 			data.resolve(payload);
 		}
 	};
 
-// gestionnaire generique pour combler les tests pas encore montés a virer une fois tout defini
+// TODO gestionnaire generique pour combler les tests pas encore montés a virer une fois tout defini
 const outgoingBasicHandler =
 	<T extends keyof OAPM>(data: OutgoingHandlerData<T>): OutgoingActionCallback<T> =>
 	(payload) => {
-		// console.error('outgoingBasicHandler', payload);
 		data.resolve(payload);
 	};
 

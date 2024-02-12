@@ -16,7 +16,6 @@ export class CreateRoom extends EventCommand {
 	public execute(): IAPM[keyof IAPM] {
 		return (name: string): void => {
 			try {
-				// console.error(this.base.getSocketData().player);
 				this.rm.create(name, this.base.getSocketData().player);
 			} catch (e) {
 				this.base.emit('error', `CreateRoom error: ${(<Error>e).message}`);

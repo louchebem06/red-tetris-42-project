@@ -1,3 +1,4 @@
+import { createGames } from '../../game/utils/creation';
 import { IPlayerJSON, IRoomJSON } from '../../../eventsIO/payloads/types/IPayload';
 
 function createRoom(overrides: Partial<IRoomJSON> = {}): IRoomJSON {
@@ -11,6 +12,7 @@ function createRoom(overrides: Partial<IRoomJSON> = {}): IRoomJSON {
 		totalPlayers: 0,
 		readys: [],
 		totalReady: 0,
+		games: createGames(),
 		...overrides,
 	};
 }

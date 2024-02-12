@@ -1,3 +1,4 @@
+import { createGames } from '../../../game/utils/creation';
 import {
 	IPlayerJSON,
 	IRoomJSON,
@@ -26,12 +27,14 @@ export async function sendMessageToOneRoom(data: {
 		leads: [roomName, roomName2],
 		roomsState,
 	};
+	const games = createGames([{ id: roomName }]);
 	const room = {
 		...roomExpect,
 		name: roomName,
 		players: [player],
 		totalPlayers: 1,
 		leader: player,
+		games,
 	};
 	await testOutgoingEventWithIncomingAct({
 		client,
