@@ -6,6 +6,7 @@
 	import { io } from '$lib/socket';
 	import type RoomType from '$lib/interfaces/Room.interface';
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
+	import Modal from '$lib/componante/Modal.svelte';
 
 	export let master: Player;
 	export let players: Player[];
@@ -25,6 +26,8 @@
 	};
 
 	let newMessage: string = '';
+
+	let modalViewRunGame: boolean = false;
 
 	const addSystemMessage = (msg: string): void => {
 		msgs = [
@@ -99,7 +102,23 @@
 	const toggleReady = (): void => {
 		io.emit('ready', room);
 	};
+
+	const toggleModalViewRunGame = (): void => {
+		modalViewRunGame = !modalViewRunGame;
+	};
+
+	const forceGameStart = (): void => {
+		io.emit('gameStart', room);
+	};
 </script>
+
+<Modal bind:show={modalViewRunGame}>
+	<p>Are you sure?</p>
+	<p>There are {ready} ready players on {players.length} total players in the waiting room.</p>
+	<p>by accepting, you are ready to play</p>
+	<button on:click={forceGameStart}>Yes</button>
+	<button on:click={toggleModalViewRunGame}>No</button>
+</Modal>
 
 <div class="content">
 	<div class="ready">
@@ -112,7 +131,7 @@
 			{/if}
 		</button>
 		{#if $sessionID == master?.sessionID}
-			<button>Run Game</button>
+			<button on:click={toggleModalViewRunGame}>Run Game</button>
 		{/if}
 	</div>
 

@@ -69,10 +69,10 @@ export class RemovePlayerCommand extends RoomCommand {
 					this.service.leave(this.room, player);
 
 					if (total === 1) {
-						if (gameState) {
-							this.room.stopGame(player);
-							new UpdateRoleCommand(this.room, this.service, 'win').execute(player);
-						}
+						// if (gameState) {
+						// 	// this.room.stopGame(player);
+						// 	new UpdateRoleCommand(this.room, this.service, 'win').execute(player);
+						// }
 						this.service.handleRoomEmpty(this.room);
 					} else if (wasLeader) {
 						new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);
@@ -94,10 +94,10 @@ export class RemovePlayerCommand extends RoomCommand {
 					this.room.updatePlayers(player);
 
 					if (total === 1) {
-						if (gameState) {
-							this.room.stopGame(player);
-							new UpdateRoleCommand(this.room, this.service, 'win').execute(player);
-						}
+						// if (gameState) {
+						// 	// this.room.stopGame(player);
+						// 	new UpdateRoleCommand(this.room, this.service, 'win').execute(player);
+						// }
 						this.service.handleRoomEmpty(this.room);
 					} else if (wasLeader) {
 						new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);

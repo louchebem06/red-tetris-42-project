@@ -4,7 +4,7 @@ import Game from './Game';
 import { TetriminosArrayType } from './tetriminos/tetriminos.interface';
 import Player from '../players/Player';
 import { logger } from '../infra';
-import { IStatePlayer } from './GameLogic';
+import { IStatePlayer, PlayerGame } from './GameLogic';
 
 export type Pieces = TetriminosArrayType;
 export type GameRoomAction = 'join' | 'leave';
@@ -63,15 +63,16 @@ export class GameService extends ServerService {
 	}
 
 	// game publish generique a la room
-	public publish(data: IStatePlayer): void {
+	public publishSpecter(data: PlayerGame[]): void {
 		const id = this.game.id;
 		try {
+			const room = id.split('_')[1];
 			this.broadcast({
-				event: 'gameChange',
+				event: 'gameInfo',
 				data,
-				room: this.game.id,
+				room,
 			});
-			const log = `GameRoom ${id} publish ${JSON.stringify(data)}`;
+			const log = `GameRoom ${id} publish on ${room} payload ${JSON.stringify(data)}`;
 			logger.logContext(log, `gameservice ${id}: publish gameChange`, log);
 		} catch (error) {
 			const log = `Error: GameRoom ${id} publish failed ${(error as Error).message}
@@ -94,7 +95,8 @@ datas: ${JSON.stringify(data)}`;
 			this.emit(sid, 'gameChange', data);
 
 			const { level, score, map, nextPiece } = data;
-			const log = `GameRoom ${id} emitStatePlayer player: ${JSON.stringify(playerOrSid)}
+			if (level && score && map && nextPiece) {
+				const log = `GameRoom ${id} emitStatePlayer player: ${JSON.stringify(playerOrSid)}
 level: ${level}, 
 score: ${score},
 nextPiece:
@@ -102,7 +104,27 @@ ${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).
 map:
 ${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}| 
 `;
-			logger.logContext(log, `gameservice ${id}: emitStatePlayer gameChange`);
+				logger.logContext(log, `gameservice ${id}: emitStatePlayer gameChange`);
+			}
+		} catch (error) {
+			const log = `Error: GameRoom ${id} publish failed ${(error as Error).message}`;
+			logger.logContext(log, `ERROR: gameservice ${id}: emitStatePlayer `, log);
+			throw error;
+		}
+	}
+
+	public emitEndGamePlayer(data: PlayerGame, playerOrSid: Player | string): void {
+		const id = this.game.id;
+		try {
+			let sid: string;
+			if (typeof playerOrSid === 'string') {
+				sid = playerOrSid;
+			} else {
+				sid = playerOrSid.sessionID;
+			}
+			this.emit(sid, 'gameEnd', data);
+			const log = `GameRoom ${id} emit end game to player ${sid} payload ${JSON.stringify(data)}`;
+			logger.logContext(log, `gameservice ${id}: publish gameChange`, log);
 		} catch (error) {
 			const log = `Error: GameRoom ${id} publish failed ${(error as Error).message}`;
 			logger.logContext(log, `ERROR: gameservice ${id}: emitStatePlayer `, log);

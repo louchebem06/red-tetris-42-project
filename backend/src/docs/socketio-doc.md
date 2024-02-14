@@ -1032,3 +1032,25 @@ socketClient.emit('gameChange', {
 } as IStatePlayer); // IStatePlayer
 
 ```
+
+### gameInfo
+
+Évènement émis par le serveur dès qu'une partie commence toutes les secondes.
+
+L'event est envoyé à toute la waiting room
+Le payload retourné est un tableau de PlayerGame
+
+```js
+socketClient.emit('gameInfo', [playerGame1, playerGame1, ...])
+```
+
+### gameEnd
+
+Évènement émis par le serveur dès qu'une partie se finit pour un joueur.
+
+L'event est envoyé à toute la waiting room
+Le payload retourné est un tableau de PlayerGame
+
+```js
+socketClient.emit('gameEnd', playerGame1);
+```

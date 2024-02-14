@@ -3,11 +3,11 @@ import { logger } from '../infra';
 import Player from '../players/Player';
 import { GameLogic, PlayerGame, TypeAction } from './GameLogic';
 import { GameService } from './GameService';
-import Room from 'rooms/Room';
+import Room from '../rooms/Room';
 import { AGameState, CreatedState } from './gameStates';
-import { GameStore, PlayerGameStore } from './gameStates/StartedState';
+import { UpdateRoleCommand } from '../rooms/useCases';
+import { gameStore, GameStore } from './stores';
 
-const gameStore: GameStore = new GameStore();
 export default class Game {
 	public gamers: Player[];
 	public winner: Player | null = null;
@@ -20,7 +20,7 @@ export default class Game {
 
 	public constructor(private room: Room) {
 		this._id = `game_${room.name}_${this.state.date.getTime()}`;
-		this.gamers = room.all;
+		this.gamers = [...room.all.filter((p) => p.status(room.name) === 'active')];
 		this.service = new GameService(this, room.io);
 		this.state.context = { game: this, service: this.service, logic: this.logic };
 
@@ -29,37 +29,23 @@ export default class Game {
 	}
 
 	public removePlayer(player: Player, playerGame: PlayerGame): Game {
-		// jeu fini pour le joueur -> le kick du serveur le remettre dans la game room
-		// sauvegarder ses donnees de jeu
-		// si 0 player -> stop le jeu et designer le vainqueur
-		this.service.leave(player);
-		this.gamers = this.gamers.filter((gamer) => gamer !== player);
+		if (this.gamers.includes(player)) {
+			this.service.leave(player);
+			this.gamers = this.gamers.filter((gamer) => gamer !== player);
 
-		this.room.updatePlayer(player, 'idle');
-		this.room.updatePlayers(player);
-		const log = `Game ${this._id}: remove player ${JSON.stringify(player)}`;
-		logger.logContext(log, `game transition new state`, log);
-		let gamePlayerStore = this.gameStore.get(this.id as string);
-		if (!gamePlayerStore) {
-			gamePlayerStore = new PlayerGameStore();
-		}
-		gamePlayerStore.save(player.sessionID, playerGame);
-		this.gameStore.save(this.id as string, gamePlayerStore);
+			this.room.updatePlayer(player, 'idle');
+			this.room.updatePlayers(player);
+			const log = `Game ${this._id}: remove player ${JSON.stringify(player)},
+			score ${JSON.stringify(playerGame)}`;
+			logger.logContext(log, `remove player`, log);
+			this.service.emitEndGamePlayer(playerGame, player);
+			this.gameStore.addPlayerGame(this.id as string, player.sessionID, playerGame); // game end to player
 
-		// si plus de gamers -> fin du jeu
-		if (this.gamers.length === 0) {
-			this.stop();
-
-			const store = this.gameStore.get(this.id as string);
-			if (store) {
-				const games = Object.entries(store).map(([key, value]) => {
-					return { player: this.room.get(key), game: value };
-				});
-				const scores = games.sort((a, b) => b.game.getScore() - a.game.getScore());
-				// TODO: StopGameCommand -> UpdateRoleCommand
-				this.winner = scores?.[0].player ?? null;
+			if (this.gamers.length === 0) {
+				this.finish();
+				const log2 = `finished game Game ${this._id}: remove player ${JSON.stringify(player)}`;
+				logger.logContext(log2, `remove player`, log2);
 			}
-			this.finish();
 		}
 		return this;
 	}
@@ -67,21 +53,12 @@ export default class Game {
 	public transitionTo(state: AGameState): void {
 		const log = `Game ${this._id} transition to ${state.constructor.name}`;
 		logger.logContext(log, `game transition new state`, log);
-		// logger.log(`Game ${this._id} transition to ${state.constructor.name}`);
 		state.context = { game: this, service: this.service, logic: this.logic };
 		this.state = state;
 	}
 
 	public start(): Game {
 		this.state.start();
-		return this;
-	}
-
-	public stop(): Game {
-		// TODO set le winner
-		// conditions pour stopper le jeu:
-		// - score le + haut
-		this.state.stop();
 		return this;
 	}
 
@@ -97,6 +74,29 @@ export default class Game {
 
 	public get id(): string {
 		return this._id;
+	}
+
+	public setWinner(): Game {
+		if (!this.winner) {
+			this.winner = this.room.get(this.gameStore.getWinnerId(this.id)) ?? null;
+			if (this.winner) {
+				// event roomChange 'new winner' emitted
+				new UpdateRoleCommand(this.room, this.room.getService(this), 'win').execute(this.winner as Player);
+			}
+		}
+		return this;
+	}
+
+	public release(): Game {
+		if (this.state.constructor.name === 'FinishedState') {
+			if (!this.winner) {
+				this.setWinner(); // player change new winner
+			}
+			this.room.unlock();
+			this.room.resetPlayersIdle();
+			this.room.updatePlayers();
+		}
+		return this;
 	}
 
 	public toJSON(): IGameJSON {

@@ -75,6 +75,7 @@ class App {
 	public stop(cb?: () => void): void {
 		this.io.close();
 		this.httpServer.stop(cb);
+		// process.exit(0);
 	}
 
 	public gracefulShutdown(): void {

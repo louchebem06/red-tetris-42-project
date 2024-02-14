@@ -10,7 +10,9 @@ export class Map {
 		public currentTetriminos: ATetriminos | undefined = undefined,
 		private nbOfTetriminos: number = 0,
 	) {
-		for (let i = 0; i < Y; i++) this.map.push(new Array(X).fill(''));
+		if (this.map.length == 0) {
+			for (let i = 0; i < Y; i++) this.map.push(new Array(X).fill(''));
+		}
 	}
 
 	public resetTetriminos(): void {
@@ -30,7 +32,6 @@ export class Map {
 		if (!this.moveIsPossible(tetriminos, 0, 0)) {
 			throw new Error('Add this tetriminos is not possible');
 		}
-		// this.currentTetriminos = tetriminos;
 		this.currentTetriminos = tetriminos.clone();
 		this.nbOfTetriminos++;
 	}

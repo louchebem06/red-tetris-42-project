@@ -14,6 +14,7 @@ class HttpServer {
 	private whiteList: string[] = [];
 	private port: number = parseInt(process.env.PORT || '8080', 10);
 	private corsOpt: CorsOptions = {};
+	private defaultPorts: number[] = [80, 443, 4173, 5173, this.port];
 
 	/**
 	 * Initializes the constructor.
@@ -22,6 +23,7 @@ class HttpServer {
 	 * set up the routes for the http server.
 	 */
 	public constructor() {
+		this.defaultPorts = this.defaultPorts.filter((value, index) => this.defaultPorts.indexOf(value) == index);
 		this.app = express();
 		this.server = http.createServer(this.app);
 
@@ -84,6 +86,67 @@ class HttpServer {
 		this.app.use(cors(this.getCorsOpts()));
 	}
 
+	private generate42Post(cluster: number, ranger: number, nbOfPosts: number): string[] {
+		const posts: string[] = [];
+		for (let p = 1; p <= nbOfPosts; p++) {
+			posts.push(`c${cluster}r${ranger}p${p}`);
+		}
+		return posts;
+	}
+
+	private generate42Cluster1(): string[] {
+		const posts: string[] = [];
+		for (let i = 1; i <= 4; i++) {
+			posts.push(...this.generate42Post(1, i, 9));
+		}
+		for (let i = 5; i <= 8; i++) {
+			posts.push(...this.generate42Post(1, i, 5));
+		}
+		return posts;
+	}
+
+	private generate42Cluster2(): string[] {
+		const posts: string[] = [];
+		for (let i = 1; i <= 3; i++) {
+			posts.push(...this.generate42Post(2, i, 6));
+		}
+		for (let i = 4; i <= 7; i++) {
+			posts.push(...this.generate42Post(2, i, 9));
+		}
+		posts.push(...this.generate42Post(2, 8, 6));
+		for (let i = 9; i <= 12; i++) {
+			posts.push(...this.generate42Post(2, i, 5));
+		}
+		return posts;
+	}
+
+	private generate42Cluster3And4(): string[] {
+		const posts: string[] = [];
+		for (let cluster = 3; cluster <= 4; cluster++) {
+			for (let ranger = 1; ranger <= 2; ranger++) {
+				posts.push(...this.generate42Post(cluster, ranger, 6));
+			}
+		}
+		return posts;
+	}
+
+	private get42PostName(): string[] {
+		return [...this.generate42Cluster1(), ...this.generate42Cluster2(), ...this.generate42Cluster3And4()];
+	}
+
+	private generateCorsUrls(urlName: string): string[] {
+		return this.defaultPorts.map((port) => {
+			switch (port) {
+				case 80:
+					return `http://${urlName}`;
+				case 443:
+					return `https://${urlName}`;
+				default:
+					return `http://${urlName}:${port}`;
+			}
+		});
+	}
+
 	/**
 	 * Set the CORS options for the server.
 	 *
@@ -91,23 +154,20 @@ class HttpServer {
 	 * and the CORS options object for the server. The whitelist
 	 * contains a list of URLs that are allowed to make requests
 	 * to the server. The CORS options object specifies how the
-	 * server should handle CORS requests.
+	 * server should handle CORS requests.q
 	 *
 	 * @return {void} This function does not return anything.
 	 */
 	private setCorsOpts(): void {
-		this.whiteList = [
-			`http://127.0.0.1:${this.port}`,
-			'http://127.0.0.1',
-			'http://127.0.0.1:4173',
-			'http://127.0.0.1:5173',
-			`http://localhost:${this.port}`,
-			'http://localhost',
-			'http://localhost:4173',
-			'http://localhost:5173',
-			'http://freebox.bryanledda.fr:5173',
-			'https://red-tetris-frontend.onrender.com',
+		const whiteList = [
+			'127.0.0.1',
+			'localhost',
+			'freebox.bryanledda.fr',
+			'aude.bryanledda.fr',
+			'red-tetris-frontend.onrender.com',
+			...this.get42PostName(),
 		];
+		whiteList.forEach((value) => this.whiteList.push(...this.generateCorsUrls(value)));
 		this.corsOpt = {
 			/**
 			 * A function that checks the origin of a request

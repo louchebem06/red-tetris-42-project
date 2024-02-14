@@ -1,2 +1,2 @@
-export { StartGameCommand, PlayGameCommand, StopGameCommand } from './useCases/';
-export { StartedState, StoppedState, FinishedState, CreatedState, AGameState } from './gameStates/';
+export { StartGameCommand, PlayGameCommand } from './useCases/';
+export { StartedState, FinishedState, CreatedState, AGameState } from './gameStates/';

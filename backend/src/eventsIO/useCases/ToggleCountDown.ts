@@ -1,9 +1,8 @@
 import { SocketBase } from '../SocketBase';
-import { PayloadFactory } from '../payloads/PayloadFactory';
 import { IAPM } from '../payloads/types/IPayload';
 import PlayersManager from '../../players/PlayersManager';
 import RoomManager from '../../rooms/RoomsManager';
-import { EventCommand } from '.';
+import { EventCommand, Ready } from '.';
 
 export class ToggleCountDown extends EventCommand {
 	public constructor(
@@ -15,30 +14,28 @@ export class ToggleCountDown extends EventCommand {
 	}
 
 	public execute(): IAPM[keyof IAPM] {
-		return (room: string): void => {
+		return (name: string): void => {
 			try {
-				if (this.rm.has(room)) {
-					this.pm
-						.getPlayerById(this.base.getSocketData().player.sessionID)
-						.then((player) => {
-							player.changeRoomStatus('ready', room);
-							this.base.broadcast(
-								'playerChange',
-								PayloadFactory.createPlayerPayload(player, 'ready'),
-								'',
-								room,
-							);
-						})
-						.catch((e) =>
-							this.base.emit(
-								'error',
-								`Ready error: \
-								${(<Error>e).message}`,
-							),
-						);
+				const room = this.rm.get(name);
+				const player = this.base.getSocketData().player;
+
+				if (room && room.isLeader(player) && !room.gameState) {
+					new Ready(this.base, this.pm, this.rm).execute()(name);
+					if (room.lock) {
+						room.resetCountdown();
+					} else {
+						room.startCountdown(player, room);
+					}
+				} else {
+					throw new Error(
+						`ToggleCountdown: not possible to toggle the game's countdown
+room: ${room ? room.name : 'not found'}
+player: ${room?.isLeader(player) ? 'is leader' : 'is not leader'}
+game: ${room?.gameState ? 'started' : 'not started'}`,
+					);
 				}
 			} catch (e) {
-				this.base.emit('error', `Ready error: ${(<Error>e).message}`);
+				this.base.emit('error', `ToggleCountDown error: ${(<Error>e).message}`);
 			}
 		};
 	}

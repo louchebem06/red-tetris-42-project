@@ -17,6 +17,7 @@ import {
 	LeaveRoom,
 	LogOnAnyEvents,
 	Ready,
+	ToggleCountDown,
 } from './useCases';
 import { SocketBase } from './SocketBase';
 import { PM } from '../players/PlayersManager';
@@ -44,7 +45,7 @@ export default class SocketController extends SocketBase {
 			getRoomsPlayer: new GetRoomsPlayer(this, pm, rm).execute(),
 			changeUsername: new ChangeUsername(this, pm, rm).execute(),
 			gameChange: new GameChange(this, pm, rm).execute(),
-			// gameStart: this.toggleCountDownGame(rm),
+			gameStart: new ToggleCountDown(this, pm, rm).execute(),
 			error: new ErrorClient(this, pm, rm).execute(),
 		};
 		this.listen();

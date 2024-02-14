@@ -22,10 +22,10 @@ export class StartGameCommand extends GameCommand {
 		try {
 			// TODO: rajouter la possibilité de laisser le leader start la game
 			// pour le moment si je fais ca comme ca, le leader en se settant ready demarre la game
-			if (hasPlayer && isReadytoPlay) {
-				const game = new CreateGameCommand(room).execute();
-				room.addGame(game);
-				game.start();
+			if ((hasPlayer && isReadytoPlay) || (room.isLeader(player) && room.lock)) {
+				// const game = new CreateGameCommand(room).execute();
+				// room.addGame(game);
+				// game.start();
 				room.all.forEach((p) => {
 					let playerStatus: PlayerState = 'active';
 					if (!p.status(room.name)?.includes('ready')) {
@@ -33,6 +33,9 @@ export class StartGameCommand extends GameCommand {
 					}
 					p.changeRoomStatus(playerStatus, room.name);
 				});
+				const game = new CreateGameCommand(room).execute();
+				room.addGame(game);
+				game.start();
 				room.updatePlayers();
 			} else {
 				throw new Error(

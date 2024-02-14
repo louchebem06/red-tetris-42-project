@@ -59,7 +59,7 @@ describe('* All Server IO Events', () => {
 					sessionID: sessionId,
 				}),
 			});
-		});
+		}, 2000);
 	});
 
 	describe(`Create rooms`, () => {
@@ -240,7 +240,7 @@ describe('* All Server IO Events', () => {
 					expected: createOutgoingAction('gameStart', {
 						reason: 'time',
 						roomName: roomName,
-						message: `The game will start in 3 seconds.`,
+						message: `The game will start in 4 seconds.`,
 					}),
 				});
 			}, 1000);

@@ -1,5 +1,4 @@
 import Player from '../../players/Player';
-// import { AGameState } from ".";
 import { TypeAction } from '../GameLogic';
 import { AGameState } from './AGameState';
 
@@ -19,8 +18,6 @@ export class FinishedState extends AGameState {
 	}
 
 	public finish(): void {
-		this.clear();
-		this.service?.finish();
-		console.log('Game already finished');
+		throw new Error(`Finished {FinishedState}: Game ${this.game?.id} already finished`);
 	}
 }

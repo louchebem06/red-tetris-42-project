@@ -11,11 +11,12 @@ import Game from '../games/Game';
 import { RoomEventsManager } from './events/manager';
 import { AddPlayerCommand, RemovePlayerCommand } from './useCases';
 import { RoomPropsBase } from './RoomPropsBase';
-import { PlayGameCommand, StartGameCommand, StartedState, StopGameCommand } from '../games';
+import { FinishedState, PlayGameCommand, StartGameCommand, StartedState } from '../games';
 import { TypeAction } from '../games/GameLogic';
 
 export default class Room extends RoomPropsBase {
 	private _games: Record<string, Game> = {};
+	private _lastWinner: Player | null = null;
 
 	public constructor(
 		name: string,
@@ -44,11 +45,24 @@ export default class Room extends RoomPropsBase {
 	}
 
 	public isReadytoPlay(player: Player): boolean {
-		return !this.gameState && this.has(player.sessionID) && this.canStartGame(player);
+		return !this.gameState && this.has(player.sessionID) && this.canStartGame();
 	}
 
 	public addPlayer(player: Player): void {
 		new AddPlayerCommand(this, this.service).execute(player);
+	}
+
+	public unlock(): Room {
+		this.timer.lock = false;
+		this.lock = false;
+		return this;
+	}
+
+	public getService(game: Game): RoomService {
+		if (this._games[game.id] === game) {
+			return this.service;
+		}
+		throw new Error('Room: getService: game not found');
 	}
 
 	public updatePlayer(player: Player, status: PlayerState): Player | undefined {
@@ -58,7 +72,7 @@ export default class Room extends RoomPropsBase {
 				status,
 				leads: this.isLeader(player),
 				readys: this.totalReady,
-				wins: this.winner?.username === player.username ?? false,
+				wins: this.winner?.sessionID === player.sessionID ?? false,
 				started: this.gameState,
 			}),
 		);
@@ -74,6 +88,13 @@ export default class Room extends RoomPropsBase {
 			});
 	}
 
+	public resetPlayersIdle(): Room {
+		this.all.forEach((p) => {
+			this.updatePlayer(p, 'active');
+		});
+		return this;
+	}
+
 	public removePlayer(player: Player): Room {
 		new RemovePlayerCommand(this, this.service).execute(player);
 		return this;
@@ -86,34 +107,16 @@ export default class Room extends RoomPropsBase {
 	}
 
 	public get winner(): Player | null {
-		return this.game?.winner ?? null;
+		return this._lastWinner ?? null;
 	}
 
 	public set winner(player: Player) {
-		player.wins = this.name;
-
-		if (this.game) {
-			this.game.winner = player;
-		}
+		this._lastWinner = player;
 	}
 
 	public startGame(player: Player): void {
 		try {
 			new StartGameCommand(this, player).execute();
-		} catch (e) {
-			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
-				throw new Error((<Error>e).message);
-			}
-		}
-	}
-
-	public stopGame(player: Player): void {
-		// si le jeu est demarré
-		// et que le joueur est le leader ou que la room est vide
-		// et que le player a la status 'left' pour la room
-		// alors on autorise l'arret du jeu
-		try {
-			new StopGameCommand(this, player).execute();
 		} catch (e) {
 			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
 				throw new Error((<Error>e).message);
@@ -128,7 +131,6 @@ export default class Room extends RoomPropsBase {
 	public play(player: Player, action: TypeAction): Room {
 		try {
 			if (this.has(player.sessionID) && this.gameState) {
-				// this.game?.play(player, action);
 				new PlayGameCommand(this, player, action).execute();
 			} else {
 				throw new Error(`Room: play: player ${player.username}(${player.sessionID}) not in room ${this.name}`);
@@ -145,10 +147,16 @@ export default class Room extends RoomPropsBase {
 		return this.games?.find((game) => game.state instanceof StartedState);
 	}
 
+	public lastFinishedGame(): Game | undefined {
+		const finished = this.games?.filter((game) => game.state instanceof FinishedState);
+		return finished ? finished[finished?.length - 1] : undefined;
+	}
+
 	public get games(): Game[] | null {
 		return Object.values(this._games);
 	}
 
+	// utils
 	public log(ctx: string): void {
 		const { raw, pretty } = logRoom(this);
 		logger.logContext(raw, ctx, pretty);

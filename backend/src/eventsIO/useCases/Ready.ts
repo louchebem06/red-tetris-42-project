@@ -14,7 +14,7 @@ export class Ready extends EventCommand {
 		super(base, pm, rm);
 	}
 
-	public execute(): IAPM[keyof IAPM] {
+	public execute(): IAPM['ready'] {
 		return (room: string): void => {
 			try {
 				if (this.rm.has(room)) {

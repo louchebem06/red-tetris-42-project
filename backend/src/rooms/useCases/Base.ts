@@ -2,11 +2,12 @@ import { RoomEmptyEventListener } from '../events/emptyRoom';
 import Player from '../../players/Player';
 import Room from '../Room';
 import { RoomService } from '../RoomService';
+import { GameService } from 'games/GameService';
 
 export abstract class RoomCommand {
 	public constructor(
 		protected room: Room,
-		protected service: RoomService,
+		protected service: RoomService | GameService,
 	) {}
 	public abstract execute(player: Player): void;
 }
