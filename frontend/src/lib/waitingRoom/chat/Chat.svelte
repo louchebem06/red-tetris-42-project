@@ -58,7 +58,7 @@
 			}, 100);
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			console.log('change', data);
+			// console.log('change', data);
 			if (data.room.name != room || data.reason == 'ready') return;
 			addSystemMessage(
 				`${data.reason}: ${
@@ -68,7 +68,7 @@
 			);
 		});
 		io.on('playerChange', (data: { reason: string; player: Player }) => {
-			console.log('player change', data);
+			// console.log('player change', data);
 			if (data.reason != 'ready') return;
 			const statusRoom = data.player?.roomsState.filter((e) => e.name == room)[0];
 			ready = statusRoom.readys;

@@ -3,8 +3,6 @@ import { RoomCommand, RoomManagerCommand } from './Base';
 import { CreateRoom } from './CreateRoom';
 import { DisconnectPlayer } from './DisconnectPlayer';
 import { RemovePlayerCommand } from './RemovePlayer';
-import { StartGameCommand } from './StartGame';
-import { StopGameCommand } from './StopGame';
 import { UpdateRoleCommand } from './UpdateRole';
 
 export {
@@ -14,7 +12,5 @@ export {
 	CreateRoom,
 	RemovePlayerCommand,
 	UpdateRoleCommand,
-	StartGameCommand,
-	StopGameCommand,
 	DisconnectPlayer,
 };

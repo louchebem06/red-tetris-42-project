@@ -94,7 +94,6 @@ function logEmitRoomInfo(p: IRoomJSON): void {
 					sessionID: leader.sessionID,
 					leads: [...leader.leads],
 					wins: [...leader.wins],
-					games: leader.games,
 					roomsState: [...leader.roomsState.values()],
 				},
 				gameState,
@@ -105,7 +104,6 @@ function logEmitRoomInfo(p: IRoomJSON): void {
 							sessionID: winner.sessionID,
 							leads: [...winner.leads],
 							wins: [...winner.wins],
-							games: winner.games,
 							roomsState: [...winner.roomsState.values()],
 						}
 					: {},

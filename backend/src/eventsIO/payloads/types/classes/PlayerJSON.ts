@@ -1,6 +1,3 @@
-// import { State } from "type/PlayerWaitingRoomState";
-
-import { IGameJSON } from '../../../../games/Game';
 import Player from '../../../../players/Player';
 import { IRoomState } from '../../../../rooms/roomState/IRoomState';
 import { IPlayerJSON } from '../IPayload';
@@ -12,7 +9,6 @@ class PlayerJSON implements IPlayerJSON {
 	public leads: string[];
 	public wins: string[];
 	public connected: boolean;
-	public games: IGameJSON[] | null;
 	public roomsState: IRoomState[];
 
 	private constructor(player: Player) {
@@ -22,7 +18,6 @@ class PlayerJSON implements IPlayerJSON {
 		this.leads = player.leads;
 		this.wins = player.wins;
 		this.connected = player.connected;
-		this.games = player.games;
 		this.roomsState = player.rooms;
 	}
 

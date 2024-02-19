@@ -6,7 +6,6 @@ import { PayloadFactory } from '../eventsIO/payloads/PayloadFactory';
 import { Observable } from '../base/Observer';
 import { RoomStateStore } from '../rooms/roomState/store';
 import { RoomState } from '../rooms/roomState/RoomState';
-import { IGameJSON } from 'games/Game';
 
 class Player extends Observable {
 	public get [Symbol.toStringTag](): string {
@@ -15,7 +14,6 @@ class Player extends Observable {
 	[key: string]: unknown;
 	private _dateCreated: Date = new Date();
 
-	private _games: Map<string, IGameJSON> = new Map<string, IGameJSON>();
 	private _leads: string[] = [];
 	private _wins: string[] = [];
 	public connected: boolean = true;
@@ -58,16 +56,13 @@ class Player extends Observable {
 		}
 	}
 
+	// redondance avec roomsState ?
 	public get rooms(): IRoomState[] {
 		return [...this._states.all];
 	}
 
 	public get dateCreated(): Date {
 		return this._dateCreated;
-	}
-
-	public get games(): IGameJSON[] {
-		return [...this._games.values()];
 	}
 
 	public get leads(): string[] {
@@ -84,10 +79,6 @@ class Player extends Observable {
 
 	public set wins(value: string) {
 		this.wins.push(value);
-	}
-
-	public addGame(id: string, game: IGameJSON): void {
-		this._games.set(id, game);
 	}
 
 	public disconnect(): void {

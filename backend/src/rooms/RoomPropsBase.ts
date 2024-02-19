@@ -5,6 +5,7 @@ import { Timer } from './Timer';
 import { Observable } from '../base/Observer';
 import Room from './Room';
 import { logger } from '../infra';
+import { Server } from 'socket.io';
 
 export class RoomPropsBase extends RoomPlayersBase {
 	public destroySession: number;
@@ -27,6 +28,10 @@ export class RoomPropsBase extends RoomPlayersBase {
 		this.timerId = timer.timerId;
 		this.countdown = timer.countdown;
 		this.lock = timer.lock;
+	}
+
+	public get io(): Server {
+		return this.service.server;
 	}
 
 	public update(eventId: string, observable: Observable): void {

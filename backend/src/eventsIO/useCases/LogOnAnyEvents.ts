@@ -24,14 +24,12 @@ export class LogOnAnyEvents extends EventCommand {
 			const sessionID = this.base.getSocketData().player.sessionID;
 			const username = this.base.getSocketData().player.username;
 			const sid = this.base.getSocket().id;
-
 			const raw = `[${username}, ${sessionID} (socket: ${sid}) - ${event}]
-received arguments: ${JSON.stringify(args)}\n${logPlayer(this.base.getSocketData().player).raw}`;
+			received arguments: ${JSON.stringify(args)}\n${logPlayer(this.base.getSocketData().player).raw}`;
 			const pretty = `[${colors.fBlue}${username}, ${sessionID} \
-(socket: ${sid}) - ${event}${colors.reset}]
-${colors.underline}received arguments:${colors.reset} \
-${_args}\n${logPlayer(this.base.getSocketData().player).pretty}`;
-
+			(socket: ${sid}) - ${event}${colors.reset}]
+			${colors.underline}received arguments:${colors.reset} \
+			${_args}\n${logPlayer(this.base.getSocketData().player).pretty}`;
 			logger.logContext(raw, ctx, pretty);
 		});
 	}

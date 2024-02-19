@@ -31,7 +31,7 @@ const clientConfig = (username: string): ClientConfigTest => {
 		username,
 		roomName,
 		roomName2,
-		playerExpect: createPlayer({ username }),
+		playerExpect: createPlayer({ username, sessionID: expect.any(String) as unknown as string }),
 		roomExpect: createRoom(),
 		roomsState: [createRoomState({ name: roomName })],
 	};

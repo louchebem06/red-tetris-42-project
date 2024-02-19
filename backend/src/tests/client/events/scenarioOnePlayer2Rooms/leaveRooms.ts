@@ -1,4 +1,3 @@
-import { createGames } from '../../../game/utils/creation';
 import {
 	IPlayerJSON,
 	IRoomJSON,
@@ -35,8 +34,6 @@ export async function leaveFirstRoomJoined(data: {
 		],
 	};
 
-	const games = createGames([{ id: roomName }]);
-
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('leaveRoom', roomName),
@@ -45,7 +42,7 @@ export async function leaveFirstRoomJoined(data: {
 				...roomExpect,
 				name: roomName,
 				leader: player,
-				games,
+				games: [],
 				totalPlayers: 0,
 				players: [],
 			},
@@ -77,7 +74,6 @@ export async function leaveSecondRoomJoined(data: {
 			}),
 		],
 	};
-	const games = createGames([{ id: roomName2 }]);
 	await testOutgoingEventWithIncomingAct({
 		client,
 		toSend: createIncomingAction('leaveRoom', roomName2),
@@ -89,7 +85,7 @@ export async function leaveSecondRoomJoined(data: {
 				leader: player,
 				totalPlayers: 0,
 				players: [],
-				games,
+				games: [],
 			},
 			player,
 		}),

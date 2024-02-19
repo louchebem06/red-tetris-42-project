@@ -35,7 +35,6 @@
 			username.set(data.username);
 		});
 		io.on('error', (data: string) => {
-			// console.log('error', data);
 			addNotification({
 				text: data,
 				position: 'top-right',

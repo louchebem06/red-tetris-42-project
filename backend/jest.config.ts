@@ -17,8 +17,9 @@ const config: Config = {
 		'<rootDir>/src/docs/',
 		'<rootDir>/src/tests/',
 		'<rootDir>/src/tests/coverage-reports/',
-		'<rootDir>/src/players/types.ts', // c'est le testeur qui s'en sert en fait,
-		'<rootDir>/src/infra/io/sessions/types/types.ts', // c'est le testeur qui s'en sert en fait,
+		'<rootDir>/src/infra/io/sessions/types/',
+		'<rootDir>/src/players/types.ts',
+		'<rootDir>/src/rooms/types.ts',
 	],
 	coverageThreshold: {
 		global: {
