@@ -1,5 +1,4 @@
 import { ATetriminos } from './ATetriminos';
-import { X, Y } from '../Map';
 
 export class ITetriminos extends ATetriminos {
 	private step = 0;

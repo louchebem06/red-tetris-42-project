@@ -12,23 +12,23 @@
 	export let room: string;
 
 	const up = (): void => {
-		io.emit('gameChange', {action: "up", room})
+		io.emit('gameChange', { action: 'up', room });
 	};
 
 	const down = (): void => {
-		io.emit('gameChange', {action: "down", room})
+		io.emit('gameChange', { action: 'down', room });
 	};
 
 	const left = (): void => {
-		io.emit('gameChange', {action: "left", room})
+		io.emit('gameChange', { action: 'left', room });
 	};
 
 	const right = (): void => {
-		io.emit('gameChange', {action: "right", room})
+		io.emit('gameChange', { action: 'right', room });
 	};
 
 	const space = (): void => {
-		io.emit('gameChange', {action: "space", room})
+		io.emit('gameChange', { action: 'space', room });
 	};
 
 	let tab: TetriminosArrayType = [];
@@ -43,22 +43,31 @@
 	let score: number = 0;
 
 	onMount(() => {
-		io.on('gameChange', (data: any) => {
-			tab = data.map;
-			nextPiece = data.nextPiece;
-			if (data?.soundEffect) {
-				data.soundEffect.forEach((effect) => {
-					effects[effect].play();
-				});
-			}
-			level = data.level;
-			score = data.score;
-		});
+		io.on(
+			'gameChange',
+			(data: {
+				map: TetriminosArrayType;
+				nextPiece: TetriminosArrayType;
+				soundEffect: string[];
+				level: number;
+				score: number;
+			}) => {
+				tab = data.map;
+				nextPiece = data.nextPiece;
+				if (data?.soundEffect) {
+					data.soundEffect.forEach((effect) => {
+						effects[effect].play();
+					});
+				}
+				level = data.level;
+				score = data.score;
+			},
+		);
 	});
 
 	onDestroy(() => {
 		io.off('gameChange');
-	})
+	});
 </script>
 
 <Controller {...controller} />

@@ -121,7 +121,7 @@
 		<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
 	</div>
 {:else}
-	<Game {room}/>
+	<Game {room} />
 {/if}
 
 <style lang="scss">

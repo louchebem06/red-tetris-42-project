@@ -50,11 +50,11 @@ export abstract class ATetriminos {
 		return this.tetriminos;
 	}
 
-	public setX(x: number) {
+	public setX(x: number): void {
 		this.x = x;
 	}
 
-	public setY(y: number) {
+	public setY(y: number): void {
 		this.y = y;
 	}
 

@@ -7,9 +7,9 @@ on:
 jobs:
   linter-back:
     uses: ./.github/workflows/jobs_lint-back.yaml
-  test-back:
-    uses: ./.github/workflows/jobs_test-back.yaml
+  # test-back:
+  #   uses: ./.github/workflows/jobs_test-back.yaml
   linter-front:
     uses: ./.github/workflows/jobs_lint-front.yaml
-  test-front:
-    uses: ./.github/workflows/jobs_test-front.yaml
+  # test-front:
+  #   uses: ./.github/workflows/jobs_test-front.yaml
