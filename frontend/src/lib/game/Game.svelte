@@ -8,6 +8,8 @@
 	import type { TetriminosArrayType } from './gameUtils';
 	import NextPiece from './NextPiece.svelte';
 	import Score from './Score.svelte';
+	import type { GameChange } from '$lib/interfaces/GameChange.interface';
+	import SpecterGame from '$lib/specter/SpecterGame.svelte';
 
 	export let room: string;
 
@@ -43,26 +45,17 @@
 	let score: number = 0;
 
 	onMount(() => {
-		io.on(
-			'gameChange',
-			(data: {
-				map: TetriminosArrayType;
-				nextPiece: TetriminosArrayType;
-				soundEffect: string[];
-				level: number;
-				score: number;
-			}) => {
-				tab = data.map;
-				nextPiece = data.nextPiece;
-				if (data?.soundEffect) {
-					data.soundEffect.forEach((effect) => {
-						effects[effect].play();
-					});
-				}
-				level = data.level;
-				score = data.score;
-			},
-		);
+		io.on('gameChange', (data: GameChange) => {
+			tab = data.map;
+			nextPiece = data.nextPiece;
+			if (data?.soundEffect) {
+				data.soundEffect.forEach((effect) => {
+					effects[effect].play();
+				});
+			}
+			level = data.level;
+			score = data.score;
+		});
 	});
 
 	onDestroy(() => {
@@ -75,6 +68,7 @@
 <NextPiece bind:nextPiece />
 <Sound bind:effects />
 <Score bind:score bind:level />
+<SpecterGame />
 
 <div class="content">
 	<div class="game">

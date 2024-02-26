@@ -12,6 +12,7 @@
 	import type RoomType from '$lib/interfaces/Room.interface';
 	import type GameStart from '$lib/interfaces/GameStart.interface';
 	import { getNotificationsContext } from 'svelte-notifications';
+	import SpecterGame from '$lib/specter/SpecterGame.svelte';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -115,10 +116,13 @@
 </script>
 
 {#if !game}
-	<button class="btnListRoom" on:click={goHome}>Leave</button>
 	<div>
-		<Room bind:players bind:master />
-		<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
+		<SpecterGame fixed={false} isWaitingRoom={true} />
+		<button class="btnListRoom" on:click={goHome}>Leave</button>
+		<div>
+			<Room bind:players bind:master />
+			<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
+		</div>
 	</div>
 {:else}
 	<Game {room} />
