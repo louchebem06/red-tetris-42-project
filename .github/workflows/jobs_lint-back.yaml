@@ -27,3 +27,7 @@ jobs:
     - name: Run Norm Lint
       working-directory: backend/
       run: npm run lint
+
+    - name: Run build
+      working-directory: backend/
+      run: npm run build

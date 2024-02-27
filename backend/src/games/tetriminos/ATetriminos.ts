@@ -62,7 +62,7 @@ export abstract class ATetriminos {
 		if (this.x + this.state()[0].length >= X) {
 			this.x = X - this.state()[0].length;
 		}
-		if (this.x + this.state().length >= Y) {
+		if (this.y + this.state().length >= Y) {
 			this.y = Y - this.state().length;
 		}
 		if (this.x < 0) this.x = 0;

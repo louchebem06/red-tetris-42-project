@@ -53,6 +53,10 @@ export class PlayerGame {
 		return this.score;
 	}
 
+	public addScore(score: number): void {
+		this.score += score;
+	}
+
 	public getMap(): MapGame {
 		return this.map;
 	}
@@ -120,10 +124,6 @@ export class PlayerGame {
 				this.score += 1200 * this.getLevel();
 				break;
 		}
-	}
-
-	public addScore(score: number): void {
-		this.score += score;
 	}
 
 	public getEndGame(): boolean {

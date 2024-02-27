@@ -15,6 +15,7 @@
 
 <style lang="scss">
 	.modal {
+		z-index: 10;
 		background: white;
 		border: 1px solid black;
 		position: fixed;

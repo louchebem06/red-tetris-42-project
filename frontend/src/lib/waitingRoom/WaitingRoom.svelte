@@ -84,9 +84,9 @@
 		io.on('gameStart', (data: GameStart) => {
 			// console.log(data);
 			if (data.roomName != room) return;
-			if (data.reason === 'start') {
+			if (userIsReady && data.reason === 'start') {
 				game = true;
-			} else {
+			} else if (userIsReady && data.reason == 'time') {
 				addNotification({
 					text: data?.message,
 					position: 'top-right',

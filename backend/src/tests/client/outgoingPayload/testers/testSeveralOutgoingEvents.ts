@@ -55,7 +55,5 @@ export async function testSeveralOutgoingEventsSeveralTimes<U extends keyof IAPM
 		listenSeveralEventsSeveralTimes<U>(client, events, toSend, config),
 		payloads,
 		config,
-	).catch((e) => {
-		console.error(e);
-	});
+	);
 }

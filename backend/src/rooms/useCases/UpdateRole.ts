@@ -35,8 +35,11 @@ export class WinnerRole extends ARole {
 	public name = 'winner';
 	public remove(player: Player): void {
 		if (this._context) {
-			player.wins.push(this._context.room.name);
-			this._context.room.winner = player;
+			const last = this._context.room.lastFinishedGame();
+			if (last) {
+				player.wins = last.id;
+				this._context.room.winner = player;
+			}
 		}
 	}
 }

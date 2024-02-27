@@ -19,12 +19,12 @@ export class Timer extends Observer<Observable> {
 					this.room.updatePlayer(player, player.status(this.room.name));
 					this.room.updatePlayers(player);
 
-					if (this.room.canStartGame(player) && !this.lock) {
-						this.lock = true;
-						this.startCountdown(player, this.room);
-					} else {
-						this.lock = false;
-						this.resetCountdown();
+					if (!this.lock) {
+						if (this.room.canStartGame()) {
+							this.startCountdown(player, this.room);
+						} else {
+							this.resetCountdown();
+						}
 					}
 					break;
 				}
@@ -53,8 +53,10 @@ export class Timer extends Observer<Observable> {
 
 				room.sendTimer(payload);
 				if (this.countdown === 0) {
-					// TODO lock le countdown et le unlock en fin de partie
 					room.updatePlayers();
+					if (!this.lock) {
+						this.lock = room.lock = true;
+					}
 					room.startGame(player);
 					this.resetCountdown();
 				} else {

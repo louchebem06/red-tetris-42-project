@@ -21,14 +21,7 @@ ${colors.italic}${player.dateCreated}${colors.reset}\n`;
 ${colors.fMagenta}${lead}${colors.reset}
 `;
 	});
-	if (player.wins.length > 0) {
-		pLog += dotSeparator;
-	}
-	player.wins.forEach((winner) => {
-		pLog += `\t+ ${colors.underline}wins${colors.reset}: \
-${colors.fCyan}${winner}${colors.reset}
-`;
-	});
+
 	if (player.wins.length > 0) {
 		pLog += dotSeparator;
 	}

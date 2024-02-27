@@ -4,7 +4,7 @@ import { RoomPlayersBase } from './stores';
 import { Timer } from './Timer';
 import { Observable } from '../base/Observer';
 import Room from './Room';
-import { logger } from '../infra';
+// import { logger } from '../infra';
 import { Server } from 'socket.io';
 
 export class RoomPropsBase extends RoomPlayersBase {
@@ -41,6 +41,7 @@ export class RoomPropsBase extends RoomPlayersBase {
 	public startCountdown(player: Player, room: Room): void {
 		try {
 			this.timer.startCountdown(player, room);
+			this.toggleCountDownLock();
 		} catch (e) {
 			throw new Error((<Error>e).message);
 		}
@@ -48,16 +49,19 @@ export class RoomPropsBase extends RoomPlayersBase {
 
 	public resetCountdown(): void {
 		this.timer.resetCountdown();
+		this.toggleCountDownLock();
+	}
+
+	public toggleCountDownLock(): void {
+		this.timer.lock = !this.timer.lock;
+		this.lock = !this.lock;
 	}
 
 	public isLeader(player: Player): boolean {
 		return this.leader === player;
 	}
 
-	// TODO => faire ca! (player a enlever du proto et repercuter les diff apls)
-	public canStartGame(player: Player): boolean {
-		logger.logContext('RoomPropsBase.canStartGame', `player: ${player.username}, room: ${this.name}`);
-		return this.arePlayersReady;
-		// return this.isLeader(player) || this.arePlayersReady;
+	public canStartGame(): boolean {
+		return this.arePlayersReady && !this.lock;
 	}
 }

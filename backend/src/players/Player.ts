@@ -78,7 +78,8 @@ class Player extends Observable {
 	}
 
 	public set wins(value: string) {
-		this.wins.push(value);
+		if (this.wins.length > 0) this.wins.push(value);
+		else this._wins = [value];
 	}
 
 	public disconnect(): void {
