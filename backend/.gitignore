@@ -17,3 +17,4 @@ asyncapi-v1-socketio.yaml
 logs/*
 !logs/.gitkeep
 TODO.txt
+leaderboard.sqlite

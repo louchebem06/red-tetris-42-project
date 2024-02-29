@@ -25,7 +25,7 @@
 
 ### Commandes
 
-#### Devellopement and build
+#### Developpement and build
 
 - `npm run install`
 - `npm run dev`
@@ -74,7 +74,7 @@ npm run start
 
 ### Development environment
 
-Install and run the server with `jsmon` watching:
+Install and run the server with `nodemon` watching:
 
 ```js
 npm install
@@ -134,6 +134,11 @@ npm run test
 ```js
 npm run check
 ```
+ou
+
+```js
+npm run test:open
+```
 
 #### Indent + Build + Test
 
@@ -163,7 +168,7 @@ The timers are decreased to:
 
 - 60s for DESTROY_TIMER
 - 30s for DISCO_TIMER
-- 15s for START_GAME_TIMER
+- 10s for START_GAME_TIMER
   The .env file is automatically created.
 
 #### UNITSTESTS
