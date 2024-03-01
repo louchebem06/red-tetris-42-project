@@ -6,6 +6,7 @@ import cors, { CorsOptions } from 'cors';
 import 'dotenv/config';
 
 import { logger } from '.';
+import { LeaderBoardController } from './leaderboard/';
 
 // TODO inserer le vrai port par default (process.env.PORT)
 class HttpServer {
@@ -42,7 +43,7 @@ class HttpServer {
 		this.port = port || this.port;
 		const callback = (): void => {
 			const log = `Server is running at http://localhost:${this.port}`;
-			logger.logContext(log, `Server is running at http://localhost:${this.port}`, log);
+			logger.logContext(log, `HTTP Server Start`, log);
 		};
 		this.server.listen(this.port, callback);
 	}
@@ -130,6 +131,7 @@ class HttpServer {
 		return posts;
 	}
 
+	// 42 clusters' workstations
 	private get42PostName(): string[] {
 		return [...this.generate42Cluster1(), ...this.generate42Cluster2(), ...this.generate42Cluster3And4()];
 	}
@@ -182,7 +184,7 @@ class HttpServer {
 					cb(null, true);
 				} else {
 					const log = `${orig} not allowed by CORS`;
-					logger.logContext(log, `${orig} not allowed by CORS`, log);
+					logger.logContext(log, `CORS ERROR`, log);
 					cb(new Error(`${orig} not allowed by CORS`));
 				}
 			},
@@ -227,9 +229,7 @@ class HttpServer {
 			res.json({ message: 'Hello World!' });
 		});
 
-		this.app.get('/leaderboard', (req: Request, res: Response) => {
-			res.json({ message: 'Leaderboard coming soon' });
-		});
+		this.app.get('/leaderboard', LeaderBoardController.getLeaderBoard);
 	}
 
 	/**

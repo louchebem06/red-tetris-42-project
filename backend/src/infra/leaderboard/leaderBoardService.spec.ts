@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { LeaderBoardResult, LeaderBoardService } from './leaderBoardService';
-import { PlayerGame } from '../games/GameLogic';
-import Player from '../players/Player';
+import { PlayerGame } from '../../games/GameLogic';
+import Player from '../../players/Player';
 
 describe('LeaderBoardService', () => {
 	let instance: LeaderBoardService;

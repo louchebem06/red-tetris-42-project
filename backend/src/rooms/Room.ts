@@ -36,20 +36,23 @@ export default class Room extends RoomPropsBase {
 		}, this.disconnectSession);
 	}
 
-	public close(): void {
+	public close(): Room {
 		this.service.close(this, this.leader);
+		return this;
 	}
 
-	public sendTimer(payload: IGameStartPayload): void {
+	public sendTimer(payload: IGameStartPayload): Room {
 		this.service.timer(payload);
+		return this;
 	}
 
 	public isReadytoPlay(player: Player): boolean {
 		return !this.gameState && this.has(player.sessionID) && this.canStartGame();
 	}
 
-	public addPlayer(player: Player): void {
+	public addPlayer(player: Player): Room {
 		new AddPlayerCommand(this, this.service).execute(player);
+		return this;
 	}
 
 	public unlock(): Room {
@@ -65,7 +68,21 @@ export default class Room extends RoomPropsBase {
 		throw new Error('Room: getService: game not found');
 	}
 
-	public updatePlayer(player: Player, status: PlayerState): Player | undefined {
+	public updatePlayer(player: Player, status: PlayerState): Room {
+		return this.updatePlayerState(player, status).updatePlayers(player);
+	}
+
+	private updatePlayers(player?: Player): Room {
+		this.all
+			.filter((p) => p !== player)
+			.forEach((p) => {
+				this.updatePlayerState(p, p.roomState(this.name)?.status ?? 'idle');
+			});
+
+		return this;
+	}
+
+	private updatePlayerState(player: Player, status: PlayerState): Room {
 		player.addRoomState(
 			new RoomState({
 				name: this.name,
@@ -77,15 +94,7 @@ export default class Room extends RoomPropsBase {
 			}),
 		);
 
-		return player;
-	}
-
-	public updatePlayers(player?: Player): void {
-		this.all
-			.filter((p) => p !== player)
-			.forEach((p) => {
-				this.updatePlayer(p, p.roomState(this.name)?.status ?? 'idle');
-			});
+		return this;
 	}
 
 	public resetPlayersIdle(): Room {
@@ -98,6 +107,10 @@ export default class Room extends RoomPropsBase {
 	public removePlayer(player: Player): Room {
 		new RemovePlayerCommand(this, this.service).execute(player);
 		return this;
+	}
+
+	public get activePlayers(): Player[] {
+		return this.all.filter((p) => p.status(this.name) === 'active');
 	}
 
 	// Methods related to the game
@@ -114,18 +127,21 @@ export default class Room extends RoomPropsBase {
 		this._lastWinner = player;
 	}
 
-	public startGame(player: Player): void {
+	public startGame(player: Player): Room {
 		try {
 			new StartGameCommand(this, player).execute();
+			this.updatePlayers();
 		} catch (e) {
 			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
 				throw new Error((<Error>e).message);
 			}
 		}
+		return this;
 	}
 
-	public addGame(game: Game): void {
+	public addGame(game: Game): Room {
 		this._games[game.id] = game;
+		return this;
 	}
 
 	public play(player: Player, action: TypeAction): Room {
@@ -157,9 +173,10 @@ export default class Room extends RoomPropsBase {
 	}
 
 	// utils
-	public log(ctx: string): void {
+	public log(ctx: string): Room {
 		const { raw, pretty } = logRoom(this);
 		logger.logContext(raw, ctx, pretty);
+		return this;
 	}
 
 	public toJSON(): IRoomJSON {

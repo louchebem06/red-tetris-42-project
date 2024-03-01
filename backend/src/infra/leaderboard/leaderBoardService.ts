@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3';
 import * as fs from 'fs';
-import { PlayerGame } from '../games/GameLogic';
+import { PlayerGame } from '../../games/GameLogic';
 
 export interface ItemLeaderBoard {
 	id: number;
