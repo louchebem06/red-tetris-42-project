@@ -17,20 +17,34 @@
 
 	onMount(() => {
 		io.on('connect', () => {
-			console.log('Connected to socket');
+			addNotification({
+				text: 'Welcome to red tetris',
+				position: 'top-right',
+				type: 'success',
+				removeAfter: 5000,
+			});
 		});
 		io.on('disconnect', () => {
-			console.log('Disconect to socket');
+			addNotification({
+				text: 'Good bye red tetris',
+				position: 'top-right',
+				type: 'success',
+				removeAfter: 5000,
+			});
 		});
 		io.on('connect_error', () => {
-			console.log('Error connection socket');
+			addNotification({
+				text: 'Error connection socket',
+				position: 'top-right',
+				type: 'error',
+				removeAfter: 5000,
+			});
 			sessionID.set('');
 			username.set('');
 			io.close();
 			goto('/');
 		});
 		io.on('join', (data: Player) => {
-			// console.log('join', data);
 			sessionID.set(data.sessionID);
 			username.set(data.username);
 		});
