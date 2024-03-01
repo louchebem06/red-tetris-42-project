@@ -65,14 +65,9 @@ export class RemovePlayerCommand extends RoomCommand {
 
 					this.room.delete(sessionID);
 					this.room.updatePlayer(player, 'left');
-					this.room.updatePlayers(player);
 					this.service.leave(this.room, player);
 
 					if (total === 1) {
-						// if (gameState) {
-						// 	// this.room.stopGame(player);
-						// 	new UpdateRoleCommand(this.room, this.service, 'win').execute(player);
-						// }
 						this.service.handleRoomEmpty(this.room);
 					} else if (wasLeader) {
 						new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);
@@ -91,13 +86,8 @@ export class RemovePlayerCommand extends RoomCommand {
 					// car le player n'est plus relié a un socket
 					this.room.delete(sessionID);
 					this.room.updatePlayer(player, 'left');
-					this.room.updatePlayers(player);
 
 					if (total === 1) {
-						// if (gameState) {
-						// 	// this.room.stopGame(player);
-						// 	new UpdateRoleCommand(this.room, this.service, 'win').execute(player);
-						// }
 						this.service.handleRoomEmpty(this.room);
 					} else if (wasLeader) {
 						new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);

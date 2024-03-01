@@ -7,20 +7,22 @@ import Room from '../rooms/Room';
 import { AGameState, CreatedState } from './gameStates';
 import { UpdateRoleCommand } from '../rooms/useCases';
 import { gameStore, GameStore } from './stores';
+import { LeaderBoardController } from '../infra/leaderboard';
 
 export default class Game {
+	private _id: string;
+
 	public gamers: Player[];
 	public winner: Player | null = null;
 	public state: AGameState = new CreatedState();
+	public gameStore: GameStore = gameStore;
 
 	protected logic: GameLogic = new GameLogic();
 	protected service: GameService;
-	private _id: string;
-	public gameStore: GameStore = gameStore;
 
 	public constructor(private room: Room) {
 		this._id = `game_${room.name}_${this.state.date.getTime()}`;
-		this.gamers = [...room.all.filter((p) => p.status(room.name) === 'active')];
+		this.gamers = [...room.activePlayers];
 		this.service = new GameService(this, room.io);
 		this.state.context = { game: this, service: this.service, logic: this.logic };
 
@@ -30,22 +32,29 @@ export default class Game {
 
 	public removePlayer(player: Player, playerGame: PlayerGame): Game {
 		if (this.gamers.includes(player)) {
-			this.service.leave(player);
-			this.gamers = this.gamers.filter((gamer) => gamer !== player);
+			this.handlePlayerRemoval(player, playerGame).checkGameEnd();
+		}
+		return this;
+	}
 
-			this.room.updatePlayer(player, 'idle');
-			this.room.updatePlayers(player);
-			const log = `Game ${this._id}: remove player ${JSON.stringify(player)},
+	private handlePlayerRemoval(player: Player, playerGame: PlayerGame): Game {
+		this.service.leave(player);
+		this.gamers = this.gamers.filter((gamer) => gamer !== player);
+
+		this.room.updatePlayer(player, 'idle');
+		const log = `Game ${this._id}: remove player ${JSON.stringify(player)},
 			score ${JSON.stringify(playerGame)}`;
-			logger.logContext(log, `remove player`, log);
-			this.service.emitEndGamePlayer(playerGame, player);
-			this.gameStore.addPlayerGame(this.id as string, player.sessionID, playerGame); // game end to player
+		logger.logContext(log, `remove player`, log);
+		this.service.emitEndGamePlayer(playerGame, player);
+		this.gameStore.addPlayerGame(this.id as string, player.sessionID, playerGame); // game end to player
+		return this;
+	}
 
-			if (this.gamers.length === 0) {
-				this.finish();
-				const log2 = `finished game Game ${this._id}: remove player ${JSON.stringify(player)}`;
-				logger.logContext(log2, `remove player`, log2);
-			}
+	private checkGameEnd(): Game {
+		if (this.gamers.length === 0) {
+			this.finish();
+			const log = `finished game Game ${this._id}}`;
+			logger.logContext(log, `remove player`, log);
 		}
 		return this;
 	}
@@ -87,15 +96,30 @@ export default class Game {
 		return this;
 	}
 
+	private addScores(): Game {
+		const scores = this.gameStore.get(this.id)?.scores;
+		if (scores && scores.length > 0) {
+			scores.forEach((score) => {
+				LeaderBoardController.insertByPlayerGame(score.playerGame).catch((err) => {
+					console.error(err);
+				});
+			});
+		}
+		return this;
+	}
+
 	public release(): Game {
 		if (this.state.constructor.name === 'FinishedState') {
-			if (!this.winner) {
-				this.setWinner(); // player change new winner
-			}
-			this.room.unlock();
-			this.room.resetPlayersIdle();
-			this.room.updatePlayers();
+			return this.handleGameRelease();
 		}
+		return this;
+	}
+
+	private handleGameRelease(): Game {
+		if (!this.winner) {
+			this.setWinner().addScores(); // player change new winner
+		}
+		this.room.unlock().resetPlayersIdle();
 		return this;
 	}
 

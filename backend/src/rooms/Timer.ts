@@ -16,8 +16,8 @@ export class Timer extends Observer<Observable> {
 			case 'PlayerReady': {
 				if (this.room) {
 					const player = observable as unknown as Player;
+
 					this.room.updatePlayer(player, player.status(this.room.name));
-					this.room.updatePlayers(player);
 
 					if (!this.lock) {
 						if (this.room.canStartGame()) {
@@ -53,7 +53,6 @@ export class Timer extends Observer<Observable> {
 
 				room.sendTimer(payload);
 				if (this.countdown === 0) {
-					room.updatePlayers();
 					if (!this.lock) {
 						this.lock = room.lock = true;
 					}

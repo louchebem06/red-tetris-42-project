@@ -80,7 +80,6 @@ export class UpdateRoleCommand extends RoomCommand {
 		if (this._role) {
 			this._role.remove(player);
 			this.room.updatePlayer(player, player.status(this.room.name));
-			this.room.updatePlayers(player);
 			if (this.service.isConnectedOnServer()) {
 				if (this._role.name === 'leader') {
 					this.service.publishNewRole(this._role.name as 'leader', this.room, this.room.leader);
