@@ -18,7 +18,7 @@
 		"install:back": "npm install -C ../backend",
 		"dev": "concurrently \"npm run start -C ../backend\" \"npm run dev:frontend\"",
 		"prod": "concurrently \"npm run start -C ../backend\" \"npm run preview\"",
-		"dev:frontend": "vite dev -c vite.dev.config.ts",
+		"dev:frontend": "npm run build:svelteconfig && vite dev -c vite.dev.config.ts",
 		"build:svelteconfig": "esbuild svelte.config.ts --outfile=svelte.config.js",
 		"build": "npm run build:svelteconfig && vite optimize --force -c vite.prod.config.ts && vite build -c vite.prod.config.ts",
 		"build:map": "npm run build:svelteconfig &&vite build -c vite.dev.config.ts",

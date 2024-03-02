@@ -10,6 +10,7 @@
 	import Score from './Score.svelte';
 	import type { GameChange } from '$lib/interfaces/GameChange.interface';
 	import SpecterGame from '$lib/specter/SpecterGame.svelte';
+	import type { GamePlayPayload } from '$lib/interfaces/GamePlayPayload';
 
 	export let room: string;
 
@@ -45,16 +46,16 @@
 	let score: number = 0;
 
 	onMount(() => {
-		io.on('gameChange', (data: GameChange) => {
-			tab = data.map;
-			nextPiece = data.nextPiece;
-			if (data?.soundEffect) {
-				data.soundEffect.forEach((effect) => {
+		io.on('gameChange', (data: GamePlayPayload<GameChange>) => {
+			tab = data.payload.map;
+			nextPiece = data.payload.nextPiece;
+			if (data.payload?.soundEffect) {
+				data.payload.soundEffect.forEach((effect) => {
 					effects[effect].play();
 				});
 			}
-			level = data.level;
-			score = data.score;
+			level = data.payload.level;
+			score = data.payload.score;
 		});
 	});
 

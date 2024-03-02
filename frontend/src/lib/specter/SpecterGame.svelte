@@ -1,45 +1,41 @@
 <script lang="ts">
-	import type Player from '$lib/interfaces/Player.interface';
 	import type PlayerGame from '$lib/interfaces/PlayerGame.interface';
 	import { sessionID } from '$lib/store';
+	import { onDestroy, onMount } from 'svelte';
 	import PlayerSpecter from './PlayerSpecter.svelte';
+	import { io } from '$lib/socket';
+	import { convertPlayerGameToSpecter, normalizeSocketToPlayerGame } from './specter.utils';
+	import type { GameInfo } from '$lib/interfaces/GameInfo.interface';
+	import type { GamePlayPayloads } from '$lib/interfaces/GamePlayPayload';
+	import type RoomChange from '$lib/interfaces/RoomChange.interface';
+	import { gameIdToRoomName } from '$lib/gameIdToRoomName';
 
 	export let fixed: boolean = true;
 	export let isWaitingRoom: boolean = false;
 
-	const playerGame: PlayerGame[] = [
-		{
-			player: {
-				username: 'BG du 06',
-				sessionID: 'sessionID',
-			} as Player,
-			map: [
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['', '', '', '', '', '', '', '', '', ''],
-				['I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I'],
-				['I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I'],
-			],
-			score: 42,
-			level: 1,
-			endGame: false,
-		},
-	];
+	let playerGame: PlayerGame[] = [];
+	let roomName: string;
+
+	onMount(() => {
+		io.on('gameInfo', (data: GamePlayPayloads<GameInfo>) => {
+			const normalizeGameInfo: PlayerGame[] = [];
+			roomName = gameIdToRoomName(data.gameId);
+			data.payload.forEach((player) => {
+				normalizeGameInfo.push(normalizeSocketToPlayerGame(player));
+			});
+			playerGame = normalizeGameInfo;
+		});
+		io.on('roomChange', (data: RoomChange) => {
+			if (data.reason == 'new winner' && data.room.name == roomName) {
+				playerGame = [];
+			}
+		});
+	});
+
+	onDestroy(() => {
+		io.off('gameInfo');
+		io.off('roomChange');
+	});
 </script>
 
 {#if !isWaitingRoom || (isWaitingRoom && playerGame.length != 0)}
@@ -52,8 +48,12 @@
 				players are still in the game.
 			</p>
 			<div class="players">
-				{#each playerGame.filter((p) => p.player.sessionID != $sessionID) as player}
-					<PlayerSpecter bind:player {isWaitingRoom} />
+				{#each playerGame
+					.filter((p) => p.player.sessionID != $sessionID)
+					.map((p) => {
+						return convertPlayerGameToSpecter(p, isWaitingRoom);
+					}) as player}
+					<PlayerSpecter {player} {isWaitingRoom} />
 				{/each}
 			</div>
 		{/if}
