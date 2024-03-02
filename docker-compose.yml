@@ -2,7 +2,12 @@ services:
   fontend:
     container_name: frontend
     image: red-tetris/frontend
-    build: frontend/
+    build:
+      context: frontend/
+      args:
+        - PUBLIC_DOMAIN_BACK
+        - PUBLIC_PORT_BACK
+        - PUBLIC_PROTOCAL_WS
     env_file:
       - .env
     ports:
@@ -13,7 +18,17 @@ services:
   backend:
     container_name: backend
     image: red-tetris/backend
-    build: backend/
+    build:
+      context: backend/
+      args:
+        - PORT
+        - HOST
+        - PROTOCOL
+        - TICKS
+        - TICKS_INTERVAL_MS
+        - DESTROY_TIMER
+        - DISCO_TIMER
+        - START_GAME_TIMER
     env_file:
       - .env
     ports:
