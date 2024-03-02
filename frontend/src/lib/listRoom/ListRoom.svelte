@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 	import type RoomType from '$lib/interfaces/Room.interface';
+	import Button from '$lib/componante/Button.svelte';
 
 	let rooms: RoomType[] = [];
 	let myRooms: RoomType[] = [];
@@ -127,15 +128,15 @@
 			<Room {room} />
 		{/each}
 	</div>
-	<button on:click={modalView}>Create a room</button>
-	<button class="resetUsername" on:click={resetUsername}>Reset your username</button>
+	<Button on:click={modalView}>Create a room</Button>
+	<Button class="resetUsername" on:click={resetUsername}>Reset your username</Button>
 </div>
 
 <Modal bind:show={showModal}>
 	<form on:submit={createRoom}>
 		<p>Room Name:</p>
 		<input type="text" bind:this={modalInput} bind:value={roomName} />
-		<button type="submit">send</button>
+		<Button type="submit">send</Button>
 	</form>
 </Modal>
 
@@ -152,7 +153,7 @@
 			color: $white2;
 		}
 
-		.resetUsername {
+		:global(.resetUsername) {
 			position: absolute;
 			top: 10px;
 			right: 10px;
