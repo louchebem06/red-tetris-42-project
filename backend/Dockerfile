@@ -1,0 +1,23 @@
+FROM node:18-buster
+
+ENV PORT=$PORT
+ENV HOST=$HOST
+ENV PROTOCOL=$PROTOCOL
+ENV TICKS=$TICKS
+ENV TICKS_INTERVAL_MS=$TICKS_INTERVAL_MS
+ENV DESTROY_TIMER=$DESTROY_TIMER
+ENV DISCO_TIMER=$DISCO_TIMER
+ENV START_GAME_TIMER=$START_GAME_TIMER
+
+COPY . /var/tmp
+
+WORKDIR /var/tmp
+
+RUN npm install && npm run build 
+RUN chown -R 777 ./dist && mv ./leaderboard.sql ./dist
+RUN mkdir -p /usr/src/app && mv ./dist ./node_modules /usr/src/app/ && rm -rf ./*
+
+WORKDIR /usr/src/app/dist
+RUN mkdir ./logs
+
+CMD ["node", "./app.js"]

@@ -15,8 +15,8 @@ export interface LeaderBoardResult {
 }
 
 export class LeaderBoardService {
-	private static db = new Database('leaderboard.sqlite').exec(
-		fs.readFileSync(`${process.cwd()}/src/leaderboard.sql`).toString(),
+	private static db = new Database('data/leaderboard.sqlite').exec(
+		fs.readFileSync(`${process.cwd()}/leaderboard.sql`).toString(),
 	);
 
 	public async insertByPlayerGame(player: PlayerGame): Promise<void> {

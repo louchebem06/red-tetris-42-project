@@ -9,3 +9,17 @@ services:
       - "80:80"
     restart: always
     hostname: nginx
+
+  backend:
+    container_name: backend
+    image: red-tetris/backend
+    build: backend/
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    restart: always
+    hostname: node
+    volumes:
+      - ./backend/data:/usr/src/app/dist/data
+      - ./backend/logs:/usr/src/app/dist/logs

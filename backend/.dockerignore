@@ -1,0 +1,36 @@
+# Docker
+Dockerfile
+.dockerignore
+
+# Dev
+node_modules
+dist
+.eslintignore
+.eslintrc
+.prettierignore
+.prettierrc
+.prettierrc.json
+nodemon.json
+configSetup.ts
+
+# Build
+
+# Test
+src/tests/coverage-reports
+jest.config.ts
+jest.onlyTest.config.ts
+
+# Config
+.env
+.env.example
+
+# Git
+.gitignore
+
+# DS_Store
+.DS_Store
+
+# Logs
+TODO.txt
+
+# logs
