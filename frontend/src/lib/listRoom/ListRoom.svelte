@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { username, sessionID } from '../../store';
+	import { username, sessionID } from '$lib/store';
 	import { io } from '$lib/socket';
 	import Modal from '$lib/componante/Modal.svelte';
 	import Room from './Room.svelte';
@@ -138,6 +138,8 @@
 </Modal>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.main {
 		display: flex;
 		align-items: center;

@@ -79,6 +79,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../../lib/scss/variables';
+
 	.container {
 		position: fixed;
 		bottom: 20px;

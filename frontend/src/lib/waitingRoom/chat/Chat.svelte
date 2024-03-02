@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Message from './Message.svelte';
-	import { sessionID } from '../../../store';
+	import { sessionID } from '$lib/store';
 	import type Player from '$lib/interfaces/Player.interface';
 	import type { Message as MessageInterface } from '$lib/interfaces/Message.interface';
 	import { onDestroy, onMount } from 'svelte';
@@ -155,6 +155,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../../lib/scss/variables';
+
 	.content {
 		display: flex;
 		flex-direction: column;

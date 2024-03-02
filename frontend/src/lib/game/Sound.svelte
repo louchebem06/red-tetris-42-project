@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { music, musicLevel, effectLevel, effectMute, musicMute } from '../../store';
+	import { music, musicLevel, effectLevel, effectMute, musicMute } from '$lib/store';
 
 	onMount(() => {
 		const createMusics: { [key: string]: HTMLAudioElement } = {
@@ -153,6 +153,8 @@
 {/if}
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.background {
 		border: none;
 		background: transparent;

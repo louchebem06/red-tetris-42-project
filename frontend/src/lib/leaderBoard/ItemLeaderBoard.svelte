@@ -14,6 +14,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.item {
 		padding: 10px 2px;
 		border-radius: 4px;

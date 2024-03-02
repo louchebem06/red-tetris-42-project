@@ -89,6 +89,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.content {
 		position: fixed;
 		top: -510px;

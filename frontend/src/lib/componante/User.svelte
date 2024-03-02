@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ImageUser from '$lib/componante/ImageUser.svelte';
 	import type Player from '$lib/interfaces/Player.interface';
-	import { sessionID } from '../../store';
+	import { sessionID } from '$lib/store';
 
 	export let user: Player;
 	export let master = false;
@@ -13,6 +13,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.master {
 		background: $orange;
 	}

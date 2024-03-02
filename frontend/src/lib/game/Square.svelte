@@ -10,6 +10,7 @@
 
 <style lang="scss">
 	@use 'sass:map';
+	@import '../../lib/scss/variables';
 
 	$top: 1px;
 	$right: 2px;
