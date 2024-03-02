@@ -2,11 +2,13 @@
 	import Message from './Message.svelte';
 	import { sessionID } from '../../../store';
 	import type Player from '$lib/interfaces/Player.interface';
+	import type { Message as MessageInterface } from '$lib/interfaces/Message.interface';
 	import { onDestroy, onMount } from 'svelte';
 	import { io } from '$lib/socket';
-	import type RoomType from '$lib/interfaces/Room.interface';
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 	import Modal from '$lib/componante/Modal.svelte';
+	import type { MessageSocket } from '$lib/interfaces/MessageSocket.interface';
+	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
 
 	export let master: Player;
 	export let players: Player[];
@@ -15,8 +17,7 @@
 	export let userIsReady: boolean;
 
 	let chat: HTMLDivElement;
-	let msgs: { message: string; username: string | undefined; me?: boolean; system?: boolean }[] =
-		[];
+	let msgs: MessageInterface[] = [];
 	let inputMessage: HTMLElement;
 
 	const autoScrollDown = (): void => {
@@ -44,7 +45,7 @@
 	};
 
 	onMount(() => {
-		io.on('message', (data: { message: string; emitter: Player; receiver: RoomType }) => {
+		io.on('message', (data: MessageSocket) => {
 			// console.log('message', data);
 			if (data.receiver.name != room) return;
 			msgs = [
@@ -70,7 +71,7 @@
 				`,
 			);
 		});
-		io.on('playerChange', (data: { reason: string; player: Player }) => {
+		io.on('playerChange', (data: PlayerChange) => {
 			// console.log('player change', data);
 			if (data.reason != 'ready') return;
 			const statusRoom = data.player?.roomsState.filter((e) => e.name == room)[0];

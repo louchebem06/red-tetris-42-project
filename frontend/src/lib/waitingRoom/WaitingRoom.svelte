@@ -13,6 +13,7 @@
 	import type GameStart from '$lib/interfaces/GameStart.interface';
 	import { getNotificationsContext } from 'svelte-notifications';
 	import SpecterGame from '$lib/specter/SpecterGame.svelte';
+	import type { RoomClosed } from '$lib/interfaces/RoomClosed.interface';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -95,7 +96,7 @@
 				});
 			}
 		});
-		io.on('roomClosed', (data: { room: RoomType }) => {
+		io.on('roomClosed', (data: RoomClosed) => {
 			if (data.room.name == room) goto('/');
 		});
 	});
