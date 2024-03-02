@@ -17,8 +17,7 @@ const config: UserConfig = {
 		preprocessorOptions: {
 			scss: {
 				additionalData: `
-				@use '$lib/scss/variables' as *;    
-				@use '$lib/scss/mixins' as *;
+				@use '$lib/scss/variables' as *;
 			`,
 			},
 		},
