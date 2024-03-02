@@ -1,0 +1,11 @@
+services:
+  fontend:
+    container_name: frontend
+    image: red-tetris/frontend
+    build: frontend/
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+    restart: always
+    hostname: nginx
