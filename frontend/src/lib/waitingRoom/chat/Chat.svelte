@@ -9,6 +9,8 @@
 	import Modal from '$lib/componante/Modal.svelte';
 	import type { MessageSocket } from '$lib/interfaces/MessageSocket.interface';
 	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
+	import Button from '$lib/componante/Button.svelte';
+
 
 	export let master: Player;
 	export let players: Player[];
@@ -117,22 +119,22 @@
 	<p>Are you sure?</p>
 	<p>There are {ready} ready players on {players.length} total players in the waiting room.</p>
 	<p>by accepting, you are ready to play</p>
-	<button on:click={forceGameStart}>Yes</button>
-	<button on:click={toggleModalViewRunGame}>No</button>
+	<Button on:click={forceGameStart}>Yes</Button>
+	<Button on:click={toggleModalViewRunGame}>No</Button>
 </Modal>
 
 <div class="content">
 	<div class="ready">
 		<p>{ready} player{ready > 1 ? 's' : ''} ready of {players.length}</p>
-		<button on:click={toggleReady}>
+		<Button on:click={toggleReady}>
 			{#if userIsReady}
 				Unset ready
 			{:else}
 				Set ready
 			{/if}
-		</button>
+		</Button>
 		{#if $sessionID == master?.sessionID}
-			<button on:click={toggleModalViewRunGame}>Run Game</button>
+			<Button on:click={toggleModalViewRunGame}>Run Game</Button>
 		{/if}
 	</div>
 
@@ -152,7 +154,7 @@
 			type="text"
 			placeholder="your message"
 		/>
-		<button type="submit">Send</button>
+		<Button type="submit">Send</Button>
 	</form>
 </div>
 

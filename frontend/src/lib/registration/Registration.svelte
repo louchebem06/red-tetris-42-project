@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from '$lib/componante/Button.svelte';
 	import { username } from '../../store';
 
 	let error = false;
@@ -26,7 +27,7 @@
 			<p class:error>{errorMsg}</p>
 		{/if}
 		<input bind:value={valueForm} class:error placeholder="username" />
-		<button type="submit">Enter in Red Tetris</button>
+		<Button type="submit">Enter in Red Tetris</Button>
 	</form>
 </div>
 
@@ -69,12 +70,6 @@
 			&:focus {
 				outline: none;
 			}
-		}
-
-		button {
-			max-width: 200px;
-			padding: 10px;
-			border-radius: 10px;
 		}
 	}
 

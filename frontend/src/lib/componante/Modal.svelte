@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from '$lib/componante/Button.svelte';
 	export let show: boolean;
 
 	const close = (): void => {
@@ -8,7 +9,7 @@
 
 {#if show}
 	<div class="modal">
-		<button on:click={close}>Close</button>
+		<Button class="button" on:click={close}>Close</Button>
 		<slot />
 	</div>
 {/if}
@@ -24,7 +25,7 @@
 		transform: translate(-50%, -50%);
 		padding: 40px 30px 30px 30px;
 
-		button {
+		:global(.button) {
 			position: fixed;
 			top: 10px;
 			right: 10px;

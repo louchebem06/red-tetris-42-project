@@ -14,6 +14,7 @@
 	import { getNotificationsContext } from 'svelte-notifications';
 	import SpecterGame from '$lib/specter/SpecterGame.svelte';
 	import type { RoomClosed } from '$lib/interfaces/RoomClosed.interface';
+	import Button from '$lib/componante/Button.svelte';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -119,7 +120,7 @@
 {#if !game}
 	<div>
 		<SpecterGame fixed={false} isWaitingRoom={true} />
-		<button class="btnListRoom" on:click={goHome}>Leave</button>
+		<Button class="btnListRoom" on:click={goHome}>Leave</Button>
 		<div>
 			<Room bind:players bind:master />
 			<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
@@ -130,7 +131,7 @@
 {/if}
 
 <style lang="scss">
-	.btnListRoom {
+	:global(.btnListRoom) {
 		position: absolute;
 		top: 10px;
 		right: 10px;

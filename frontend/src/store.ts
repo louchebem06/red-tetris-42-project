@@ -72,28 +72,50 @@ if (browser) {
 	window.addEventListener('storage', (event) => {
 		const key = event.key;
 		const value = event.newValue;
+		let $username, $sessionID, $music, $musicLevel, $musicMute, $effectLevel, $effectMute;
 		if (value != null) {
 			switch (key) {
 				case 'username':
-					username.set(value);
+					username.subscribe(($) => ($username = $))();
+					if ($username != value) {
+						username.set(value);
+					}
 					break;
 				case 'sessionID':
-					sessionID.set(value);
+					sessionID.subscribe(($) => ($sessionID = $))();
+					if ($sessionID != value) {
+						sessionID.set(value);
+					}
 					break;
 				case 'music':
-					music.set(value);
+					music.subscribe(($) => ($music = $))();
+					if ($music != value) {
+						music.set(value);
+					}
 					break;
 				case 'musicLevel':
-					music.set(value);
+					musicLevel.subscribe(($) => ($musicLevel = $))();
+					if ($musicLevel != Number.parseFloat(value)) {
+						musicLevel.set(Number.parseFloat(value));
+					}
 					break;
 				case 'musicMute':
-					musicMute.set(value == 'true');
+					musicMute.subscribe(($) => ($musicMute = $))();
+					if ($musicMute != (value == 'true')) {
+						musicMute.set(value == 'true');
+					}
 					break;
 				case 'effectLevel':
-					effectLevel.set(Number.parseFloat(value));
+					effectLevel.subscribe(($) => ($effectLevel = $))();
+					if ($effectLevel != Number.parseFloat(value)) {
+						effectLevel.set(Number.parseFloat(value));
+					}
 					break;
 				case 'effectMute':
-					effectMute.set(value == 'true');
+					effectMute.subscribe(($) => ($effectMute = $))();
+					if ($effectMute != (value == 'true')) {
+						effectMute.set(value == 'true');
+					}
 					break;
 			}
 		}
