@@ -33,7 +33,7 @@ export class Disconnect extends EventCommand {
 					logger.logContext(log, `emit playerChange: disconnected player ${reason}`);
 				});
 			} catch (e) {
-				this.base.emit('error', `Disconnect error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

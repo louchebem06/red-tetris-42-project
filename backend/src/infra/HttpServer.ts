@@ -9,6 +9,7 @@ import { logger } from '.';
 import { LeaderBoardController } from './leaderboard/';
 
 // TODO inserer le vrai port par default (process.env.PORT)
+
 class HttpServer {
 	private app: Express;
 	private server: ServerHttp;
@@ -58,6 +59,7 @@ class HttpServer {
 		this.server.close(cb);
 		this.server.closeAllConnections();
 		this.server.closeIdleConnections();
+		this.server.unref();
 	}
 
 	/**

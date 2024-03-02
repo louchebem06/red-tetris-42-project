@@ -27,11 +27,17 @@ export class PlayGameCommand extends GameCommand {
 			if (hasPlayer && started && game && isInGame) {
 				game.play(player, action);
 			} else {
-				const errMsg = `PlayGameCommand: player ${username}(${sid}) 
-in room ${room.name}: ${hasPlayer}
-game started: ${started}
-is in game: ${isInGame}`;
-				throw new Error(errMsg);
+				if (!hasPlayer) {
+					throw new Error(`Player ${username} not in room ${room.name} anymore`);
+				}
+
+				if (!started) {
+					throw new Error(`Game finished for room ${room.name}`);
+				}
+
+				if (!isInGame) {
+					throw new Error(`Game finished for player ${username} in room ${room.name}`);
+				}
 			}
 		} catch (e) {
 			throw new Error((<Error>e).message);

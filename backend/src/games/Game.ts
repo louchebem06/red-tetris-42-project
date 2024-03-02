@@ -101,7 +101,7 @@ export default class Game {
 		if (scores && scores.length > 0) {
 			scores.forEach((score) => {
 				LeaderBoardController.insertByPlayerGame(score.playerGame).catch((err) => {
-					console.error(err);
+					logger.logContext(`Error: ${err}`, 'addScores', `Error: ${err}`);
 				});
 			});
 		}

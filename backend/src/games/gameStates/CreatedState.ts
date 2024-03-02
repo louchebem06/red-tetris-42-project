@@ -21,12 +21,10 @@ export class CreatedState extends AGameState {
 	}
 
 	public play(player: Player, action: TypeAction): void {
-		throw new Error(
-			`Play {CreatedState}: Game ${this.game?.id} not started [${action}]: ${JSON.stringify(player)}`,
-		);
+		throw new Error(`Game ${this.game?.id} not started [${action}]`);
 	}
 
 	public finish(): void {
-		throw new Error(`Finish {CreatedState}: Game ${this.game?.id} not started`);
+		throw new Error(`Game ${this.game?.id} not started`);
 	}
 }

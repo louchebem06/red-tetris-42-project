@@ -23,6 +23,7 @@ import {
 	SessionManager,
 	SessionStore,
 	isSessionClass,
+	TimeoutManager,
 } from './io';
 import { colors, logPlayer, logRoom, logSession, logSocket, logger } from './logger';
 
@@ -57,4 +58,5 @@ export {
 	NextIoFunction,
 	IoMiddleware,
 	isSessionClass,
+	TimeoutManager,
 };

@@ -56,13 +56,10 @@ export default class RoomManager extends RoomStore {
 		const s = total > 1 ? 's' : '';
 
 		const log = `\n\x1b[33mroom manager:\t[${total} room${s}]\x1b[0m`;
-		logger.log(`\n[${total} room${s}]`);
-		console.log(log);
+		logger.logContext(`\n[${total} room${s}]`, 'room manager log', log);
 		rooms.forEach((room) => {
 			room.log('log from manager');
 		});
-		logger.log(`============================================================`);
-		console.log(`\x1b[34m============================================================\x1b[0m`);
 	}
 }
 export type RM = RoomManager;

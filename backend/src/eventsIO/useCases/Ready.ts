@@ -30,15 +30,11 @@ export class Ready extends EventCommand {
 							);
 						})
 						.catch((e) => {
-							this.base.emit(
-								'error',
-								`Ready error: \
-								${(<Error>e).message}`,
-							);
+							this.base.emit('error', `${(<Error>e).message}`);
 						});
 				}
 			} catch (e) {
-				this.base.emit('error', `Ready error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

@@ -26,23 +26,6 @@ export class Formatter<T> {
 		}
 	}
 
-	// private incrementLevel(stylers: { [key: string]: Styler }): { [key: string]: Styler } {
-	// 	// construit un nouveau stylers avec un level d'indentation en plus sans garder de reference sur l'ancien styler
-	// 	const newStylers = { ...stylers };
-
-	// 	for (const key in newStylers) {
-	// 		if (newStylers.hasOwnProperty(key)) {
-	// 			const styler = new Styler(newStylers[key].getConfig());
-	// 			const lvlConfig = styler.getConfig();
-	// 			lvlConfig.indentation = (lvlConfig.indentation ?? 0) + 1;
-	// 			styler.setConfig({ ...lvlConfig });
-	// 			newStylers[key] = styler;
-	// 		}
-	// 	}
-
-	// 	return newStylers;
-	// }
-
 	private formatArrayOfArray(
 		data: T[][],
 		stylers: { [key: string]: Styler },
@@ -80,9 +63,7 @@ export class Formatter<T> {
 			(acc, value) => {
 				if (Array.isArray(value)) {
 					return this.formatArray(value, stylers, level + 1);
-					// return this.formatArray(value, this.incrementLevel(stylers));
 				} else if (typeof value === 'object') {
-					// return this.formatObject(value as { [key: string]: unknown }, this.incrementLevel(stylers));
 					return this.formatObject(value as { [key: string]: unknown }, stylers, level + 1);
 				} else {
 					const _d = (String(value) ?? `NO VALUE`).concat('\n');
@@ -95,8 +76,6 @@ export class Formatter<T> {
 			{ raw: '', pretty: '' },
 		);
 
-		// console.error('level format array', level)
-
 		return { raw, pretty };
 	}
 
@@ -106,7 +85,6 @@ export class Formatter<T> {
 		level: number = 0,
 	): StringsLoggingFormat {
 		// Appliquer les stylers à chaque élément du tableau
-		// let _stylers = this.incrementLevel(stylers);
 		if (isTypeOfUndefined(data) || data === null) {
 			return { raw: '', pretty: '' };
 		}
@@ -114,7 +92,6 @@ export class Formatter<T> {
 		const { keyStyler, valueStyler, textStyler } = _stylers;
 
 		const incrementedStylers = _stylers;
-		// const incrementedStylers = this.incrementLevel({ ..._stylers });
 
 		const { raw, pretty } = Object.entries(data).reduce(
 			// Pour chaque data d
@@ -132,7 +109,6 @@ export class Formatter<T> {
 
 				// si value est un type atomic (qu'on ne peut pas decouper plus)
 				if (atomicTypesRegex.test(typeof value)) {
-					// const valueStyler = _stylers.valueStyler;
 					const { raw, pretty } = this.formatKeyValue<string>(
 						{ key, value: String(value) },
 						{
@@ -151,7 +127,6 @@ export class Formatter<T> {
 					let pretty = resultKey.pretty.concat('\n');
 
 					let result: StringsLoggingFormat = { raw: '', pretty: '' };
-					// _stylers = this.incrementLevel(_stylers);
 					if (
 						Array.isArray(value) ||
 						(value !== null && (value instanceof Set || isSetIterator(value) || isMapIterator(value)))
@@ -167,28 +142,22 @@ export class Formatter<T> {
 						}
 					} else if (typeof value === 'object') {
 						if (value instanceof Map) {
-							// console.error(`INSTANCE OF MAP ${key} : ${typeof value}`, value, d);
 							const transform = Object.fromEntries(value);
 							result = this.formatObject(
 								transform as { [key: string]: unknown },
 								incrementedStylers,
 								(level ?? 0) + 1,
-								// _stylers,
-								// this.incrementLevel(_stylers),
 							);
 						} else {
 							result = this.formatObject(
 								value as { [key: string]: unknown },
-								// this.incrementLevel(_stylers),
 								incrementedStylers,
 								(level ?? 0) + 1,
-								// _stylers,
 							);
 						}
 					}
 					raw += result?.raw;
 					pretty += result.pretty;
-					// console.error('a trouver des tableaux', typeof d, key, value, d, raw, pretty);
 					return {
 						raw: acc.raw.concat(raw, '\n'),
 						pretty: acc.pretty.concat(pretty, '\n'),
@@ -198,7 +167,6 @@ export class Formatter<T> {
 			{ raw: '', pretty: '' },
 		);
 
-		// console.error('level format object', level)
 		return { raw, pretty };
 	}
 
@@ -209,15 +177,6 @@ export class Formatter<T> {
 		// Appliquer les stylers à la clé et à la valeur
 		const { keyStyler, valueStyler } = stylers;
 		const { key, value } = data;
-		// console.error(
-		// 	'formatKeyValue',
-		// 	key,
-		// 	value,
-		// 	this.formatValue(key, keyStyler),
-		// 	this.formatValue(value, valueStyler),
-		// 	keyStyler,
-		// 	valueStyler,
-		// );
 		const { raw, pretty } = [this.formatValue(key, keyStyler), this.formatValue(value, valueStyler)].reduce(
 			(acc, { raw, pretty }) => ({ raw: `${acc.raw}${raw}`, pretty: `${acc.pretty}${pretty}` }),
 			{ raw: '', pretty: '' },
@@ -228,7 +187,6 @@ export class Formatter<T> {
 
 	private formatValue<T>(value: T, styler: Styler): StringsLoggingFormat {
 		// Appliquer chaque styler à la valeur
-		// console.error('formatValue', value, styler, styler.getStyledText(String(value)));
 		return styler.getStyledText(String(value));
 	}
 }

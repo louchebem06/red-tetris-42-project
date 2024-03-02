@@ -15,22 +15,18 @@ export class GameChange extends EventCommand {
 	}
 
 	public execute(): IAPM[keyof IAPM] {
-		// TODO besoin d'avoir aussi le nom de la room dans le payload incoming
 		return (data: { action: TypeAction; room: string }): void => {
 			try {
 				const { action, room } = data;
 				const player = this.base.getSocketData().player;
 
 				if (this.rm.get(room)) {
-					// ecoute le front et
-					// le donne a gameLogic.action(sid, action) -> apl au travers de room.play(player, action)
 					this.rm.get(room)?.play(player, action);
 				} else {
-					throw new Error(`GameChange: room ${room} inexistant
-payload: ${JSON.stringify(data)}`);
+					throw new Error(`Room ${room} inexistant`);
 				}
 			} catch (e) {
-				this.base.emit('error', `GameChange error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

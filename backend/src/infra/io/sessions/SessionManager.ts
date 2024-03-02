@@ -5,6 +5,7 @@ import { RM } from '../../../rooms/RoomsManager';
 import { colors, logger } from '../../';
 import { DisconnectPlayer } from '../../../rooms/useCases';
 import { IoMiddleware, NextIoFunction, Session, SessionEmptyEventListener, SessionHandler, SessionStore } from '.';
+import { TimeoutManager } from '../TimeoutManager';
 
 export class SessionManager {
 	private sessionStore = new SessionStore();
@@ -49,7 +50,7 @@ export class SessionManager {
 			const sid = session.sid;
 			const player = await this.pm.getPlayerById(sid);
 			new DisconnectPlayer<RM>(this.rm).execute(player);
-			setTimeout(
+			const tm = setTimeout(
 				() => {
 					if (session.isEmpty()) {
 						this.delete(sid);
@@ -63,6 +64,7 @@ export class SessionManager {
 				},
 				parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000,
 			);
+			TimeoutManager.addTimeout(tm);
 		}
 		return this;
 	}
@@ -74,8 +76,7 @@ export class SessionManager {
 	public log(context: string): void {
 		const llog = `${this.sessionStore.total} session(s) registered:\n`;
 		const log = `${this.sessionStore.total} session(s) registered:\n`;
-		logger.log(llog);
-		console.log(log, this.sessionStore, context);
+		logger.logContext(llog, 'session manager log', log);
 		this.sessionStore.all.forEach((session) => {
 			session.log(context);
 		});

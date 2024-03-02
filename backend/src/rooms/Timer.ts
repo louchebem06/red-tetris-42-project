@@ -2,6 +2,7 @@ import Player from '../players/Player';
 import Room from './Room';
 import { Observable, Observer } from '../base/Observer';
 import { PayloadFactory } from '../eventsIO/payloads/PayloadFactory';
+import { TimeoutManager } from '../infra/io';
 
 export class Timer extends Observer<Observable> {
 	public room: Room | null = null;
@@ -30,11 +31,6 @@ export class Timer extends Observer<Observable> {
 				}
 				break;
 			}
-
-			case 'LeaderStartGame': {
-				// TODO demarrer la game si le leader le demande
-				break;
-			}
 		}
 	}
 
@@ -60,6 +56,7 @@ export class Timer extends Observer<Observable> {
 					this.resetCountdown();
 				} else {
 					this.timerId = setTimeout(updateCount, 1000);
+					TimeoutManager.addTimeout(this.timerId);
 				}
 			} catch (e) {
 				this.timerId = null;

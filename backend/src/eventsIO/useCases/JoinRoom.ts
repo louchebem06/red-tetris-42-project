@@ -23,7 +23,7 @@ export class JoinRoom extends EventCommand {
 				}
 				this.rm.log();
 			} catch (e) {
-				this.base.emit('error', `JoinRoom error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

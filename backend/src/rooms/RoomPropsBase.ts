@@ -1,16 +1,14 @@
-import Player from 'players/Player';
+import Player from '../players/Player';
 import { RoomService } from './RoomService';
 import { RoomPlayersBase } from './stores';
 import { Timer } from './Timer';
 import { Observable } from '../base/Observer';
 import Room from './Room';
-// import { logger } from '../infra';
 import { Server } from 'socket.io';
 
 export class RoomPropsBase extends RoomPlayersBase {
 	public destroySession: number;
 	public disconnectSession: number;
-	public timerId: NodeJS.Timeout | null;
 	public countdown: number;
 	public lock: boolean;
 	public constructor(
@@ -25,7 +23,6 @@ export class RoomPropsBase extends RoomPlayersBase {
 
 		this.destroySession = timer.destroySession;
 		this.disconnectSession = timer.disconnectSession;
-		this.timerId = timer.timerId;
 		this.countdown = timer.countdown;
 		this.lock = timer.lock;
 	}
@@ -62,6 +59,6 @@ export class RoomPropsBase extends RoomPlayersBase {
 	}
 
 	public canStartGame(): boolean {
-		return this.arePlayersReady && !this.lock;
+		return this.arePlayersReady;
 	}
 }

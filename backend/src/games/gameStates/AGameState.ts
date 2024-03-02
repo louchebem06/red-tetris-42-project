@@ -2,6 +2,7 @@ import { GameService } from '../GameService';
 import Game from '../Game';
 import { GameLogic, IStatePlayer, PlayerGame, TypeAction } from '../GameLogic';
 import Player from '../../players/Player';
+import { TimeoutManager } from '../../infra/io';
 
 // https://refactoring.guru/fr/design-patterns/state
 export abstract class AGameState {
@@ -66,6 +67,7 @@ export abstract class AGameState {
 					if ((this.game?.state.constructor.name ?? '') === `StartedState`) this.game?.finish();
 				}
 			}, this.intervalMs / this.ticks);
+			TimeoutManager.addInterval(this.intervalID);
 		}
 	}
 
@@ -78,6 +80,7 @@ export abstract class AGameState {
 					if ((this.game?.state.constructor.name ?? '') === `StartedState`) this.game?.finish();
 				}
 			}, this.intervalMs);
+			TimeoutManager.addInterval(this.specterIntervalID);
 		}
 	}
 
@@ -93,12 +96,10 @@ export abstract class AGameState {
 	}
 
 	public start(): void {
-		const id = this.game?.id;
 		try {
 			this.update();
 			this.specter();
 		} catch (e) {
-			console.error(`Start {CreatedState}: Game ${id} failed to start: ${(<Error>e).message}`);
 			this.clear();
 		}
 	}
@@ -106,11 +107,11 @@ export abstract class AGameState {
 	public abstract play(player: Player, action: TypeAction): void;
 
 	public state(player: Player): IStatePlayer {
-		if (!this.logic) throw new Error('AGameState: game logic is not defined');
+		if (!this.logic) throw new Error('Internal error. Contact your support team.');
 		try {
 			return this.logic.statePlayer(player);
 		} catch (error) {
-			throw new Error(`AGameState: state player failed: ${(<Error>error).message}`);
+			throw new Error(`${(<Error>error).message}`);
 		}
 	}
 }

@@ -33,9 +33,7 @@ export abstract class SocketBase {
 				break;
 			}
 			case 'error': {
-				p = `SOCKET ERROR: ${player.username} - id: \
-${sid}, socket id: ${this.socket.id}\
-error: ${p}`;
+				p = `Player ${player.username} has encountered an error: ${p}`;
 				break;
 			}
 			case 'roomInfo':
@@ -121,6 +119,6 @@ function logEmitRoomInfo(p: IRoomJSON): void {
 		const { raw, pretty } = logFormattedNStyled(data, new BasicDataStylers().stylers);
 		logger.logContext(raw, `emitting event [roomInfo]`, pretty);
 	} catch (error) {
-		console.error(error);
+		logger.logContext((<Error>error).message, `error event [roomInfo]`, (<Error>error).message);
 	}
 }

@@ -19,7 +19,7 @@ export class GetRooms extends EventCommand {
 				const rooms = this.rm.roomsJSON;
 				this.base.emit('getRooms', rooms);
 			} catch (e) {
-				this.base.emit('error', `GetRooms error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

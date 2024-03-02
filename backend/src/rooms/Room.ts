@@ -65,7 +65,7 @@ export default class Room extends RoomPropsBase {
 		if (this._games[game.id] === game) {
 			return this.service;
 		}
-		throw new Error('Room: getService: game not found');
+		throw new Error('Internal error. Contact your support team.');
 	}
 
 	public updatePlayer(player: Player, status: PlayerState): Room {
@@ -146,11 +146,7 @@ export default class Room extends RoomPropsBase {
 
 	public play(player: Player, action: TypeAction): Room {
 		try {
-			if (this.has(player.sessionID) && this.gameState) {
-				new PlayGameCommand(this, player, action).execute();
-			} else {
-				throw new Error(`Room: play: player ${player.username}(${player.sessionID}) not in room ${this.name}`);
-			}
+			new PlayGameCommand(this, player, action).execute();
 		} catch (e) {
 			if (this.service.isConnectedOnServer() && !this.service.isEmpty()) {
 				throw new Error((<Error>e).message);

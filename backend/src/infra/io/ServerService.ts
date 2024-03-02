@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 
-import { IBrodacastFormat, IMOP, OAPM } from 'eventsIO/payloads/types/IPayload';
+import { IBrodacastFormat, IMOP, OAPM } from '../../eventsIO/payloads/types/IPayload';
 import { ChangeRoom } from '../../rooms/types';
 
 export class ServerService {
@@ -53,7 +53,6 @@ export class ServerService {
 	}
 
 	protected throwError(message: string): never {
-		console.trace('server Service throwError:', message);
 		throw new Error(message);
 	}
 
@@ -93,7 +92,6 @@ export class ServerService {
 				}
 			}
 		} catch (e) {
-			console.log('SService broadcast error', e);
 			if (this.hasClients) this.throwError(`${e instanceof Error && e.message}`);
 		}
 	}
