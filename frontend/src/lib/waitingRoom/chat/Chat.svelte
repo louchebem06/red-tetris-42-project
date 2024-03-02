@@ -11,7 +11,6 @@
 	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
 	import Button from '$lib/componante/Button.svelte';
 
-
 	export let master: Player;
 	export let players: Player[];
 	export let room: string;
@@ -48,7 +47,6 @@
 
 	onMount(() => {
 		io.on('message', (data: MessageSocket) => {
-			// console.log('message', data);
 			if (data.receiver.name != room) return;
 			msgs = [
 				...msgs,
@@ -64,7 +62,6 @@
 			}, 100);
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			// console.log('change', data);
 			if (data.room.name != room || data.reason == 'ready') return;
 			addSystemMessage(
 				`${data.reason}: ${
@@ -74,7 +71,6 @@
 			);
 		});
 		io.on('playerChange', (data: PlayerChange) => {
-			// console.log('player change', data);
 			if (data.reason != 'ready') return;
 			const statusRoom = data.player?.roomsState.filter((e) => e.name == room)[0];
 			ready = statusRoom.readys;

@@ -44,7 +44,6 @@
 		io.emit('changeUsername', user);
 		io.emit('getRoom', room);
 		io.on('roomInfo', (data: RoomType) => {
-			// console.log('roomInfo', data);
 			if (data == null) {
 				io.emit('createRoom', room);
 				io.emit('getRoom', room);
@@ -64,7 +63,6 @@
 			}
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			// console.log('change', data);
 			if (data.room.name != room) return;
 			switch (data.reason) {
 				case 'player incoming':
@@ -84,7 +82,6 @@
 			}
 		});
 		io.on('gameStart', (data: GameStart) => {
-			// console.log(data);
 			if (data.roomName != room) return;
 			if (userIsReady && data.reason === 'start') {
 				game = true;
