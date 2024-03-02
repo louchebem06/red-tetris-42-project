@@ -13,6 +13,7 @@
 	import type GameStart from '$lib/interfaces/GameStart.interface';
 	import { getNotificationsContext } from 'svelte-notifications';
 	import SpecterGame from '$lib/specter/SpecterGame.svelte';
+	import type { RoomClosed } from '$lib/interfaces/RoomClosed.interface';
 	import Button from '$lib/componante/Button.svelte';
 
 	const { addNotification } = getNotificationsContext();
@@ -43,7 +44,6 @@
 		io.emit('changeUsername', user);
 		io.emit('getRoom', room);
 		io.on('roomInfo', (data: RoomType) => {
-			// console.log('roomInfo', data);
 			if (data == null) {
 				io.emit('createRoom', room);
 				io.emit('getRoom', room);
@@ -63,7 +63,6 @@
 			}
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			// console.log('change', data);
 			if (data.room.name != room) return;
 			switch (data.reason) {
 				case 'player incoming':
@@ -83,7 +82,6 @@
 			}
 		});
 		io.on('gameStart', (data: GameStart) => {
-			// console.log(data);
 			if (data.roomName != room) return;
 			if (userIsReady && data.reason === 'start') {
 				game = true;
@@ -96,7 +94,7 @@
 				});
 			}
 		});
-		io.on('roomClosed', (data: { room: RoomType }) => {
+		io.on('roomClosed', (data: RoomClosed) => {
 			if (data.room.name == room) goto('/');
 		});
 	});

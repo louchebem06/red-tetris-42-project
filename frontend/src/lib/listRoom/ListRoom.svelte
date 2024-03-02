@@ -8,6 +8,8 @@
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 	import type RoomType from '$lib/interfaces/Room.interface';
 	import Button from '$lib/componante/Button.svelte';
+	import type { RoomOpened } from '$lib/interfaces/RoomOpened.interface';
+	import type { RoomClosed } from '$lib/interfaces/RoomClosed.interface';
 
 	let rooms: RoomType[] = [];
 	let myRooms: RoomType[] = [];
@@ -24,19 +26,15 @@
 		io.emit('getRooms');
 		io.emit('getRoomsPlayer');
 		io.on('getRooms', (data: RoomType[]) => {
-			// console.log('getRooms', data);
 			rooms = data;
 		});
 		io.on('getRoomsPlayer', (data: RoomType[]) => {
-			// console.log('getRoomsPlayer', data);
 			myRooms = data;
 		});
-		io.on('roomOpened', (data: { room: RoomType }) => {
-			// console.log('opened', data.room);
+		io.on('roomOpened', (data: RoomOpened) => {
 			rooms = [...rooms, data.room];
 		});
-		io.on('roomClosed', (data: { room: RoomType }) => {
-			// console.log('close', data);
+		io.on('roomClosed', (data: RoomClosed) => {
 			rooms = rooms.filter((x) => {
 				if (x.name == data.room.name) return false;
 				return true;
@@ -47,7 +45,6 @@
 			});
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			// console.log('change', data);
 			switch (data.reason) {
 				case 'player incoming':
 					rooms[rooms.findIndex((x) => x.name == data.room.name)] = data.room;
