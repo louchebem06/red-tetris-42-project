@@ -1,7 +1,5 @@
 import { Server } from 'socket.io';
 
-import { logger } from '../';
-
 import { IBrodacastFormat, IMOP, OAPM } from 'eventsIO/payloads/types/IPayload';
 import { ChangeRoom } from '../../rooms/types';
 
@@ -72,42 +70,20 @@ export class ServerService {
 	public broadcast(datas: IBrodacastFormat): void {
 		try {
 			const { event, data, sid, room } = datas;
-			// console.log('SService', event, data, sid, room);
 			if (room && this.hasClients) {
 				// broadcast to room
 				if (!this.isPublicRoom(room)) {
-					// console.error(``, this.rooms, this.sids, this.io, this.io.sockets, this.io.sockets.adapter)
 					this.throwError(`Invalid public room ${room}`);
 				}
-				if (sid) {
-					// send to all but self
-
-					const except = this.io.sockets.adapter.rooms.get(sid);
-
-					if (except) {
-						const self = [...except.values()];
-
-						if (self) {
-							this.io.except(sid).except(self).to(room).emit(event, data);
-						}
-					} else {
-						this.throwError(`Room ${sid} not found`);
-					}
-				} else {
-					// send to all
-					this.io.in(room).emit(event, data);
-				}
+				this.io.in(room).emit(event, data);
+				// }
 			} else {
 				// broadcast to all
 				if (sid) {
 					// send to all but self
 					const except = this.io.sockets.adapter.rooms.get(sid);
-					if (except) {
-						const self = [...except.values()];
-
-						if (self) {
-							this.io.except(sid).emit(event, data);
-						}
+					if (except && [...except.values()].length > 0) {
+						this.io.except(sid).emit(event, data);
 					} else {
 						this.throwError(`Room ${sid} not found`);
 					}
@@ -188,33 +164,6 @@ export class ServerService {
 				room: sid,
 			});
 		}
-	}
-
-	public log(): void {
-		let log = `[server service]\n${this.rooms.size} rooms(s) registered`;
-		let llog = `[server service]\n${this.rooms.size} rooms(s) registered`;
-		this.rooms.forEach((room, sid) => {
-			log += `\n ** \x1b[4m${sid}\x1b[0m contains:`;
-			llog += `\n ** ${sid} contains:`;
-			[...room.values()].forEach((r) => {
-				log += `\n       \x1b[3m ->    ${r}\x1b[0m`;
-				llog += `\n        ->    ${r}`;
-			});
-		});
-		log += `\n\n${this.sids.size} sid(s) registered`;
-		llog += `\n\n${this.sids.size} sid(s) registered`;
-		this.sids.forEach((sid, room) => {
-			log += `\n ** \x1b[4m${room}\x1b[0m is in:`;
-			llog += `\n ** ${room} is in:`;
-			[...sid.values()].forEach((sid) => {
-				log += `\n       \x1b[3m ->    ${sid}\x1b[0m`;
-				llog += `\n        ->    ${sid}`;
-			});
-		});
-		logger.log(llog);
-		logger.log(`============================================================`);
-		console.log(log);
-		console.log(`\x1b[34m============================================================\x1b[0m`);
 	}
 
 	protected validateNewNameRoom(sid: string): void {
