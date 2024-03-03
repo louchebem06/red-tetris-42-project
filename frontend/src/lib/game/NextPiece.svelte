@@ -17,6 +17,7 @@
 
 <style lang="scss">
 	@use 'sass:map';
+	@import '../../lib/scss/variables';
 
 	.line {
 		display: flex;

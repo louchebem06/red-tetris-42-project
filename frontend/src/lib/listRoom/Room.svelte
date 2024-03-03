@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { sessionID, username } from '../../store';
+	import { sessionID, username } from '$lib/store';
 	import type RoomType from '$lib/interfaces/Room.interface';
 
 	export let room: RoomType;
@@ -25,6 +25,8 @@
 </span>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	span {
 		display: flex;
 		align-items: center;

@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Game from '$lib/game/Game.svelte';
-	import { username, sessionID } from '../../store';
+	import { username, sessionID } from '$lib/store';
 	import Chat from './chat/Chat.svelte';
 	import Room from './room/Room.svelte';
 	import { io } from '$lib/socket';

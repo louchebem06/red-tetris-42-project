@@ -78,6 +78,7 @@
 
 <style lang="scss">
 	@use 'sass:map';
+	@import '../../lib/scss/variables';
 
 	.content {
 		width: 100vw;

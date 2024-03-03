@@ -15,6 +15,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../../lib/scss/variables';
+
 	.message {
 		padding: 10px;
 		border-radius: 10px;

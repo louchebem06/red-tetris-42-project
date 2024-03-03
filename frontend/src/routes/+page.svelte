@@ -3,7 +3,7 @@
 	import ListRoom from '$lib/listRoom/ListRoom.svelte';
 	import Registration from '$lib/registration/Registration.svelte';
 	import WaitingRoom from '$lib/waitingRoom/WaitingRoom.svelte';
-	import { sessionID, username } from '../store';
+	import { sessionID, username } from '$lib/store';
 	import { io } from '$lib/socket';
 	import { onDestroy, onMount } from 'svelte';
 	import type Player from '$lib/interfaces/Player.interface';

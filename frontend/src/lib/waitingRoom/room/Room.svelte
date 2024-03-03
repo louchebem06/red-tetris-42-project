@@ -13,6 +13,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../../lib/scss/variables';
+
 	.users {
 		display: flex;
 		flex-direction: column;

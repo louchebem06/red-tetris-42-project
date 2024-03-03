@@ -13,6 +13,8 @@
 </div>
 
 <style lang="scss">
+	@import '../lib/scss/variables';
+
 	div {
 		display: flex;
 		align-items: center;

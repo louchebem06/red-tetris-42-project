@@ -19,6 +19,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.grid {
 		position: absolute;
 		width: 100%;

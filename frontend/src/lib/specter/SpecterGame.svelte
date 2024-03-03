@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type Player from '$lib/interfaces/Player.interface';
 	import type PlayerGame from '$lib/interfaces/PlayerGame.interface';
-	import { sessionID } from '../../store';
+	import { sessionID } from '$lib/store';
 	import PlayerSpecter from './PlayerSpecter.svelte';
 
 	export let fixed: boolean = true;
@@ -61,6 +61,8 @@
 {/if}
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.fixed {
 		position: fixed;
 		bottom: 15px;

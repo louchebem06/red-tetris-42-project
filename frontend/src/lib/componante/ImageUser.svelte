@@ -7,6 +7,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	div {
 		width: 50px;
 		height: 50px;

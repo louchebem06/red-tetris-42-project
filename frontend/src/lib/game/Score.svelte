@@ -9,6 +9,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	.level {
 		position: fixed;
 		top: 15px;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/componante/Button.svelte';
-	import { username } from '../../store';
+	import { username } from '$lib/store';
 
 	let error = false;
 	let errorMsg: string = '';
@@ -32,6 +32,8 @@
 </div>
 
 <style lang="scss">
+	@import '../../lib/scss/variables';
+
 	p {
 		width: 100%;
 		&.error {
