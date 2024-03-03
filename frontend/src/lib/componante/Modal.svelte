@@ -15,15 +15,18 @@
 {/if}
 
 <style lang="scss">
+	@import '../scss/variables.scss';
 	.modal {
 		z-index: 10;
 		background: white;
-		border: 1px solid black;
+		border: 0.5px solid $orange;
 		position: fixed;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
 		padding: 40px 30px 30px 30px;
+		border-radius: 10px;
+		box-shadow: rgba(255, 162, 0, 0.2) 0px 7px 29px 0px;
 
 		:global(.button) {
 			position: fixed;
