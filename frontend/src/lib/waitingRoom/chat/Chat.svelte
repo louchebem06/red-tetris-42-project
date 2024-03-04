@@ -102,34 +102,48 @@
 		io.emit('ready', room);
 	};
 
-	const toggleModalViewRunGame = (): void => {
-		modalViewRunGame = !modalViewRunGame;
+	const forceGameStart = (): void => {
+		if (!userIsReady) {
+			io.emit('gameStart', room);
+		}
+		modalViewRunGame = false;
 	};
 
-	const forceGameStart = (): void => {
-		io.emit('gameStart', room);
+	const cancelForceGameStart = (): void => {
+		if (userIsReady) {
+			io.emit('gameStart', room);
+		}
+		modalViewRunGame = false;
+	};
+
+	const toggleModalViewRunGame = (): void => {
+		modalViewRunGame = !modalViewRunGame;
 	};
 </script>
 
 <Modal bind:show={modalViewRunGame}>
-	<p>Are you sure?</p>
-	<p>There are {ready} ready players on {players.length} total players in the waiting room.</p>
-	<p>by accepting, you are ready to play</p>
-	<Button on:click={forceGameStart}>Yes</Button>
-	<Button on:click={toggleModalViewRunGame}>No</Button>
+	<p>Are you sure launch game?</p>
+	{#if players.length != 1}
+		<p>Other player {userIsReady ? ready - 1 : ready} / {players.length - 1} ready</p>
+	{/if}
+	<div class="buttonModalViewRunGame">
+		<Button on:click={forceGameStart}>Yes</Button>
+		<Button on:click={cancelForceGameStart}>No</Button>
+	</div>
 </Modal>
 
 <div class="content">
 	<div class="ready">
 		<p>{ready} player{ready > 1 ? 's' : ''} ready of {players.length}</p>
-		<Button on:click={toggleReady}>
-			{#if userIsReady}
-				Unset ready
-			{:else}
-				Set ready
-			{/if}
-		</Button>
-		{#if $sessionID == master?.sessionID}
+		{#if $sessionID != master?.sessionID}
+			<Button on:click={toggleReady}>
+				{#if userIsReady}
+					Unset ready
+				{:else}
+					Set ready
+				{/if}
+			</Button>
+		{:else}
 			<Button on:click={toggleModalViewRunGame}>Run Game</Button>
 		{/if}
 	</div>
@@ -206,5 +220,12 @@
 				width: 100%;
 			}
 		}
+	}
+
+	.buttonModalViewRunGame {
+		display: flex;
+		justify-content: center;
+		gap: 50px;
+		margin-top: 25px;
 	}
 </style>
