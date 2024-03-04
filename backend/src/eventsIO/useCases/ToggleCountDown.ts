@@ -27,15 +27,10 @@ export class ToggleCountDown extends EventCommand {
 						room.startCountdown(player, room);
 					}
 				} else {
-					throw new Error(
-						`ToggleCountdown: not possible to toggle the game's countdown
-room: ${room ? room.name : 'not found'}
-player: ${room?.isLeader(player) ? 'is leader' : 'is not leader'}
-game: ${room?.gameState ? 'started' : 'not started'}`,
-					);
+					throw new Error('Internal error. Contact your support team.');
 				}
 			} catch (e) {
-				this.base.emit('error', `ToggleCountDown error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

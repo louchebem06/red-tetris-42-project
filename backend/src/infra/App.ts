@@ -11,6 +11,7 @@ import {
 	logger,
 	HttpServer,
 } from '.';
+import { TimeoutManager } from './io';
 
 class App {
 	private httpServer: HttpServer;
@@ -45,8 +46,8 @@ class App {
 	 * @return {void} This function does not return anything.
 	 */
 	public start(port?: number): void {
-		this.httpServer.start(port);
 		this.gracefulShutdown();
+		this.httpServer.start(port);
 	}
 
 	/**
@@ -73,22 +74,20 @@ class App {
 	 * @return {void} - No return value.
 	 */
 	public stop(cb?: () => void): void {
+		TimeoutManager.clearAll();
 		this.io.close();
 		this.httpServer.stop(cb);
-		// process.exit(0);
 	}
 
 	public gracefulShutdown(): void {
 		signals.forEach((signal) => {
 			process.on(signal, () => {
-				this.stop((): void => {
-					logger.log(`[SHUTDOWN] Received ${signal} signal`);
-
-					// TODO: kill le front aussi!
-					setTimeout(() => {
-						process.exit(0);
-					}, 2000);
-				});
+				logger.logContext(
+					`[SHUTDOWN] Server stopped with ${signal} signal`,
+					'shutdown',
+					`[SHUTDOWN] Server stopped with ${signal} signal`,
+				);
+				this.stop();
 			});
 		});
 	}

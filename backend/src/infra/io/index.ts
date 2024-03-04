@@ -17,6 +17,7 @@ import {
 	SessionStore,
 	isSessionClass,
 } from './sessions';
+import { TimeoutManager } from './TimeoutManager';
 
 export {
 	ISrvToCltEvts,
@@ -40,4 +41,5 @@ export {
 	NextIoFunction,
 	IoMiddleware,
 	isSessionClass,
+	TimeoutManager,
 };

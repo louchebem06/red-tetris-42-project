@@ -22,10 +22,10 @@ export class GetRoomsPlayer extends EventCommand {
 						this.base.emit('getRoomsPlayer', this.rm.roomsPlayerPayload(p));
 					})
 					.catch((e) => {
-						this.base.emit('error', `GetRoomsPlayer error: ${(<Error>e).message}`);
+						this.base.emit('error', `${(<Error>e).message}`);
 					});
 			} catch (e) {
-				this.base.emit('error', `GetRoomsPlayer error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

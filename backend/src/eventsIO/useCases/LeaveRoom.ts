@@ -18,11 +18,11 @@ export class LeaveRoom extends EventCommand {
 			try {
 				const room = this.rm.get(name);
 				if (!room) {
-					throw new Error(`room ${name} does not exist`);
+					throw new Error(`Room ${name} inexistant`);
 				}
 				room.removePlayer(this.base.getSocketData().player);
 			} catch (e) {
-				this.base.emit('error', `LeaveRoom error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

@@ -1,6 +1,6 @@
 import Room from '../../rooms/Room';
 import Player from '../../players/Player';
-import { PlayerState } from 'players/types';
+import { PlayerState } from '../../players/types';
 import { CreateGameCommand } from '.';
 import { GameCommand } from './GameCommand';
 
@@ -32,10 +32,20 @@ export class StartGameCommand extends GameCommand {
 				room.addGame(game);
 				game.start();
 			} else {
-				throw new Error(
-					`Room: play: player ${username}(${sid}) \
-					not in room ${room.name} or room not ready to play: ${hasPlayer}.`,
-				);
+				if (!hasPlayer) {
+					throw new Error(`Player ${username} not in room ${room.name}.`);
+				}
+
+				if (!isReadytoPlay) {
+					throw new Error(`Player ${username} not ready to play.`);
+				}
+
+				if (!room.isLeader(player)) {
+					throw new Error(`Player ${username} cannot start the game.`);
+				}
+				if (!room.lock) {
+					throw new Error(`Internal error. Contact your support team.`);
+				}
 			}
 		} catch (e) {
 			throw new Error((<Error>e).message);

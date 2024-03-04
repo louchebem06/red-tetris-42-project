@@ -666,7 +666,7 @@ describe('* Disconnect Players State', () => {
 		});
 	});
 
-	describe.skip(`Client 4 should income in room ${room1} while game is started and disconnect and reconnect`, () => {
+	describe(`Client 4 should income in room ${room1} while game is started and disconnect and reconnect`, () => {
 		const roomsState: IRoomState[] = [
 			createRoomState({
 				name: room1,

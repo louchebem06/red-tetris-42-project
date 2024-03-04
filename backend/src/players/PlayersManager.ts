@@ -26,13 +26,10 @@ class PlayersManager extends PlayerStore {
 		const llog = `\n[playercontroller]: (currently registered: ${total} player${s})\n`;
 		const log = `\n\x1b[34m[playercontroller ${context}]\x1b[0m
 \x1b[4m(currently registered: ${total} player${s})\x1b[0m\n`;
-		console.log(log);
-		logger.log(llog);
+		logger.logContext(llog, 'playercontroller log', log);
 		this.all.forEach((player) => {
 			player.log(context);
 		});
-		logger.log(`============================================================`);
-		console.log(`\x1b[34m============================================================\x1b[0m`);
 	}
 }
 

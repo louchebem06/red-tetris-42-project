@@ -36,7 +36,7 @@ export class Logger {
 		return content;
 	}
 
-	public log(message: string): void {
+	private log(message: string): void {
 		this.write(this.setContent(message));
 	}
 
@@ -45,7 +45,10 @@ export class Logger {
 			this.log(message);
 		} else {
 			this.write(this.setContent(message, context));
-			if (format) console.log(`${context}\n${format}`);
+
+			if (process.env.UNITS_TESTS || process.env.DEV) {
+				if (format) console.log(`${context}\n${format}`);
+			}
 		}
 	}
 

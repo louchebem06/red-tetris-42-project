@@ -59,7 +59,7 @@ export class GameService extends ServerService {
 		this.game.gamers.forEach((gamer) => {
 			this.leave(gamer);
 		});
-		logger.log(`GameRoom ${this.game.id} finished`);
+		logger.logContext(`GameRoom ${this.game.id} finished`, 'game service log', `GameRoom ${this.game.id} finished`);
 	}
 
 	// game publish generique a la room

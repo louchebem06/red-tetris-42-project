@@ -18,7 +18,7 @@ export class CreateRoom extends EventCommand {
 			try {
 				this.rm.create(name, this.base.getSocketData().player);
 			} catch (e) {
-				this.base.emit('error', `CreateRoom error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

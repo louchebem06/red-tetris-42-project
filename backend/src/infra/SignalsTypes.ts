@@ -2,9 +2,9 @@ type CoreSignals1 = 'SIGABRT' | 'SIGBUS' | 'SIGFPE' | 'SIGILL' | 'SIGSEGV' | 'SI
 type CoreSignals = 'SIGSYS' | CoreSignals1;
 type StopSignals = 'SIGSTOP' | 'SIGTSTP' | 'SIGTTIN' | 'SIGTTOU';
 type TermSignals = 'SIGINT' | 'SIGTERM' | 'SIGHUP' | 'SIGKILL' | 'SIGPIPE';
-type Signals = CoreSignals | StopSignals | TermSignals;
+type Signals = CoreSignals | StopSignals | TermSignals | 'exit' | 'uncaughtException';
 
-export const signals: Signals[] = [
+const signals: Signals[] = [
 	'SIGINT',
 	'SIGTERM',
 	'SIGHUP',
@@ -16,4 +16,7 @@ export const signals: Signals[] = [
 	'SIGSEGV',
 	'SIGSYS',
 	'SIGQUIT',
+	'uncaughtException',
 ];
+
+export { signals };

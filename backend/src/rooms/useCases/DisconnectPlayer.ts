@@ -26,7 +26,7 @@ export class DisconnectPlayer<
 				}
 			});
 		} catch (e) {
-			throw new Error(`DisconnectPlayer: disconnectPlayer error: ${(<Error>e).message}`);
+			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 }

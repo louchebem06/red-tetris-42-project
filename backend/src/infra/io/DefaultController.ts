@@ -29,7 +29,7 @@ export default class DefaultController {
 			try {
 				new SocketController(socket, this._ss, this._pc, this._rc, this._sm);
 			} catch (e) {
-				throw new Error(`io on connection: ${(<Error>e).message}`);
+				throw new Error(`${(<Error>e).message}`);
 			}
 		});
 	}

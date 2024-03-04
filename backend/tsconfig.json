@@ -6,7 +6,6 @@
 		"emitDecoratorMetadata": true,
 		"module": "commonjs",
 		"moduleResolution": "node",
-		// "moduleResolution": "bundler",
 		"baseUrl": "./src/",
 		"typeRoots": ["./src/types", "./node_modules/@types", "./src/definition"],
 		"resolveJsonModule": true,

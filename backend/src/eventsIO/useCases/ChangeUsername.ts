@@ -24,15 +24,9 @@ export class ChangeUsername extends EventCommand {
 						const payload = PayloadFactory.createPlayerPayload(p, 'change username');
 						this.base.emit('playerChange', payload);
 					})
-					.catch((e) =>
-						this.base.emit(
-							'error',
-							`ChangeUsername error: \
-					${(<Error>e).message}`,
-						),
-					);
+					.catch((e) => this.base.emit('error', `${(<Error>e).message}`));
 			} catch (e) {
-				this.base.emit('error', `ChangeUsername error: ${(<Error>e).message}`);
+				this.base.emit('error', `${(<Error>e).message}`);
 			}
 		};
 	}

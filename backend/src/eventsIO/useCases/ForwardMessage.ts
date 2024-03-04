@@ -24,13 +24,7 @@ export class ForwardMessage extends EventCommand {
 					.then((p) => {
 						this.base.forwardMessage(datas, player, p);
 					})
-					.catch((e) =>
-						this.base.emit(
-							'error',
-							`ForwardMessage error: \
-					${(<Error>e).message}`,
-						),
-					);
+					.catch((e) => this.base.emit('error', `${(<Error>e).message}`));
 			} else if (this.rm.has(datas.receiver)) {
 				// mp player -> room
 				this.rm
@@ -39,14 +33,10 @@ export class ForwardMessage extends EventCommand {
 						this.base.forwardMessage(datas, player, payload);
 					})
 					.catch((e) => {
-						this.base.emit('error', `ForwardMessage error: ${(<Error>e).message}`);
+						this.base.emit('error', `${(<Error>e).message}`);
 					});
 			} else {
-				this.base.emit(
-					'error',
-					`ForwardMessage error: receiver \
-"${datas.receiver}" not found`,
-				);
+				this.base.emit('error', `receiver "${datas.receiver}" not found`);
 			}
 		};
 	}

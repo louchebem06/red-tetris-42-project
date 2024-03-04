@@ -33,7 +33,7 @@ export class RemovePlayerCommand extends RoomCommand {
 	}
 
 	public execute(player: Player): void {
-		const entityName = this.constructor.name;
+		// const entityName = this.constructor.name;
 		try {
 			const { username, sessionID } = player;
 			const { name, gameState, total } = this.room;
@@ -49,9 +49,7 @@ export class RemovePlayerCommand extends RoomCommand {
 					// ou si le compte a rebours est lancé?
 					if (gameState) {
 						if (!status?.match(allowedStatusRegex)) {
-							this.service.error(
-								`${entityName}: player ${username} [${sessionID}] not allowed to leave room ${name}`,
-							);
+							this.service.error(`not allowed to leave room ${name}`);
 							return;
 						}
 					}
@@ -73,7 +71,11 @@ export class RemovePlayerCommand extends RoomCommand {
 						new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);
 					}
 
-					logger.log(`player ${username} has left room ${name}`);
+					logger.logContext(
+						`player ${username} has left room ${name}`,
+						'remove player',
+						`player ${username} has left room ${name}`,
+					);
 				} else if (!this.service.isConnectedOnServer()) {
 					// la room n'existe plus sur le serveur
 					// il faut supprimer la room sans y envoyer d'event car elle n'est plus reliée a un socket
@@ -94,10 +96,10 @@ export class RemovePlayerCommand extends RoomCommand {
 					}
 				}
 			} else {
-				this.service.error(`${entityName}: player ${username} [${sessionID}] not in room ${name}`);
+				this.service.error(`not in room ${name}`);
 			}
 		} catch (e) {
-			throw new Error(`${entityName}: ${(<Error>e).message}`);
+			throw new Error(`${(<Error>e).message}`);
 		}
 	}
 }

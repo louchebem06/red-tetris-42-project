@@ -17,6 +17,7 @@ export class ErrorClient extends EventCommand {
 	public execute(): IAPM[keyof IAPM] {
 		return (message: string) => {
 			logger.logContext(message, 'Receiving client error', message);
+			this.base.getSocket().disconnect();
 		};
 	}
 }
