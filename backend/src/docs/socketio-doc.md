@@ -1024,12 +1024,15 @@ Ce compte à rebours est transmis au travers de cet event:
 
 ```js
 socketClient.emit('gameChange', {
-	level: number;
-	score: number;
-	map: TetriminosArrayType;
-	nextPiece: TetriminosArrayType;
-	soundEffect?: SoundEffectType;
-} as IStatePlayer); // IStatePlayer
+	gameId: string,
+	payload: {
+		level: number;
+		score: number;
+		map: TetriminosArrayType;
+		nextPiece: TetriminosArrayType;
+		soundEffect?: SoundEffectType;
+	} as IStatePlayer // IStatePlayer
+})
 
 ```
 
@@ -1041,7 +1044,10 @@ L'event est envoyé à toute la waiting room
 Le payload retourné est un tableau de PlayerGame
 
 ```js
-socketClient.emit('gameInfo', [playerGame1, playerGame1, ...])
+socketClient.emit('gameInfo', {
+	gameId: string,
+	payload: [playerGame1, playerGame1, ...]
+})
 ```
 
 ### gameEnd
@@ -1052,5 +1058,8 @@ L'event est envoyé à toute la waiting room
 Le payload retourné est un tableau de PlayerGame
 
 ```js
-socketClient.emit('gameEnd', playerGame1);
+socketClient.emit('gameEnd', {
+	gameId: string,
+	payload: playerGame,
+});
 ```

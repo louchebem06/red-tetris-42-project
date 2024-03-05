@@ -1,3 +1,4 @@
+import { IStatePlayer, PlayerGame } from '../../../../games/GameLogic';
 import { ISrvToCltPayload, GameStartReason } from './base';
 import { IPlayerJSON } from './players';
 
@@ -14,4 +15,9 @@ export interface IGameJSON {
 	state: string;
 }
 
-export { IGameStartPayload, GameStartReason };
+type IGamePlayPayload<T extends IStatePlayer | PlayerGame | PlayerGame[]> = {
+	gameId: string;
+	payload: T;
+};
+
+export { IGameStartPayload, GameStartReason, IGamePlayPayload };

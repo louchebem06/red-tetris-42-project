@@ -1,29 +1,8 @@
 import Player from '../../players/Player';
 import { FinishedState } from '.';
-// import { IStatePlayer, PlayerGame, TypeAction } from '../../games/GameLogic';
 import { TypeAction } from '../../games/GameLogic';
 import { AGameState } from './AGameState';
 import { logger } from '../../infra';
-
-// function debugPlayerGame(playerGame: PlayerGame): string {
-// 	return `level: ${playerGame?.getLevel()},
-// score: ${playerGame?.getScore()},
-// map:
-// ${playerGame
-// 	?.getMap()
-// 	?.render()
-// 	?.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join(''))
-// 	.join('|\n')}|`;
-// }
-
-// function debugIStatePlayer(state: IStatePlayer): string {
-// 	return `level: ${state.level},
-// score: ${state.score},
-// nextPiece:
-// ${state.nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
-// map:
-// ${state.map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`;
-// }
 
 export class StartedState extends AGameState {
 	public start(): void {

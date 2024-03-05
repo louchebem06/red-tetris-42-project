@@ -293,6 +293,25 @@ describe('* Disconnect Players State', () => {
 		}, 1000);
 	});
 
+	// function debugPlayerGame(playerGame: PlayerGame): string {
+	// 	return `level: ${playerGame?.getLevel()},
+	// score: ${playerGame?.getScore()},
+	// map:
+	// ${playerGame
+	// 	?.getMap()
+	// 	?.render()
+	// 	?.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join(''))
+	// 	.join('|\n')}|`;
+	// }
+
+	// function debugIStatePlayer(state: IStatePlayer): string {
+	// 	return `level: ${state.level},
+	// score: ${state.score},
+	// nextPiece:
+	// ${state.nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
+	// map:
+	// ${state.map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`;
+	// }
 	describe(`Clients should set as ready`, () => {
 		test(`${config(username1).client} should set as ready \
 		, ${config('ready').eventI} -> [${config('playerChange').eventO}] events`, (done) => {
@@ -369,41 +388,41 @@ describe('* Disconnect Players State', () => {
 						}, 8000);
 						setTimeout(() => {
 							done();
-						}, 75000);
+						}, 50000);
 					}, 8000);
 				}
 			});
 
-			client1.on('gameChange', (payload): void => {
-				const { level, score, map, nextPiece } = payload;
+			// 			client1.on('gameChange', (payload): void => {
+			// 				const { level, score, map, nextPiece } = payload;
 
-				console.error(
-					`level: ${level}, 
-score: ${score},
-nextPiece:
-${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
-map:
-${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`,
-				);
-			});
+			// 				console.error(
+			// 					`level: ${level},
+			// score: ${score},
+			// nextPiece:
+			// ${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
+			// map:
+			// ${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`,
+			// 				);
+			// 			});
 
-			client4.on('gameChange', (payload): void => {
-				const { level, score, map, nextPiece } = payload;
+			// 			client4.on('gameChange', (payload): void => {
+			// 				const { level, score, map, nextPiece } = payload;
 
-				console.error(
-					`level: ${level}, 
-score: ${score},
-nextPiece:
-${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
-map:
-${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`,
-				);
-			});
+			// 				console.error(
+			// 					`level: ${level},
+			// score: ${score},
+			// nextPiece:
+			// ${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
+			// map:
+			// ${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`,
+			// 				);
+			// 			});
 			client1.emit('ready', room1);
 			client2.emit('ready', room1);
 			client3.emit('ready', room1);
 			client4.emit('ready', room1);
-		}, 250000);
+		}, 80000);
 	});
 
 	describe('disconnect all clients', () => {
