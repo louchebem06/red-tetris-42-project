@@ -1179,7 +1179,7 @@ ${config('joinRoom').eventI} -> [${config('roomChange').eventO}:\
 		});
 	});
 
-	describe.skip('Client 1 should connect with several sockets in same time,\
+	describe('Client 1 should connect with several sockets in same time,\
 		then disconnecting all, allowing destroying session, then Client 2 should become leader of the room', () => {
 		const games = createGames([
 			{
@@ -1305,7 +1305,7 @@ ${config('getRoom').eventI} -> [${config('roomInfo').eventO}] events`, async () 
 		 * mais est toujours dans les gamers de la partie
 		 * soit on l'autorise a quitter, soit on l'autorise pas a quitter la room
 		 */
-		test.skip(
+		test(
 			`${config(username1).client} should disconnect all its sockets, allowing destroying session, \
 then ${config(username2).client} should become leader of the room,
 ${config('disconnect').eventI} -> [${config('join').eventO}] events`,
@@ -1335,6 +1335,22 @@ ${config('disconnect').eventI} -> [${config('join').eventO}] events`,
 					leads: [room1],
 				};
 
+				const roomsState1ExLeader = [
+					createRoomState({
+						name: room1,
+						status: 'left',
+						readys: 0,
+						started: true,
+						leads: false,
+					}),
+				];
+
+				const player1ExLeaderGame = {
+					...playerExpect1,
+					roomsState: roomsState1ExLeader,
+					leads: [],
+				};
+
 				const roomGameStartedLeader = {
 					...roomGameStarted,
 					leader: player2LeaderGame,
@@ -1346,7 +1362,7 @@ ${config('disconnect').eventI} -> [${config('join').eventO}] events`,
 							id: expect.any(String) as unknown as string,
 							state: 'StartedState',
 							winner: null,
-							gamers: [player2LeaderGame],
+							gamers: [player1ExLeaderGame, player2LeaderGame],
 						},
 					]),
 				};

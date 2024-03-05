@@ -13,11 +13,11 @@ export class AddPlayerCommand extends RoomCommand {
 	}
 	public execute(player: Player): void {
 		if (!this.room.has(player.sessionID) && this.room.canJoin(player)) {
-			const event = new PlayerReady(player, this.room.name);
-			player.addObserver({ event, observer: this.room });
-			this.room.log('addPlayer');
-			this.room.updatePlayer(player, this.room.gameState ? 'idle' : 'active');
-			this.room.save(player.sessionID, player);
+			new PlayerReady(player, this.room.name).add(this.room);
+			this.room
+				.log('addPlayer')
+				.updatePlayer(player, this.room.gameState ? 'idle' : 'active')
+				.save(player.sessionID, player);
 			this.service.join(this.room, player);
 		}
 	}
