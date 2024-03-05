@@ -51,6 +51,10 @@ export abstract class AGameState {
 				if (playerGame?.getEndGame()) this.game?.removePlayer(gamer, playerGame);
 			});
 
+			// recup du gameStore des joueurs finis et ajouter les PlayerGame au tab de specters
+			const endedSpecters = this.game?.gameStore.getEndedPlayerGames(this.game?.id);
+			if (endedSpecters) specters.push(...endedSpecters);
+
 			const state = this.game?.state.constructor.name ?? '';
 			if (state === `StartedState`) this.service?.publishSpecter(specters);
 		} catch (e) {
