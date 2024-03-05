@@ -3,24 +3,6 @@
 
 	export let player: PlayerGame;
 	export let isWaitingRoom: boolean;
-
-	const username: string =
-		player.player.username.length > 10
-			? `${player.player.username.slice(0, 9)}…`
-			: player.player.username;
-	const score: string | number =
-		player.score > 1000 ? `${Math.round(player.score / 1000)}K` : player.score;
-	for (let y = 0; y < player.map.length; y++) {
-		for (let x = 0; x < player.map[y].length; x++) {
-			if (player.map[y][x] != '') {
-				let yy = y + 1;
-				while (yy < player.map.length) {
-					player.map[yy][x] = '';
-					yy++;
-				}
-			}
-		}
-	}
 </script>
 
 <div class="playerSpecter">
@@ -28,7 +10,7 @@
 		<div class="death left" />
 		<div class="death right" />
 	{/if}
-	<p>{username}</p>
+	<p>{player.player.username}</p>
 	<div class="map">
 		{#each player.map as map}
 			<div class="line">
@@ -43,7 +25,7 @@
 		{/each}
 	</div>
 	<div class="meta">
-		<p>Score: {score}</p>
+		<p>Score: {player.score}</p>
 		<p>Level: {player.level}</p>
 	</div>
 </div>

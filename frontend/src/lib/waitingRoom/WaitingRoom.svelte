@@ -15,6 +15,8 @@
 	import SpecterGame from '$lib/specter/SpecterGame.svelte';
 	import type { RoomClosed } from '$lib/interfaces/RoomClosed.interface';
 	import Button from '$lib/componante/Button.svelte';
+	import type { GamePlayPayload } from '$lib/interfaces/GamePlayPayload';
+	import type { GameEnd } from '$lib/interfaces/GameEnd.interface';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -97,6 +99,11 @@
 		io.on('roomClosed', (data: RoomClosed) => {
 			if (data.room.name == room) goto('/');
 		});
+		io.on('gameEnd', (data: GamePlayPayload<GameEnd>) => {
+			if (data.payload.player.sessionID == $sessionID) {
+				game = false;
+			}
+		});
 	});
 
 	onDestroy(() => {
@@ -104,11 +111,13 @@
 		io.off('roomChange');
 		io.off('roomClosed');
 		io.off('gameStart');
+		io.off('gameEnd');
 	});
 
 	$: if ($page.url.hash) {
 		getHashValue();
 	}
+
 	$: if (user && user != $username) {
 		username.set(user);
 	}

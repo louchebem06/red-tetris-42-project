@@ -98,7 +98,7 @@
 		transform: translateX(-50%);
 		background: $red;
 		transition: top 1s;
-		z-index: 1000;
+		z-index: 99;
 		width: 250px;
 		padding: 10px;
 		border-radius: 0 0 10px 10px;
