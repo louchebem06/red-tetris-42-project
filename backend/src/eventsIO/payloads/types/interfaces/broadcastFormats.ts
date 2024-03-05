@@ -1,6 +1,6 @@
 // TODO { IStatePlayer, TypeAction } à rappatrier dans le repertoire courant ./games
 import { IStatePlayer, PlayerGame, TypeAction } from '../../../../games/GameLogic';
-import { IGameStartPayload } from './games';
+import { IGamePlayPayload, IGameStartPayload } from './games';
 import { IMIP, IMOP } from './messages';
 import { IPlayerJSON, IPlayerPayload } from './players';
 import { IRoomJSON, IRoomPayload } from './rooms';
@@ -39,9 +39,9 @@ type OutgoingActionPayloadMap = {
 	message: IMOP;
 	error: string;
 	gameStart: IGameStartPayload;
-	gameChange: IStatePlayer;
-	gameEnd: PlayerGame;
-	gameInfo: PlayerGame[];
+	gameChange: IGamePlayPayload<IStatePlayer>;
+	gameEnd: IGamePlayPayload<PlayerGame>;
+	gameInfo: IGamePlayPayload<PlayerGame[]>;
 };
 
 type OAPM = OutgoingActionPayloadMap;

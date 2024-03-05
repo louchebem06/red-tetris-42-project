@@ -5,6 +5,7 @@ import { TetriminosArrayType } from './tetriminos/tetriminos.interface';
 import Player from '../players/Player';
 import { logger } from '../infra';
 import { IStatePlayer, PlayerGame } from './GameLogic';
+import { PayloadFactory } from '../eventsIO/payloads/PayloadFactory';
 
 export type Pieces = TetriminosArrayType;
 export type GameRoomAction = 'join' | 'leave';
@@ -66,10 +67,11 @@ export class GameService extends ServerService {
 	public publishSpecter(data: PlayerGame[]): void {
 		const id = this.game.id;
 		try {
+			const payload = PayloadFactory.createGamePlayPayload(id, data);
 			const room = id.split('_')[1];
 			this.broadcast({
 				event: 'gameInfo',
-				data,
+				data: payload,
 				room,
 			});
 			const log = `GameRoom ${id} publish on ${room} payload ${JSON.stringify(data)}`;
@@ -86,13 +88,14 @@ datas: ${JSON.stringify(data)}`;
 	public emitStatePlayer(data: IStatePlayer, playerOrSid: Player | string): void {
 		const id = this.game.id;
 		try {
+			const payload = PayloadFactory.createGamePlayPayload(id, data);
 			let sid: string;
 			if (typeof playerOrSid === 'string') {
 				sid = playerOrSid;
 			} else {
 				sid = playerOrSid.sessionID;
 			}
-			this.emit(sid, 'gameChange', data);
+			this.emit(sid, 'gameChange', payload);
 
 			const { level, score, map, nextPiece } = data;
 			if (level && score && map && nextPiece) {
@@ -116,13 +119,14 @@ ${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('
 	public emitEndGamePlayer(data: PlayerGame, playerOrSid: Player | string): void {
 		const id = this.game.id;
 		try {
+			const payload = PayloadFactory.createGamePlayPayload(id, data);
 			let sid: string;
 			if (typeof playerOrSid === 'string') {
 				sid = playerOrSid;
 			} else {
 				sid = playerOrSid.sessionID;
 			}
-			this.emit(sid, 'gameEnd', data);
+			this.emit(sid, 'gameEnd', payload);
 			const log = `GameRoom ${id} emit end game to player ${sid} payload ${JSON.stringify(data)}`;
 			logger.logContext(log, `gameservice ${id}: publish gameChange`, log);
 		} catch (error) {

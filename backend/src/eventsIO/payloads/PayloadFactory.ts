@@ -10,6 +10,7 @@ import {
 	OAPM,
 	IGameStartPayload,
 	GameStartReason,
+	IGamePlayPayload,
 } from './types/IPayload';
 import {
 	PlayerJSON,
@@ -23,6 +24,8 @@ import {
 } from './types/Payloads';
 import Room from '../../rooms/Room';
 import Player from '../../players/Player';
+import { GamePlayPayload } from './types/classes/GamePayload';
+import { IStatePlayer, PlayerGame } from 'games/GameLogic';
 
 class PayloadFactory {
 	public static createRoomJSON(room: Room): IRoomJSON {
@@ -61,6 +64,13 @@ class PayloadFactory {
 		message?: string | undefined,
 	): IGameStartPayload {
 		return GameStartPayload.createPayload(roomName, reason, message);
+	}
+
+	public static createGamePlayPayload<T extends IStatePlayer | PlayerGame | PlayerGame[]>(
+		gameId: string,
+		payload: T,
+	): IGamePlayPayload<T> {
+		return GamePlayPayload.createPayload(gameId, payload);
 	}
 
 	public static createBroadcastFormat<T extends keyof OAPM>(

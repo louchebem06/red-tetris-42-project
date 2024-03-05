@@ -4,7 +4,6 @@ import { logSession, logger } from '../../';
 import { IPlayerJSON } from '../../../eventsIO/payloads/types/IPayload';
 import { ClientInfosStore, SessionEventsManager } from '.';
 import { TimeoutManager } from '../TimeoutManager';
-// import { TimeoutManager } from '../TimeoutManager';
 
 export class Session {
 	private _sid: string;

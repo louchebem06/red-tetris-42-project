@@ -2,7 +2,7 @@ import { IPayload, ISrvToCltPayload, ICltToSrvPayload, Change } from './interfac
 import { IPlayerJSON, IPlayerPayload } from './interfaces/players';
 import { IRoomJSON, IRoomPayload } from './interfaces/rooms';
 import { IMIP, IMOP } from './interfaces/messages';
-import { IGameStartPayload, GameStartReason, IGameJSON } from './interfaces/games';
+import { IGameStartPayload, GameStartReason, IGameJSON, IGamePlayPayload } from './interfaces/games';
 
 import { IBrodacastFormat, IAPM, IncomingAction, OAPM } from './interfaces/broadcastFormats';
 
@@ -24,4 +24,5 @@ export {
 	IncomingAction,
 	OAPM,
 	IGameJSON,
+	IGamePlayPayload,
 };

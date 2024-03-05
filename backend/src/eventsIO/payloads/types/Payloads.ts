@@ -5,7 +5,7 @@ import { RoomPayload } from './classes/RoomPayload';
 import { MessageIncomingPayload, MIP } from './classes/MessageIncomingPayload';
 import { MessageOutgoingPayload, MOP } from './classes/MessageOutgoingPayload';
 import { BrodcastFormat } from './classes/BroadcastFormat';
-import { GameStartPayload } from './classes/GameStartPayload';
+import { GameStartPayload } from './classes/GamePayload';
 
 export {
 	RoomJSON,

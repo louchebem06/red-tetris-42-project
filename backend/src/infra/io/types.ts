@@ -6,6 +6,7 @@ import {
 	IMIP,
 	IMOP,
 	IGameStartPayload,
+	IGamePlayPayload,
 } from '../../eventsIO/payloads/types/IPayload';
 import Player from '../../players/Player';
 
@@ -36,9 +37,9 @@ interface ISrvToCltEvts {
 	message: (payload: IMOP) => void;
 	error: (message: string) => void;
 	gameStart: (payload: IGameStartPayload) => void;
-	gameChange: (payload: IStatePlayer) => void;
-	gameEnd: (payload: PlayerGame) => void;
-	gameInfo: (payload: PlayerGame[]) => void;
+	gameChange: (payload: IGamePlayPayload<IStatePlayer>) => void;
+	gameEnd: (payload: IGamePlayPayload<PlayerGame>) => void;
+	gameInfo: (payload: IGamePlayPayload<PlayerGame[]>) => void;
 }
 
 interface ICltToSrvEvts {
