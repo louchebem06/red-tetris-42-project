@@ -38,6 +38,13 @@ export class GameStore implements IStore<PlayerGameStore> {
 		this.save(gameId, gamePlayerStore);
 	}
 
+	public getEndedPlayerGames(gameId: string): PlayerGame[] | undefined {
+		return this.get(gameId)?.scores.reduce((acc, { playerGame }) => {
+			acc.push(playerGame);
+			return acc;
+		}, [] as PlayerGame[]);
+	}
+
 	public getWinnerId(gameId: string): string {
 		return this.get(gameId)?.winner ?? '';
 	}
