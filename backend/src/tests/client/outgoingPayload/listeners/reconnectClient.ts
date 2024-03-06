@@ -16,7 +16,7 @@ export async function reconnectClient(client: Socket, username: string): Promise
 			client.off('disconnect');
 			client = createClient({
 				username: username,
-				sessionId: sid,
+				sessionID: sid,
 			});
 
 			client.on(event, (payload: OPayload<typeof event>) => {

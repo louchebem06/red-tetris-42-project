@@ -40,7 +40,7 @@ export class SessionHandler {
 	}
 
 	public run(socket: Socket, next: NextIoFunction): void {
-		let sid = socket.handshake.auth.sessionId;
+		let sid = socket.handshake.auth.sessionID;
 		if (sid) {
 			const s = new ExistingSessionStrategy(this.sm);
 			const p = new ExistingPlayerStrategy(this.pm, this.rm);
@@ -58,7 +58,6 @@ export class SessionHandler {
 			}
 			sid = uuidv4();
 		}
-
 		this.playerCreationStrategy
 			.create(sid, socket)
 			.then((p) => {
