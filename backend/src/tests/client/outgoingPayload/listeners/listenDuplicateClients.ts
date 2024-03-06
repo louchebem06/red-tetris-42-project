@@ -17,7 +17,7 @@ export async function duplicateClient(client: Socket, username: string, nb: numb
 			.map(() => {
 				return createClient({
 					username: username,
-					sessionId: sid,
+					sessionID: sid,
 				});
 			});
 

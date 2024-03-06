@@ -16,7 +16,7 @@ interface ISocketData {
 
 interface ISocketAuth {
 	username: string;
-	sessionId?: string;
+	sessionID?: string;
 }
 
 interface IInterSrvEvts {
