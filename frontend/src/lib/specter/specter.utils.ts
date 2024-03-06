@@ -23,7 +23,7 @@ const convertToSpecter = (player: PlayerGame): TetriminosArrayType => {
 
 const convertScore = (player: PlayerGame | GameInfo): number | string => {
 	return (player.score as number) > 1000
-		? `${Math.round((player.score as number) / 1000)}K`
+		? `${Math.floor((player.score as number) / 1000)}K`
 		: player.score;
 };
 
