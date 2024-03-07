@@ -70,7 +70,7 @@ export class RemovePlayerCommand extends RoomCommand {
 		this.removePlayer(player);
 		this.service.leave(this.room, player);
 
-		if (this.room.total === 1) {
+		if (this.room.total === 0) {
 			this.service.handleRoomEmpty(this.room);
 		} else if (wasLeader) {
 			new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);
