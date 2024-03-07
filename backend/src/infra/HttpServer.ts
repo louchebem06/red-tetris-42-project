@@ -56,10 +56,14 @@ class HttpServer {
 	 * @return {void} None
 	 */
 	public stop(cb?: () => void): void {
-		this.server.close(cb);
-		this.server.closeAllConnections();
-		this.server.closeIdleConnections();
-		this.server.unref();
+		this.server.close((err) => {
+			if (err) {
+				logger.logContext(err.message, 'error', err.message);
+			}
+			if (typeof cb === 'function') cb();
+			this.server.closeAllConnections();
+			this.server.closeIdleConnections();
+		});
 	}
 
 	/**

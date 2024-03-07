@@ -73,22 +73,28 @@ class App {
 	 *
 	 * @return {void} - No return value.
 	 */
-	public stop(cb?: () => void): void {
-		TimeoutManager.clearAll();
-		this.io.close();
-		this.httpServer.stop(cb);
+	public stop(): void {
+		this.httpServer.stop(() => {
+			logger.logContext('Server stopped', 'shutdown', 'Server stopped');
+			TimeoutManager.clearAll();
+			this.io.close();
+		});
 	}
 
 	public gracefulShutdown(): void {
-		signals.forEach((signal) => {
-			process.on(signal, () => {
-				logger.logContext(
-					`[SHUTDOWN] Server stopped with ${signal} signal`,
-					'shutdown',
-					`[SHUTDOWN] Server stopped with ${signal} signal`,
-				);
-				this.stop();
-			});
+		Object.entries(signals).forEach(([signal, value]) => {
+			if (!signal.match(/SIGKILL|SIGSTOP/)) {
+				process.on(signal, () => {
+					process.exitCode = value;
+					if (!signal.match(/exit|uncaughtException/)) process.exitCode += 128;
+					logger.logContext(
+						`[SHUTDOWN] Server stopped with ${signal}  - ${value} signal`,
+						'shutdown',
+						`[SHUTDOWN] Server stopped with ${signal}  - ${value} signal ${process.exitCode}`,
+					);
+					this.stop();
+				});
+			}
 		});
 	}
 }
