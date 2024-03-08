@@ -29,7 +29,7 @@
 				text: 'Good bye red tetris',
 				position: 'top-right',
 				type: 'success',
-				removeAfter: 5000,
+				removeAfter: 1000,
 			});
 		});
 		io.on('connect_error', () => {
@@ -37,7 +37,7 @@
 				text: 'Error connection socket',
 				position: 'top-right',
 				type: 'error',
-				removeAfter: 5000,
+				removeAfter: 1000,
 			});
 			sessionID.set('');
 			username.set('');
