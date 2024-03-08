@@ -32,7 +32,7 @@
 			musics[music].loop = true;
 		});
 		Object.keys(effects).forEach((effect) => {
-			effects[effect].volume = $musicMute ? 0 : $musicLevel;
+			effects[effect].volume = $effectMute ? 0 : $effectLevel;
 		});
 
 		musics[$music].volume = $musicMute ? 0 : $musicLevel;
