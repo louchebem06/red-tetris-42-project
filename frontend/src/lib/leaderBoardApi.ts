@@ -17,7 +17,11 @@ export const leaderBoardApi = async (page: number, limit: number): Promise<Leade
 	const query = `${url}?page=${page}&limit=${limit}`;
 	return await fetch(query, {
 		method: 'GET',
-	}).then(async (res) => {
-		return await res.json();
-	});
+	})
+		.then(async (res) => {
+			return await res.json();
+		})
+		.catch((err) => {
+			throw new Error(err);
+		});
 };
