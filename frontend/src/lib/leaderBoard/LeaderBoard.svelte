@@ -75,8 +75,8 @@
 
 <div class="content" bind:this={contentLeaderBoard}>
 	<div class="leaderBoard" bind:this={leaderBoard}>
-		{#each leaderBoardValue as item}
-			<ItemLeaderBoard {item} />
+		{#each leaderBoardValue as item, index}
+			<ItemLeaderBoard {index} {item} />
 		{/each}
 		{#if loading}
 			<p>Loading...</p>
@@ -96,7 +96,7 @@
 		top: -510px;
 		left: 50%;
 		transform: translateX(-50%);
-		background: $red;
+		background: $background;
 		transition: top 1s;
 		z-index: 99;
 		width: 250px;
