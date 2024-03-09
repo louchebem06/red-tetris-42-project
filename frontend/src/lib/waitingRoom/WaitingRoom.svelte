@@ -17,6 +17,7 @@
 	import Button from '$lib/componante/Button.svelte';
 	import type { GamePlayPayload } from '$lib/interfaces/GamePlayPayload';
 	import type { GameEnd } from '$lib/interfaces/GameEnd.interface';
+	import type { StatusPlayer } from '$lib/interfaces/RoomState.interface';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -25,6 +26,7 @@
 	let game: boolean = false;
 	let ready: number = 0;
 	let userIsReady: boolean = false;
+	let statusPlayer: StatusPlayer = 'idle';
 
 	let players: Player[] = [];
 	let master: Player;
@@ -63,6 +65,15 @@
 			if (data.readys.filter((e) => e.sessionID == $sessionID).length == 1) {
 				userIsReady = true;
 			}
+			players
+				.filter((p) => p.sessionID == $sessionID)
+				.forEach((p) =>
+					p.roomsState.forEach((r) => {
+						if (r.name == room) {
+							statusPlayer = r.status;
+						}
+					}),
+				);
 		});
 		io.on('roomChange', (data: RoomChange) => {
 			if (data.room.name != room) return;
@@ -123,7 +134,9 @@
 	}
 </script>
 
-{#if !game}
+{#if game && statusPlayer != 'idle'}
+	<Game {room} />
+{:else}
 	<div>
 		<SpecterGame fixed={false} isWaitingRoom={true} />
 		<Button class="btnListRoom" on:click={goHome}>Leave</Button>
@@ -132,8 +145,6 @@
 			<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
 		</div>
 	</div>
-{:else}
-	<Game {room} />
 {/if}
 
 <style lang="scss">
