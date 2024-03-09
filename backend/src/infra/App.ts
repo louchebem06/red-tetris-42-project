@@ -74,21 +74,19 @@ class App {
 	 * @return {void} - No return value.
 	 */
 	public stop(): void {
-		this.httpServer.stop(() => {
-			logger.logContext('Server stopped', 'shutdown', 'Server stopped');
-			TimeoutManager.clearAll();
-			this.io.close();
-		});
+		TimeoutManager.clearAll();
+		this.io.close();
+		this.httpServer.stop();
 	}
 
 	public gracefulShutdown(): void {
 		Object.entries(signals).forEach(([signal, value]) => {
-			if (!signal.match(/SIGKILL|SIGSTOP/)) {
+			if (!signal.match(/SIGKILL|SIGSTOP|exit|uncaughtException/)) {
 				process.on(signal, () => {
 					process.exitCode = value;
 					if (!signal.match(/exit|uncaughtException/)) process.exitCode += 128;
 					logger.logContext(
-						`[SHUTDOWN] Server stopped with ${signal}  - ${value} signal`,
+						`[SHUTDOWN] Server stopped with ${signal}  - ${value} signal ${process.exitCode}`,
 						'shutdown',
 						`[SHUTDOWN] Server stopped with ${signal}  - ${value} signal ${process.exitCode}`,
 					);
