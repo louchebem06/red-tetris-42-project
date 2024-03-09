@@ -5,6 +5,9 @@
 	} from '$lib/leaderBoardApi';
 	import { onMount } from 'svelte';
 	import ItemLeaderBoard from './ItemLeaderBoard.svelte';
+	import { getNotificationsContext } from 'svelte-notifications';
+
+	const { addNotification } = getNotificationsContext();
 
 	let page = 1;
 	const limit = 5;
@@ -19,9 +22,20 @@
 	const getChunk = async (): Promise<void> => {
 		if (end) return;
 		loading = true;
-		const data = await leaderBoardApi(page++, limit);
-		if (data.page >= data.totalPage) end = true;
-		leaderBoardValue = [...leaderBoardValue, ...data.results];
+		try {
+			const data = await leaderBoardApi(page++, limit);
+			if (data.page >= data.totalPage) end = true;
+			leaderBoardValue = [...leaderBoardValue, ...data.results];
+		} catch {
+			end = true;
+			page = 1;
+			addNotification({
+				text: 'Fail loading leaderboard',
+				position: 'top-right',
+				type: 'error',
+				removeAfter: 5000,
+			});
+		}
 		loading = false;
 	};
 
