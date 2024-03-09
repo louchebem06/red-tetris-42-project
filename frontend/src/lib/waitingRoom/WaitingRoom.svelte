@@ -112,7 +112,7 @@
 		});
 		io.on('gameEnd', (data: GamePlayPayload<GameEnd>) => {
 			if (data.payload.player.sessionID == $sessionID) {
-				game = false;
+				io.emit('getRoom', room);
 			}
 		});
 	});
