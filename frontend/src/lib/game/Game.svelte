@@ -11,6 +11,7 @@
 	import type { GameChange } from '$lib/interfaces/GameChange.interface';
 	import SpecterGame from '$lib/specter/SpecterGame.svelte';
 	import type { GamePlayPayload } from '$lib/interfaces/GamePlayPayload';
+	import { gameIdToRoomName } from '$lib/gameIdToRoomName';
 
 	export let room: string;
 
@@ -47,6 +48,8 @@
 
 	onMount(() => {
 		io.on('gameChange', (data: GamePlayPayload<GameChange>) => {
+			const roomName = gameIdToRoomName(data.gameId);
+			if (room != roomName) return;
 			tab = data.payload.map;
 			nextPiece = data.payload.nextPiece;
 			if (data.payload?.soundEffect) {
