@@ -10,6 +10,7 @@
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 	import { gameIdToRoomName } from '$lib/gameIdToRoomName';
 
+	export let room: string;
 	export let fixed: boolean = true;
 	export let isWaitingRoom: boolean = false;
 
@@ -20,6 +21,7 @@
 		io.on('gameInfo', (data: GamePlayPayloads<GameInfo>) => {
 			const normalizeGameInfo: PlayerGame[] = [];
 			roomName = gameIdToRoomName(data.gameId);
+			if (roomName != room) return;
 			data.payload.forEach((player) => {
 				normalizeGameInfo.push(normalizeSocketToPlayerGame(player));
 			});

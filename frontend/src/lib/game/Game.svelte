@@ -69,7 +69,7 @@
 <NextPiece bind:nextPiece />
 <Sound bind:effects />
 <Score bind:score bind:level />
-<SpecterGame />
+<SpecterGame bind:room />
 
 <div class="content">
 	<div class="game">
