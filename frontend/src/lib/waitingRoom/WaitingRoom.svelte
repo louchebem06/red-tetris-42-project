@@ -18,6 +18,7 @@
 	import type { GamePlayPayload } from '$lib/interfaces/GamePlayPayload';
 	import type { GameEnd } from '$lib/interfaces/GameEnd.interface';
 	import type { StatusPlayer } from '$lib/interfaces/RoomState.interface';
+	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -115,6 +116,14 @@
 				io.emit('getRoom', room);
 			}
 		});
+		io.on('playerChange', (data: PlayerChange) => {
+			if (data.player.sessionID != $sessionID) return;
+			data.player.roomsState.forEach((roomState) => {
+				if (roomState.name == room) {
+					statusPlayer = roomState.status;
+				}
+			});
+		});
 	});
 
 	onDestroy(() => {
@@ -123,6 +132,7 @@
 		io.off('roomClosed');
 		io.off('gameStart');
 		io.off('gameEnd');
+		io.off('playerChange');
 	});
 
 	$: if ($page.url.hash) {
