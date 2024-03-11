@@ -70,7 +70,7 @@
 	}
 
 	.other {
-		background: $primary;
+		background: #91818a;
 
 		p {
 			color: $white2;
