@@ -148,7 +148,7 @@
 	<Game {room} />
 {:else}
 	<div>
-		<SpecterGame fixed={false} isWaitingRoom={true} />
+		<SpecterGame bind:room fixed={false} isWaitingRoom={true} />
 		<Button class="btnListRoom" on:click={goHome}>Leave</Button>
 		<div>
 			<Room bind:players bind:master />
