@@ -11,6 +11,9 @@
 	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
 	import Button from '$lib/componante/Button.svelte';
 	import { getNotificationsContext } from 'svelte-notifications';
+	import type { GamePlayPayloads } from '$lib/interfaces/GamePlayPayload';
+	import type { GameInfo } from '$lib/interfaces/GameInfo.interface';
+	import { gameIdToRoomName } from '$lib/gameIdToRoomName';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -24,6 +27,8 @@
 	let msgs: MessageInterface[] = [];
 	let inputMessage: HTMLElement;
 	let winAudio: HTMLAudioElement;
+	let gameInProgress: boolean = false;
+	let roomName: string;
 
 	onMount(() => {
 		winAudio = new Audio('/sounds/win.mp3');
@@ -106,12 +111,24 @@
 				`${data.player.username} ${statusRoom.status == 'ready' ? 'set' : 'unset'} ready`,
 			);
 		});
+		io.on('gameInfo', (data: GamePlayPayloads<GameInfo>) => {
+			roomName = gameIdToRoomName(data.gameId);
+			if (roomName != room) return;
+			gameInProgress = true;
+		});
+		io.on('roomChange', (data: RoomChange) => {
+			console.log(data.room.name);
+			if (data.reason == 'new winner' && data.room.name == roomName) {
+				gameInProgress = false;
+			}
+		});
 	});
 
 	onDestroy(() => {
 		io.off('message');
 		io.off('roomChange');
 		io.off('playerChange');
+		io.off('gameInfo');
 	});
 
 	const onSubmit = (): void => {
@@ -159,17 +176,21 @@
 
 <div class="content">
 	<div class="ready">
-		<p>{ready} player{ready > 1 ? 's' : ''} ready of {players.length}</p>
-		{#if $sessionID != master?.sessionID}
-			<Button on:click={toggleReady}>
-				{#if userIsReady}
-					Unset ready
-				{:else}
-					Set ready
-				{/if}
-			</Button>
+		{#if !gameInProgress}
+			<p>{ready} player{ready > 1 ? 's' : ''} ready of {players.length}</p>
+			{#if $sessionID != master?.sessionID}
+				<Button on:click={toggleReady}>
+					{#if userIsReady}
+						Unset ready
+					{:else}
+						Set ready
+					{/if}
+				</Button>
+			{:else}
+				<Button on:click={toggleModalViewRunGame}>Run Game</Button>
+			{/if}
 		{:else}
-			<Button on:click={toggleModalViewRunGame}>Run Game</Button>
+			<p>Game in progress</p>
 		{/if}
 	</div>
 
