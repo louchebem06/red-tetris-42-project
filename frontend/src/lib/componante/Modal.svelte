@@ -61,7 +61,7 @@
 		top: 0;
 		left: 0;
 		z-index: 9;
-		opacity: 0.5;
+		opacity: 0.1;
 		border: none;
 		cursor: default;
 	}
