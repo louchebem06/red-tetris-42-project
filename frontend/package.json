@@ -61,7 +61,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"socket.io-client": "^4.7.4",
+		"socket.io-client": "^4.7.5",
 		"svelte-notifications": "github:louchebem06/svelte-notifications#fix-warn-vite-plugin-svelte"
 	}
 }
