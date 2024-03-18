@@ -65,6 +65,8 @@
 			game = data.gameState;
 			if (data.readys.filter((e) => e.sessionID == $sessionID).length == 1) {
 				userIsReady = true;
+			} else {
+				userIsReady = false;
 			}
 			players
 				.filter((p) => p.sessionID == $sessionID)
