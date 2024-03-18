@@ -19,6 +19,7 @@
 	import type { GameEnd } from '$lib/interfaces/GameEnd.interface';
 	import type { StatusPlayer } from '$lib/interfaces/RoomState.interface';
 	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
+	import type { Message as MessageInterface } from '$lib/interfaces/Message.interface';
 
 	const { addNotification } = getNotificationsContext();
 
@@ -31,6 +32,8 @@
 
 	let players: Player[] = [];
 	let master: Player;
+
+	let msgs: MessageInterface[] = [];
 
 	const getHashValue = (): void => {
 		const hash = $page.url.hash;
@@ -148,11 +151,11 @@
 	<Game {room} />
 {:else}
 	<div>
-		<SpecterGame bind:room fixed={false} isWaitingRoom={true} />
+		<SpecterGame bind:room fixed={false} isWaitingRoom={true} bind:msgs />
 		<Button class="btnListRoom" on:click={goHome}>Leave</Button>
 		<div>
 			<Room bind:players bind:master />
-			<Chat bind:ready bind:userIsReady bind:room bind:players bind:master />
+			<Chat bind:ready bind:userIsReady bind:room bind:players bind:master bind:msgs />
 		</div>
 	</div>
 {/if}

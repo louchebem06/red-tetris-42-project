@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Message from './Message.svelte';
-	import { effectLevel, effectMute, sessionID } from '$lib/store';
+	import { sessionID } from '$lib/store';
 	import type Player from '$lib/interfaces/Player.interface';
 	import type { Message as MessageInterface } from '$lib/interfaces/Message.interface';
 	import { onDestroy, onMount } from 'svelte';
@@ -10,34 +10,27 @@
 	import type { MessageSocket } from '$lib/interfaces/MessageSocket.interface';
 	import type { PlayerChange } from '$lib/interfaces/PlayerChange.interface';
 	import Button from '$lib/componante/Button.svelte';
-	import { getNotificationsContext } from 'svelte-notifications';
 	import type { GamePlayPayloads } from '$lib/interfaces/GamePlayPayload';
 	import type { GameInfo } from '$lib/interfaces/GameInfo.interface';
 	import { gameIdToRoomName } from '$lib/gameIdToRoomName';
-
-	const { addNotification } = getNotificationsContext();
 
 	export let master: Player;
 	export let players: Player[];
 	export let room: string;
 	export let ready = 0;
 	export let userIsReady: boolean;
+	export let msgs: MessageInterface[] = [];
 
 	let chat: HTMLDivElement;
-	let msgs: MessageInterface[] = [];
 	let inputMessage: HTMLElement;
-	let winAudio: HTMLAudioElement;
 	let gameInProgress: boolean = false;
 	let roomName: string;
 
-	onMount(() => {
-		winAudio = new Audio('/sounds/win.mp3');
-		winAudio.volume = $effectMute ? 0 : $effectLevel;
-	});
-
 	const autoScrollDown = (): void => {
 		if (typeof chat != 'undefined') {
-			chat.scrollTop = chat.scrollHeight;
+			if (chat?.scrollHeight) {
+				chat.scrollTop = chat.scrollHeight;
+			}
 		}
 	};
 
@@ -76,29 +69,20 @@
 			}, 100);
 		});
 		io.on('roomChange', (data: RoomChange) => {
-			if (data.room.name != room || data.reason == 'ready') return;
-			if (data.reason == 'new winner') {
-				const messageWin =
-					data.player.sessionID == $sessionID
-						? `Congratulation You Win!`
-						: `Congratulation for new winner ${data.player.username}`;
-				if (data.player.sessionID == $sessionID) {
-					winAudio.volume = $effectMute ? 0 : $effectLevel;
-					winAudio.play();
-				}
-				addNotification({
-					text: messageWin,
-					position: 'top-right',
-					type: 'success',
-					removeAfter: 5000,
-				});
+			if (data.reason == 'new winner' && data.room.name == roomName) {
+				gameInProgress = false;
 			}
-			addSystemMessage(
-				`${data.reason}: ${
-					data.reason != 'new leader' ? data.player.username : data.room.leader.username
-				}
-				`,
-			);
+			if (data.room.name != room || data.reason == 'ready') return;
+			if (data.reason != 'new winner') {
+				addSystemMessage(
+					`${data.reason}: ${
+						data.reason != 'new leader'
+							? data.player.username
+							: data.room.leader.username
+					}
+					`,
+				);
+			}
 		});
 		io.on('playerChange', (data: PlayerChange) => {
 			if (data.reason != 'ready') return;
@@ -115,12 +99,6 @@
 			roomName = gameIdToRoomName(data.gameId);
 			if (roomName != room) return;
 			gameInProgress = true;
-		});
-		io.on('roomChange', (data: RoomChange) => {
-			console.log(data.room.name);
-			if (data.reason == 'new winner' && data.room.name == roomName) {
-				gameInProgress = false;
-			}
 		});
 	});
 
