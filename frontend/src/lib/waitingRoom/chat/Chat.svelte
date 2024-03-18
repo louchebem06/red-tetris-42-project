@@ -120,6 +120,7 @@
 
 	const toggleReady = (): void => {
 		io.emit('ready', room);
+		io.emit('getRoom', room);
 	};
 
 	const forceGameStart = (): void => {
@@ -127,6 +128,7 @@
 			io.emit('gameStart', room);
 		}
 		modalViewRunGame = false;
+		io.emit('getRoom', room);
 	};
 
 	const cancelForceGameStart = (): void => {
@@ -134,10 +136,12 @@
 			io.emit('gameStart', room);
 		}
 		modalViewRunGame = false;
+		io.emit('getRoom', room);
 	};
 
 	const toggleModalViewRunGame = (): void => {
 		modalViewRunGame = !modalViewRunGame;
+		io.emit('getRoom', room);
 	};
 </script>
 
