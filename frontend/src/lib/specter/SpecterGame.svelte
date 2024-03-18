@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type PlayerGame from '$lib/interfaces/PlayerGame.interface';
-	import { sessionID } from '$lib/store';
+	import { sessionID, effectLevel, effectMute } from '$lib/store';
 	import { onDestroy, onMount } from 'svelte';
 	import PlayerSpecter from './PlayerSpecter.svelte';
 	import { io } from '$lib/socket';
@@ -9,15 +9,35 @@
 	import type { GamePlayPayloads } from '$lib/interfaces/GamePlayPayload';
 	import type RoomChange from '$lib/interfaces/RoomChange.interface';
 	import { gameIdToRoomName } from '$lib/gameIdToRoomName';
+	import type { Message as MessageInterface } from '$lib/interfaces/Message.interface';
+	import { getNotificationsContext } from 'svelte-notifications';
 
 	export let room: string;
 	export let fixed: boolean = true;
 	export let isWaitingRoom: boolean = false;
+	export let msgs: MessageInterface[] = [];
 
 	let playerGame: PlayerGame[] = [];
 	let roomName: string;
 
+	let winAudio: HTMLAudioElement;
+
+	const { addNotification } = getNotificationsContext();
+
+	const addSystemMessage = (msg: string): void => {
+		msgs = [
+			...msgs,
+			{
+				message: msg,
+				username: undefined,
+				system: true,
+			},
+		];
+	};
+
 	onMount(() => {
+		winAudio = new Audio('/sounds/win.mp3');
+		winAudio.volume = $effectMute ? 0 : $effectLevel;
 		io.on('gameInfo', (data: GamePlayPayloads<GameInfo>) => {
 			const normalizeGameInfo: PlayerGame[] = [];
 			roomName = gameIdToRoomName(data.gameId);
@@ -30,6 +50,23 @@
 		io.on('roomChange', (data: RoomChange) => {
 			if (data.reason == 'new winner' && data.room.name == roomName) {
 				playerGame = [];
+				const messageWin =
+					data.player.sessionID == $sessionID
+						? `Congratulation You Win!`
+						: `Congratulation for new winner ${data.player.username}`;
+				if (data.player.sessionID == $sessionID) {
+					winAudio.volume = $effectMute ? 0 : $effectLevel;
+					winAudio.play();
+				}
+				addNotification({
+					text: messageWin,
+					position: 'top-right',
+					type: 'success',
+					removeAfter: 5000,
+				});
+				addSystemMessage(`${data.reason}: ${data.player.username}`);
+			} else if (data.reason == 'new leader' && data.room.name == roomName) {
+				addSystemMessage(`${data.reason}: ${data.room.leader.username}`);
 			}
 		});
 	});
