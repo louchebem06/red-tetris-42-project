@@ -2,7 +2,7 @@ name: Main
 
 on:
   pull_request:
-    branches: ['main']
+    branches: ["main"]
 
 jobs:
   linter-back:
@@ -13,3 +13,28 @@ jobs:
     uses: ./.github/workflows/jobs_lint-front.yaml
   # test-front:
   #   uses: ./.github/workflows/jobs_test-front.yaml
+  dependabot-merge-pr:
+    needs: [linter-front, linter-back]
+    # needs: [linter-front, test-front, linter-back, test-back]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Approve a PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
