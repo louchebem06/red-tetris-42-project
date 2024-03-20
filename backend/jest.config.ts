@@ -1,6 +1,7 @@
 import type { Config } from 'jest';
 
 const config: Config = {
+	preset: 'ts-jest',
 	verbose: true,
 	forceExit: true,
 	collectCoverage: true,
@@ -47,6 +48,7 @@ const config: Config = {
 	roots: ['<rootDir>/src/'],
 	setupFilesAfterEnv: ['<rootDir>/src/tests/utils/expect.ts'],
 	injectGlobals: true,
+	testSequencer: '<rootDir>/testSequencer.js',
 };
 
 export default config;

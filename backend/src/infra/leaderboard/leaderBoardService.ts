@@ -9,9 +9,9 @@ export interface ItemLeaderBoard {
 }
 
 export interface LeaderBoardResult {
-	page: number;
-	totalPage: number;
-	results: ItemLeaderBoard[];
+	page?: number;
+	totalPage?: number;
+	results?: ItemLeaderBoard[];
 }
 
 export class LeaderBoardService {

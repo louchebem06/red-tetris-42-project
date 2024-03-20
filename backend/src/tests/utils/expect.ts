@@ -12,8 +12,10 @@ import {
 	isPlayerPayload,
 	isRoomPayload,
 	isOutgoingPayload,
+	isLeaderBoardResult,
 } from '../client/outgoingPayload/typeGuard/validation';
 import { OAPM } from 'tests/client/outgoingPayload/types';
+import { LeaderBoardResult } from '../../infra/leaderboard/leaderBoardService';
 
 function createMatcher<T>(validator: Validator<T>): MF<[T]> {
 	return function (received: unknown, expected: T) {
@@ -46,6 +48,7 @@ const toBePlayer = createMatcher<IPlayerJSON>(isPlayer);
 const toBePlayerPayload = createMatcher<IPlayerPayload>(isPlayerPayload);
 const toBeRoomPayload = createMatcher<IRoomPayload>(isRoomPayload);
 const toBeOutgoingPayload = createMatcher<OAPM[keyof OAPM]>(isOutgoingPayload);
+const toBeLeaderBoardResult = createMatcher<LeaderBoardResult>(isLeaderBoardResult);
 
 expect.extend({
 	toBeRoom,
@@ -53,6 +56,7 @@ expect.extend({
 	toBeRoomPayload,
 	toBePlayerPayload,
 	toBeOutgoingPayload,
+	toBeLeaderBoardResult,
 });
 
 declare module 'expect' {
@@ -62,6 +66,7 @@ declare module 'expect' {
 		toBePlayerPayload(data: IPlayerPayload | undefined): R;
 		toBeRoomPayload(data: IRoomPayload | undefined): R;
 		toBeOutgoingPayload(payload: OAPM[keyof OAPM]): R;
+		toBeLeaderBoardResult(result: LeaderBoardResult): R;
 	}
 	interface AsymmetricMatchers {
 		toBeRoom(room: IRoomJSON | undefined): void;
@@ -69,5 +74,6 @@ declare module 'expect' {
 		toBePlayerPayload(data: IPlayerPayload | undefined): void;
 		toBeRoomPayload(data: IRoomPayload | undefined): void;
 		toBeOutgoingPayload(payload: OAPM[keyof OAPM]): void;
+		toBeLeaderBoardResult(result: LeaderBoardResult): void;
 	}
 }

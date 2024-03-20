@@ -46,7 +46,7 @@ export class Logger {
 		} else {
 			this.write(this.setContent(message, context));
 
-			if (process.env.UNITS_TESTS || process.env.DEV) {
+			if (process.env.UNITSTESTS || process.env.DEV) {
 				if (format) console.log(`${context}\n${format}`);
 			}
 		}

@@ -5,6 +5,7 @@ import { Validator, isTypeOfUndefined } from '../../../../base/typeGuards';
 import { isPlayer } from '../../../player/utils/typeGuard/validation';
 import { isRoom, isArrayOfRooms } from '../../../room/typeGuard/validation';
 import { OAPM } from '../types';
+import { LeaderBoardResult } from '../../../../infra/leaderboard/leaderBoardService';
 
 type IGSP = IGameStartPayload;
 
@@ -70,6 +71,23 @@ const isOutgoingPayload: Validator<OAPM[keyof OAPM]> = (value): value is OAPM[ke
 	);
 };
 
+// leaderboard service result
+const isLeaderBoardResult: Validator<LeaderBoardResult> = (value): value is LeaderBoardResult => {
+	if (typeof value !== 'object' || Array.isArray(value)) {
+		return false;
+	}
+	const _value = value as LeaderBoardResult;
+
+	return (
+		'page' in _value &&
+		'totalPage' in _value &&
+		'results' in _value &&
+		(typeof _value.page === 'number' || isTypeOfUndefined(_value.page)) &&
+		(typeof _value.totalPage === 'number' || isTypeOfUndefined(_value.page)) &&
+		(Array.isArray(_value.results) || isTypeOfUndefined(_value.results))
+	);
+};
+
 export {
 	isRoom,
 	isPlayer,
@@ -79,4 +97,5 @@ export {
 	isIMessageOutgoingPayload,
 	isIGameStartPayload,
 	isOutgoingPayload,
+	isLeaderBoardResult,
 };
