@@ -63,7 +63,10 @@ class HttpServer {
 				logger.logContext(err.message, 'error stop', err.message);
 			}
 			this.server.unref();
-			process.exit();
+			if (!process.env.UNITSTESTS) {
+				// otherwise jest kill process before the first job is done
+				process.exit();
+			}
 		});
 	}
 

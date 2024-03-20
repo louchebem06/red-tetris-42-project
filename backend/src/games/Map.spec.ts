@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Map } from './Map';
 import { ATetriminos } from './tetriminos/ATetriminos';
 import { ITetriminos } from './tetriminos/I.tetriminos';

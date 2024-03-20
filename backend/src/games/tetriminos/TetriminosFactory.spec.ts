@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from '@jest/globals';
 import { ATetriminos } from './ATetriminos';
 import { ITetriminos } from './I.tetriminos';

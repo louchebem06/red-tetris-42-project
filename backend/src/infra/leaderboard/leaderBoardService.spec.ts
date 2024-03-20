@@ -24,7 +24,7 @@ describe('LeaderBoardService', () => {
 					expect(true).toBe(true);
 				}
 			} else {
-				expect(await instance.search(page, limit)).toMatchObject<LeaderBoardResult>({
+				expect(await instance.search(page, limit)).toBeLeaderBoardResult({
 					page: result?.page,
 					totalPage: result?.totalPage,
 					results: result?.results,
