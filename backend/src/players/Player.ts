@@ -56,7 +56,6 @@ class Player extends Observable {
 		}
 	}
 
-	// redondance avec roomsState ?
 	public get rooms(): IRoomState[] {
 		return [...this._states.all];
 	}

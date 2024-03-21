@@ -1052,7 +1052,6 @@ ${config('getRoom').eventI} -> [${config('roomInfo').eventO}] events`, async () 
 						started: true,
 					}),
 				],
-				// games: roomExpect.games,
 				leads: [room1],
 			};
 			const player2InGame = {
@@ -1064,7 +1063,6 @@ ${config('getRoom').eventI} -> [${config('roomInfo').eventO}] events`, async () 
 						started: true,
 					}),
 				],
-				// games: roomExpect.games,
 				leads: [],
 			};
 			const player4Left = {
@@ -1078,7 +1076,6 @@ ${config('getRoom').eventI} -> [${config('roomInfo').eventO}] events`, async () 
 						started: true,
 					}),
 				],
-				// games: [],
 				leads: [],
 			};
 
@@ -1109,8 +1106,6 @@ ${config('getRoom').eventI} -> [${config('roomInfo').eventO}] events`, async () 
 			]);
 		});
 
-		// TODO on le remet dans la room pour pouvoir tester + tard quand le leader
-		// re - start une partie -> player4 doit etre dans la room avec status active
 		test(`${config(username4).client} should join ${room1} but be in idle state\,
 ${config('joinRoom').eventI} -> [${config('roomChange').eventO}:\
  ${config('player incoming').eventO}] events`, async () => {

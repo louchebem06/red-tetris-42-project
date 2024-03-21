@@ -93,7 +93,6 @@ const outgoingGameStartRejectHandler =
 		}
 	};
 
-// TODO gestionnaire generique pour combler les tests pas encore montés a virer une fois tout defini
 const outgoingBasicHandler =
 	<T extends keyof OAPM>(data: OutgoingHandlerData<T>): OutgoingActionCallback<T> =>
 	(payload) => {

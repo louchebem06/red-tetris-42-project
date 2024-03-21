@@ -140,7 +140,6 @@ socketClient.emit('ready', roomName);
 
 ### gameStart
 
-_(pas encore mis en place, sorry)_
 Le leader d'une room peut envoyer cet event afin de demarrer le compte à rebours pour démarrer la partie. Si le leader renvoie cet event, le compte à rebours est arrêté. (fonctionnement en _toggle_)
 
 Le serveur repond avec un event **gameStart** (payload détaillé plus bas), lorsque le compte à rebours est lancé (meme conditions que si tous les joueurs d'une room sont readys, la game start au bout du décompte):

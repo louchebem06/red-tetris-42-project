@@ -59,7 +59,6 @@ const isIGameStartPayload: Validator<IGSP> = (value): value is IGSP => {
 		: true;
 };
 
-// TODO handler pour IOutgoingMessage && IGameStart
 const isOutgoingPayload: Validator<OAPM[keyof OAPM]> = (value): value is OAPM[keyof OAPM] => {
 	return (
 		typeof value === 'string' ||

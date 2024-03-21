@@ -53,7 +53,7 @@ export default class Game {
 	private checkGameEnd(): Game {
 		if (this.gamers.length === 0) {
 			this.finish();
-			const log = `finished game Game ${this._id}}`;
+			const log = `finished game Game ${this._id}`;
 			logger.logContext(log, `remove player`, log);
 		}
 		return this;
@@ -124,7 +124,6 @@ export default class Game {
 	}
 
 	public toJSON(): IGameJSON {
-		// TODO PayloadFactory
 		return {
 			id: this._id,
 			gamers: this.gamers.map((p) => p.toJSON() as IPlayerJSON),

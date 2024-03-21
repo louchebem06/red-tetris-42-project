@@ -1,4 +1,3 @@
-// TODO { IStatePlayer, TypeAction } à rappatrier dans le repertoire courant ./games
 import { IStatePlayer, PlayerGame, TypeAction } from '../../../../games/GameLogic';
 import { IGamePlayPayload, IGameStartPayload } from './games';
 import { IMIP, IMOP } from './messages';

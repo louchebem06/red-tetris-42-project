@@ -11,8 +11,8 @@ const protocol = process.env.PROTOCOL || 'ws';
 const host = process.env.HOST || 'localhost';
 const serverPort = process.env.PORT || '8080';
 
-const destroyTimer = parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000 ?? 5000;
-const discoTimer = parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000 ?? 5000;
+const destroyTimer = parseInt(process.env.DESTROY_TIMER ?? '1', 10) * 1000 ?? 1000;
+const discoTimer = parseInt(process.env.DISCO_TIMER ?? '1', 10) * 1000 ?? 1000;
 
 beforeAll(async () => {
 	await new Promise<App>((resolve) => {
@@ -21,7 +21,6 @@ beforeAll(async () => {
 	});
 });
 
-// TODO app tout seul a tester
 afterAll(
 	(done) => {
 		app.stop();

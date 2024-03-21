@@ -31,7 +31,7 @@ export abstract class AGameState {
 		try {
 			this.logic?.update();
 			this.game?.gamers.forEach((gamer: Player) => {
-				const stateGame = this.state(gamer); // throw une TypeError si le joueur n'est pas dans la game
+				const stateGame = this.state(gamer);
 				const state = this.game?.state.constructor.name ?? '';
 				if (stateGame && state === `StartedState`) this.service?.emitStatePlayer(stateGame, gamer.sessionID);
 				const playerGame = this.logic?.endGame(gamer.sessionID);
@@ -51,7 +51,6 @@ export abstract class AGameState {
 				if (playerGame?.getEndGame()) this.game?.removePlayer(gamer, playerGame);
 			});
 
-			// recup du gameStore des joueurs finis et ajouter les PlayerGame au tab de specters
 			const endedSpecters = this.game?.gameStore.getEndedPlayerGames(this.game?.id);
 			if (endedSpecters) specters.push(...endedSpecters);
 

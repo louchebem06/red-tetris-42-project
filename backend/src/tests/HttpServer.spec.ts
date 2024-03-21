@@ -81,7 +81,6 @@ describe('HttpServer Basic Connection Home Page default port', () => {
 			.get('/leaderboard')
 			.then((response) => {
 				expect(response.statusCode).toBe(200);
-				// expect(response.body.message).toBe('Leaderboard coming soon');
 				expect(response.body.page).toBe(1);
 				expect(response.body.totalPage).toBeDefined();
 				expect(response.body.results).toBeDefined();

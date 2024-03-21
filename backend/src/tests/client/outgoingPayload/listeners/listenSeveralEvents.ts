@@ -48,9 +48,8 @@ export async function listenSeveralEvents<U extends keyof IAPM>(
 						updateDatasClients(client, sid);
 						break;
 					case 'playerChange':
-						outgoingPlayerChangeRejectHandler({ resolve: reject, sessionId: sid })(payload);
 						// reason surveillée == payload.reason
-						// check les diff raisons
+						outgoingPlayerChangeRejectHandler({ resolve: reject, sessionId: sid })(payload);
 						break;
 					case 'roomInfo':
 						// nom de room surveillé == payload.room.name
