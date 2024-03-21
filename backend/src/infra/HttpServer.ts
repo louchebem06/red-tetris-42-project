@@ -8,8 +8,6 @@ import 'dotenv/config';
 import { logger } from '.';
 import { LeaderBoardController } from './leaderboard/';
 
-// TODO inserer le vrai port par default (process.env.PORT)
-
 class HttpServer {
 	private app: Express;
 	private server: ServerHttp;

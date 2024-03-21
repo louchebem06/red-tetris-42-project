@@ -1,5 +1,3 @@
-// import { IAPM, IncomingAction } from 'eventsIO/payloads/types/IPayload';
-
 import { IncomingActionPayloadMap as IAPM, IncomingAction } from '../../incomingPayload/types';
 import { OAPM } from '..';
 import { Socket } from 'socket.io-client';

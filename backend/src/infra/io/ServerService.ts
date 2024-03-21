@@ -75,7 +75,6 @@ export class ServerService {
 					this.throwError(`Invalid public room ${room}`);
 				}
 				this.io.in(room).emit(event, data);
-				// }
 			} else {
 				// broadcast to all
 				if (sid) {

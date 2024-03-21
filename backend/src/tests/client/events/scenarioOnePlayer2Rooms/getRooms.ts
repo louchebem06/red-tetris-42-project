@@ -103,7 +103,6 @@ export async function getRoomInfo(data: {
 		leads: [roomName, roomName2],
 		roomsState,
 	};
-	// const games = createGames([{ id: roomName }]);
 	const room = {
 		...roomExpect,
 		name: roomName,

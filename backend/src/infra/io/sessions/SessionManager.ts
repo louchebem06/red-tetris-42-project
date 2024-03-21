@@ -62,7 +62,7 @@ export class SessionManager {
 						);
 					}
 				},
-				parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000,
+				parseInt(process.env.DESTROY_TIMER ?? '60', 10) * 1000,
 			);
 			TimeoutManager.addTimeout(tm);
 		}

@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 
-// TODO Ask this info before starting server!
 const controller = new AbortController();
 const { signal } = controller;
 
@@ -15,9 +14,9 @@ const env: Env[] = [
 	{ key: 'PROTOCOL', value: 'ws' },
 	{ key: 'TICKS', value: '128' },
 	{ key: 'TICKS_INTERVAL_MS', value: '1000' },
-	{ key: 'DESTROY_TIMER', value: '3600' },
+	{ key: 'DESTROY_TIMER', value: '60' },
 	{ key: 'DISCO_TIMER', value: '60' },
-	{ key: 'START_GAME_TIMER', value: '60' },
+	{ key: 'START_GAME_TIMER', value: '10' },
 ];
 
 function replace(key: string, value: string): void {
@@ -26,8 +25,8 @@ function replace(key: string, value: string): void {
 }
 
 if (process.env.UNITSTESTS) {
-	replace('DESTROY_TIMER', '9');
-	replace('DISCO_TIMER', '5');
+	replace('DESTROY_TIMER', '1');
+	replace('DISCO_TIMER', '1');
 	replace('START_GAME_TIMER', '5');
 	replace('TICKS', '128');
 } else if (process.env.DEV) {
@@ -53,7 +52,10 @@ fs.access('./.env', fs.constants.F_OK, (err) => {
 				}
 			});
 		} else {
-			console.log(`\x1b[31m*** YOU SHOULD BE IN PROD (ask to sysadmin) ***\x1b[0m`);
+			console.log(
+				`\x1b[31m*** YOU SHOULD BE IN PROD (ask to sysadmin if no .env is provided). \
+No .env should be in backend folder ***\x1b[0m`,
+			);
 		}
 	} else {
 		console.log(`\x1b[31m*** .env already exists ***\x1b[0m`);

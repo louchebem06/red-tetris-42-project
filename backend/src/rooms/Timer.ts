@@ -6,10 +6,10 @@ import { TimeoutManager } from '../infra/io';
 
 export class Timer extends Observer<Observable> {
 	public room: Room | null = null;
-	public destroySession: number = parseInt(process.env.DESTROY_TIMER ?? '3600', 10) * 1000;
+	public destroySession: number = parseInt(process.env.DESTROY_TIMER ?? '60', 10) * 1000;
 	public disconnectSession: number = parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000;
 	public timerId: NodeJS.Timeout | null = null;
-	public countdown: number = parseInt(process.env.START_GAME_TIMER ?? '60', 10);
+	public countdown: number = parseInt(process.env.START_GAME_TIMER ?? '10', 10);
 	public lock: boolean = false;
 
 	public update(eventId: string, observable: Observable): void {
@@ -69,7 +69,7 @@ export class Timer extends Observer<Observable> {
 
 	public resetCountdown(): void {
 		if (!this.lock) {
-			this.countdown = parseInt(process.env.START_GAME_TIMER ?? '60', 10);
+			this.countdown = parseInt(process.env.START_GAME_TIMER ?? '10', 10);
 			if (this.timerId) {
 				clearTimeout(this.timerId);
 			}

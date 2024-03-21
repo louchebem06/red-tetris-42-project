@@ -25,7 +25,7 @@ interface IInterSrvEvts {
 }
 
 interface ISrvToCltEvts {
-	// emits by the server
+	// emitted by the server
 	join: (player: ISrvToCltPayload) => void;
 	playerChange: (payload: IPlayerPayload) => void;
 	getRooms: (rooms: ISrvToCltPayload[]) => void;

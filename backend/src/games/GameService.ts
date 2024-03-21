@@ -35,7 +35,6 @@ export class GameService extends ServerService {
 
 	private setGamer(player: Player, action: GameRoomAction): void {
 		// ajout du joueur dans la room
-		// TODO: verif le player state?
 		const username = player.username;
 		const id = this.game.id;
 		const sid = player.sessionID;

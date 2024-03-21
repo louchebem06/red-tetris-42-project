@@ -12,17 +12,18 @@ import {
 	createRoomState,
 } from './client/events';
 import { testSeveralOutgoingEvents } from './client/outgoingPayload/testers';
-import { disconnectAllClients } from './client/utils/creation';
 describe('* Disconnect Players State', () => {
 	let client1: Socket;
 	let client2: Socket;
 	let client3: Socket;
 	let client4: Socket;
+	let client5: Socket;
 
 	const username1 = 'First';
 	const username2 = 'Second';
 	const username3 = 'Third';
 	const username4 = 'Fourth';
+	const username5 = 'Fifth';
 
 	const room1 = 'Choupinou';
 	const { playerExpect, roomExpect } = clientConfig('First');
@@ -30,6 +31,7 @@ describe('* Disconnect Players State', () => {
 	const playerExpect2 = { ...playerExpect, username: username2 };
 	const playerExpect3 = { ...playerExpect, username: username3 };
 	const playerExpect4 = { ...playerExpect, username: username4 };
+	const playerExpect5 = { ...playerExpect, username: username4 };
 
 	roomExpect.name = room1;
 	roomExpect.leader = playerExpect1;
@@ -43,19 +45,6 @@ describe('* Disconnect Players State', () => {
 		name: room1,
 		leads: false,
 	});
-
-	// const leaderReadyState = createRoomState({
-	// 	name: room1,
-	// 	status: 'ready',
-	// 	readys: 4,
-	// });
-
-	// const playerReadyState = createRoomState({
-	// 	name: room1,
-	// 	leads: false,
-	// 	status: 'ready',
-	// 	readys: 4,
-	// });
 
 	const leads = [room1];
 
@@ -117,6 +106,13 @@ describe('* Disconnect Players State', () => {
 			expect(client4).toBeDefined();
 			expect(client4).not.toBeNull();
 		});
+
+		test(`client ${config(username5).client} should be created`, () => {
+			client5 = createClient({ username: username5 });
+			expect(client5).toBeInstanceOf(Socket);
+			expect(client5).toBeDefined();
+			expect(client5).not.toBeNull();
+		});
 	});
 
 	describe('Connect to Server IO', () => {
@@ -127,7 +123,7 @@ describe('* Disconnect Players State', () => {
 					...playerExpect1,
 				}),
 			]);
-		}, 1000);
+		}, 500);
 
 		test(`${config(username2).client} join Server\
 	, ${config('no one').eventI} -> ${config('join').eventO} events`, async () => {
@@ -136,7 +132,7 @@ describe('* Disconnect Players State', () => {
 					...playerExpect2,
 				}),
 			]);
-		}, 1000);
+		}, 500);
 	});
 
 	describe('Clients enter room 1', () => {
@@ -229,7 +225,7 @@ describe('* Disconnect Players State', () => {
 	describe('Connect to Server IO', () => {
 		// si je le passe audessus,
 		// a la suite logique des autres connexions au serveur de client1 et client2
-		// -> le teste ne passe plus du tout: comportement bizarre
+		// -> le test ne passe plus du tout: comportement bizarre
 		// car ils sont regroupes sous les meme describe en analyse de tests
 		test(`${config(username3).client} join Server\
 		, ${config('no one').eventI} -> ${config('join').eventO} events`, async () => {
@@ -238,7 +234,7 @@ describe('* Disconnect Players State', () => {
 					...playerExpect3,
 				}),
 			]);
-		}, 1000);
+		}, 500);
 
 		test(`${config(username4).client} join Server\
 		, ${config('no one').eventI} -> ${config('join').eventO} events`, async () => {
@@ -247,7 +243,7 @@ describe('* Disconnect Players State', () => {
 					...playerExpect4,
 				}),
 			]);
-		}, 1000);
+		}, 500);
 	});
 
 	describe('Clients enter room 1', () => {
@@ -289,153 +285,199 @@ describe('* Disconnect Players State', () => {
 					}),
 				]);
 				done();
-			}, 500);
-		}, 1000);
+			}, 100);
+		}, 400);
 	});
 
-	// function debugPlayerGame(playerGame: PlayerGame): string {
-	// 	return `level: ${playerGame?.getLevel()},
-	// score: ${playerGame?.getScore()},
-	// map:
-	// ${playerGame
-	// 	?.getMap()
-	// 	?.render()
-	// 	?.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join(''))
-	// 	.join('|\n')}|`;
-	// }
-
-	// function debugIStatePlayer(state: IStatePlayer): string {
-	// 	return `level: ${state.level},
-	// score: ${state.score},
-	// nextPiece:
-	// ${state.nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
-	// map:
-	// ${state.map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`;
-	// }
-	describe(`Clients should set as ready`, () => {
-		test(`${config(username1).client} should set as ready \
-		, ${config('ready').eventI} -> [${config('playerChange').eventO}] events`, (done) => {
+	describe(`Clients should play and end a Game`, () => {
+		test(`${config(username1).client} should stay leader after ended game, \
+${config('ready').eventI} -> [${config('playerChange').eventO}], \
+${config('gameChange').eventI} -> [${config('roomChange: new winner').eventO}] events`, (done) => {
+			let idInterval: NodeJS.Timeout | null = null;
+			client1.on('roomChange', (payload): void => {
+				if (payload.reason === 'new winner') {
+					expect(payload.room.leader.username).toBe(username1);
+					expect(payload.room.winner).toBeDefined();
+					expect(payload.room.winner).toHaveProperty('wins');
+					expect(payload.room.winner.wins.length).toBeGreaterThanOrEqual(1);
+					expect(payload.room.totalPlayers).toBeGreaterThanOrEqual(4);
+					expect(payload.room.totalReady).toBe(0);
+					if (idInterval) clearInterval(idInterval);
+					done();
+				}
+			});
 			client4.on('playerChange', (payload): void => {
-				// console.log(payload);
 				if (payload.reason === 'ready' && payload.player.username === username4) {
-					setTimeout(() => {
-						setTimeout(() => {
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'space', room: room1 });
-							client1.emit('gameChange', { action: 'right', room: room1 });
-						}, 8000);
-
-						setTimeout(() => {
-							client4.emit('gameChange', { action: 'down', room: room1 });
-							client4.emit('gameChange', { action: 'left', room: room1 });
-							client4.emit('gameChange', { action: 'up', room: room1 });
-							client4.emit('gameChange', { action: 'up', room: room1 });
-							client4.emit('gameChange', { action: 'up', room: room1 });
-							client4.emit('gameChange', { action: 'left', room: room1 });
-							client4.emit('gameChange', { action: 'left', room: room1 });
-							client4.emit('gameChange', { action: 'up', room: room1 });
-							client4.emit('gameChange', { action: 'right', room: room1 });
-							client4.emit('gameChange', { action: 'right', room: room1 });
-							client4.emit('gameChange', { action: 'right', room: room1 });
-							client4.emit('gameChange', { action: 'right', room: room1 });
-							client4.emit('gameChange', { action: 'up', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-							client4.emit('gameChange', { action: 'right', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-							client4.emit('gameChange', { action: 'space', room: room1 });
-						}, 8000);
-
-						setTimeout(() => {
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'space', room: room1 });
-							client1.emit('gameChange', { action: 'right', room: room1 });
-						}, 8000);
-
-						setTimeout(() => {
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'space', room: room1 });
-							client1.emit('gameChange', { action: 'right', room: room1 });
-						}, 8000);
-
-						setTimeout(() => {
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'down', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'left', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'up', room: room1 });
-							client1.emit('gameChange', { action: 'space', room: room1 });
-							client1.emit('gameChange', { action: 'right', room: room1 });
-						}, 8000);
-						setTimeout(() => {
-							done();
-						}, 50000);
-					}, 8000);
+					idInterval = setInterval(() => {
+						client1.emit('gameChange', { action: 'space', room: room1 });
+						client2.emit('gameChange', { action: 'space', room: room1 });
+						client3.emit('gameChange', { action: 'space', room: room1 });
+						client4.emit('gameChange', { action: 'space', room: room1 });
+					}, 100);
 				}
 			});
 
-			// 			client1.on('gameChange', (payload): void => {
-			// 				const { level, score, map, nextPiece } = payload;
-
-			// 				console.error(
-			// 					`level: ${level},
-			// score: ${score},
-			// nextPiece:
-			// ${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
-			// map:
-			// ${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`,
-			// 				);
-			// 			});
-
-			// 			client4.on('gameChange', (payload): void => {
-			// 				const { level, score, map, nextPiece } = payload;
-
-			// 				console.error(
-			// 					`level: ${level},
-			// score: ${score},
-			// nextPiece:
-			// ${nextPiece.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|
-			// map:
-			// ${map.map((row: string[]) => '|' + row.map((cell) => (cell ? cell : ' ')).join('')).join('|\n')}|`,
-			// 				);
-			// 			});
 			client1.emit('ready', room1);
 			client2.emit('ready', room1);
 			client3.emit('ready', room1);
 			client4.emit('ready', room1);
-		}, 80000);
+		}, 6000);
+	});
+
+	describe(`A Second Game should be played`, () => {
+		test(`${config(username1).client} should stay leader after ended game, \
+${config('ready').eventI} -> [${config('playerChange').eventO}], \
+${config('gameChange').eventI} -> [${config('roomChange: new winner').eventO}] events`, (done) => {
+			let idInterval: NodeJS.Timeout | null = null;
+			client1.on('roomChange', (payload): void => {
+				if (payload.reason === 'new winner') {
+					expect(payload.room.leader.username).toBe(username1);
+					expect(payload.room.winner).toBeDefined();
+					expect(payload.room.winner).toHaveProperty('wins');
+					expect(payload.room.winner.wins.length).toBeGreaterThanOrEqual(1);
+					expect(payload.room.totalPlayers).toBeGreaterThanOrEqual(4);
+					expect(payload.room.totalReady).toBe(0);
+					if (idInterval) clearInterval(idInterval);
+					done();
+				}
+			});
+			client4.on('playerChange', (payload): void => {
+				if (payload.reason === 'ready' && payload.player.username === username4) {
+					const actions = ['space', 'left', 'right', 'down', 'up'];
+					idInterval = setInterval(() => {
+						client1.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+						client2.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+						client3.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+						client4.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+					}, 100);
+				}
+			});
+
+			client1.emit('ready', room1);
+			client2.emit('ready', room1);
+			client3.emit('ready', room1);
+			client4.emit('ready', room1);
+		}, 6000);
+	});
+
+	describe('Connect to Server IO', () => {
+		test(`${config(username5).client} join Server\
+	, ${config('no one').eventI} -> ${config('join').eventO} events`, async () => {
+			await testSeveralOutgoingEvents(client5, createIncomingAction('undefined', undefined), [
+				createOutgoingAction('join', {
+					...playerExpect5,
+				}),
+			]);
+		}, 500);
+	});
+
+	describe('A Fifth Player enters in Room 1, after Third Game started', () => {
+		test(`${config(username1).client} should stay leader after ended game, \
+${config(username5).client} should be set as idle when entering room,\
+${config('ready').eventI} -> [${config('playerChange').eventO}], \
+${config('gameChange').eventI} -> [${config('roomChange: new winner').eventO}] events`, (done) => {
+			let idInterval: NodeJS.Timeout | null = null;
+			client1.on('roomChange', (payload): void => {
+				if (payload.reason === 'new winner') {
+					expect(payload.room.leader.username).toBe(username1);
+					expect(payload.room.winner).toBeDefined();
+					expect(payload.room.winner).toHaveProperty('wins');
+					expect(payload.room.winner.wins.length).toBeGreaterThanOrEqual(1);
+					expect(payload.room.totalPlayers).toBe(5);
+					expect(payload.room.totalReady).toBe(0);
+					if (idInterval) clearInterval(idInterval);
+					done();
+				}
+				if (payload.reason === 'player incoming') {
+					expect(payload.room.players).toHaveLength(5);
+					expect(payload.player.username).toBe(username5);
+					expect(payload.player.roomsState).toHaveLength(1);
+					expect(payload.player.roomsState[0].status).toBe('idle');
+				}
+			});
+			client4.on('playerChange', (payload): void => {
+				if (payload.reason === 'ready' && payload.player.username === username4) {
+					const actions = ['space', 'left', 'right', 'down', 'up'];
+					idInterval = setInterval(() => {
+						client1.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+						client2.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+						client3.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+						client4.emit('gameChange', { action: actions[Math.floor(Math.random() * 5) % 5], room: room1 });
+					}, 100);
+				}
+			});
+			client1.on('gameStart', (payload) => {
+				if (payload.reason === 'start') {
+					client5.emit('joinRoom', room1);
+				}
+			});
+
+			client1.emit('ready', room1);
+			client2.emit('ready', room1);
+			client3.emit('ready', room1);
+			client4.emit('ready', room1);
+		}, 6000);
 	});
 
 	describe('disconnect all clients', () => {
 		test(
 			'disconnect',
 			(done) => {
-				try {
-					console.log('disconnect all clients');
-					disconnectAllClients(done);
-				} catch (e) {
-					console.error(e);
-					done(e);
-				}
+				let nb = 0;
+				client1.on('disconnect', () => {
+					nb++;
+					client1.off('disconnect');
+					if (nb === 5) {
+						setTimeout(() => {
+							done();
+						}, destroyTimer);
+					}
+				});
+
+				client2.on('disconnect', () => {
+					nb++;
+					client2.off('disconnect');
+					if (nb === 5) {
+						setTimeout(() => {
+							done();
+						}, destroyTimer);
+					}
+				});
+
+				client3.on('disconnect', () => {
+					nb++;
+					client3.off('disconnect');
+					if (nb === 5) {
+						setTimeout(() => {
+							done();
+						}, destroyTimer);
+					}
+				});
+
+				client4.on('disconnect', () => {
+					nb++;
+					client4.off('disconnect');
+					if (nb === 5) {
+						setTimeout(() => {
+							done();
+						}, destroyTimer);
+					}
+				});
+
+				client5.on('disconnect', () => {
+					nb++;
+					client5.off('disconnect');
+					if (nb === 5) {
+						setTimeout(() => {
+							done();
+						}, destroyTimer);
+					}
+				});
+				client1.disconnect();
+				client2.disconnect();
+				client3.disconnect();
+				client4.disconnect();
+				client5.disconnect();
 			},
 			destroyTimer + 1000,
 		);
