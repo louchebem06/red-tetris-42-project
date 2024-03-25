@@ -88,9 +88,7 @@
 			if (data.reason != 'ready') return;
 			const statusRoom = data.player?.roomsState.filter((e) => e.name == room)[0];
 			ready = statusRoom.readys;
-			if ($sessionID == data.player.sessionID) {
-				userIsReady = statusRoom.status == 'ready';
-			}
+			io.emit('getRoom', room);
 			addSystemMessage(
 				`${data.player.username} ${statusRoom.status == 'ready' ? 'set' : 'unset'} ready`,
 			);
