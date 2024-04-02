@@ -30,6 +30,8 @@ jobs:
     
     - name: Install playright
       run: npx playwright install
+    - name: Install playright dep
+      run: npx playwright install-deps
     
     - name: Run build
       working-directory: frontend/
