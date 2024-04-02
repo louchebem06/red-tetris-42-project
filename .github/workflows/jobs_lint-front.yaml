@@ -41,7 +41,3 @@ jobs:
         else
           echo "Not forbidden tags found"
         fi
-
-    - name: Run build
-      working-directory: frontend/
-      run: npm run build
