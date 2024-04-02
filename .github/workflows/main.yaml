@@ -7,16 +7,16 @@ on:
 jobs:
   linter-back:
     uses: ./.github/workflows/jobs_lint-back.yaml
-  # test-back:
-  #   uses: ./.github/workflows/jobs_test-back.yaml
+  test-back:
+    uses: ./.github/workflows/jobs_test-back.yaml
   linter-front:
     uses: ./.github/workflows/jobs_lint-front.yaml
-  # test-front:
-  #   uses: ./.github/workflows/jobs_test-front.yaml
+  test-front:
+    uses: ./.github/workflows/jobs_test-front.yaml
   dependabot-merge-pr:
-    needs: [linter-front, linter-back]
-    # needs: [linter-front, test-front, linter-back, test-back]
-    runs-on: ubuntu-latest
+    # needs: [linter-front, linter-back]
+    needs: [linter-front, test-front, linter-back, test-back]
+    runs-on: self-hosted
     permissions:
       pull-requests: write
       contents: write

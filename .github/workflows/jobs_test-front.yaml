@@ -5,7 +5,7 @@ on: workflow_call
 jobs:
   test-frontend:
     name: Check test frontend
-    runs-on: macos-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
