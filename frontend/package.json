@@ -37,7 +37,7 @@
 		"test:coverage:web": "npm run test:coverage && open coverage/index.html"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.42.1",
+		"@playwright/test": "^1.43.0",
 		"@sveltejs/adapter-static": "^3.0.1",
 		"@sveltejs/kit": "^2.5.5",
 		"@sveltejs/vite-plugin-svelte": "^3.0.2",
