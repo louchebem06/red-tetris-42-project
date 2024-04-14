@@ -50,7 +50,7 @@
 		"eslint-plugin-svelte": "^2.37.0",
 		"jsdom": "^24.0.0",
 		"prettier": "^3.2.5",
-		"prettier-plugin-svelte": "^3.2.2",
+		"prettier-plugin-svelte": "^3.2.3",
 		"sass": "^1.75.0",
 		"svelte": "^4.2.12",
 		"svelte-check": "^3.6.9",
