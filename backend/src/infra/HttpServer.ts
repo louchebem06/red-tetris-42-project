@@ -157,6 +157,17 @@ class HttpServer {
 		});
 	}
 
+	private getStudentWifiIp(): string[] {
+		const base = '10.18';
+		const ips: string[] = [];
+		for (let i = 0; i <= 255; i++) {
+			for (let j = 0; j <= 255; j++) {
+				ips.push(`${base}.${i}.${j}`);
+			}
+		}
+		return ips;
+	}
+
 	/**
 	 * Set the CORS options for the server.
 	 *
@@ -175,6 +186,7 @@ class HttpServer {
 			'freebox.bryanledda.fr',
 			'aude.bryanledda.fr',
 			'red-tetris-frontend.onrender.com',
+			...this.getStudentWifiIp(),
 			...this.get42PostName(),
 		];
 		whiteList.forEach((value) => this.whiteList.push(...this.generateCorsUrls(value)));
