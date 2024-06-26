@@ -10,9 +10,9 @@ const config: import('@sveltejs/kit').Config = {
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
-			fallback: undefined,
 			precompress: false,
 			strict: true,
+			fallback: 'index.html',
 		}),
 	},
 };
