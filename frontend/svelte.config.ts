@@ -12,7 +12,7 @@ const config: import('@sveltejs/kit').Config = {
 			assets: 'build',
 			precompress: false,
 			strict: true,
-			fallback: 'index.html',
+			fallback: 'dynamic.html',
 		}),
 	},
 };

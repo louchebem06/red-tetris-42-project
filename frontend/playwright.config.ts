@@ -2,7 +2,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
 	workers: 1,
-	retries: 3,
+	retries: 0,
 	webServer: [
 		{
 			command: 'npm run start -C ../backend',
