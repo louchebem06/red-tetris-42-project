@@ -17,6 +17,9 @@ RUN npm install && npm run build
 RUN mv ./build/* /var/www/html
 RUN rm -rf ./*
 
+RUN rm -rf /etc/nginx/sites-enabled
+COPY ./nginx.conf /etc/nginx/sites-enabled/default
+
 WORKDIR /var/www/html
 
 RUN rm index.nginx-debian.html
