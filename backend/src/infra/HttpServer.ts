@@ -14,7 +14,14 @@ class HttpServer {
 	private whiteList: string[] = [];
 	private port: number = parseInt(process.env.PORT || '8080', 10);
 	private corsOpt: CorsOptions = {};
-	private defaultPorts: number[] = [80, 443, 4173, 5173, this.port];
+	private defaultPorts: number[] = [
+		80,
+		443,
+		4173,
+		5173,
+		Number.parseInt(process.env.PORT_FRONTEND || '80'),
+		this.port,
+	];
 
 	/**
 	 * Initializes the constructor.

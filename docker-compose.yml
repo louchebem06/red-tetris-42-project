@@ -11,7 +11,7 @@ services:
     env_file:
       - .env
     ports:
-      - "80:80"
+      - "$PORT_FRONTEND:80"
     restart: always
     hostname: nginx
 
@@ -29,10 +29,11 @@ services:
         - DESTROY_TIMER
         - DISCO_TIMER
         - START_GAME_TIMER
+        - PORT_FRONTEND
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "$PORT:$PORT"
     restart: always
     hostname: node
     volumes:

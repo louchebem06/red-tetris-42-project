@@ -8,7 +8,7 @@ function getServerPort(server: HttpServer): number {
 	return address.port;
 }
 
-describe('HttpServer Basic Connection Home Page port 4242', () => {
+describe('HttpServer Basic Connection Home Page port 4245', () => {
 	let server: HttpServer;
 	beforeAll((done) => {
 		server = new HttpServer();
@@ -16,13 +16,13 @@ describe('HttpServer Basic Connection Home Page port 4242', () => {
 	});
 
 	test('Server start', (done) => {
-		server.start(4242);
+		server.start(4245);
 		expect(server.getHttpServer().listening).toBeTruthy();
 		done();
 	});
 
 	test('Port listening', (done) => {
-		expect(getServerPort(server)).toBe(4242);
+		expect(getServerPort(server)).toBe(4245);
 		done();
 	});
 
@@ -134,7 +134,7 @@ describe('HttpServer ERROR', () => {
 	test('Not allowed by cors', (done) => {
 		request(server.getHttpServer())
 			.get('/')
-			.set('Origin', 'http://localhost:4242')
+			.set('Origin', 'http://localhost:4245')
 			.then((response) => {
 				console.log('then not allowed by cors?', response);
 				expect(response.statusCode).toBe(403);
