@@ -2,7 +2,7 @@ import { test, expect } from './baseFixtures';
 
 test('Logout', async ({ page }) => {
 	await page.goto('/');
-
+	await page.waitForTimeout(1000);
 	expect(await page.title()).toEqual('Registration | Red Tetris');
 
 	await page.getByPlaceholder('username').click();
