@@ -134,6 +134,7 @@ npm run test
 ```js
 npm run check
 ```
+
 ou
 
 ```js
@@ -190,3 +191,52 @@ The timers are decreased to:
 - 60s for DISCO_TIMER
 - 60s for START_GAME_TIMER
   The .env file should be handled by the provider.
+
+#### Application
+
+```sh
+cp .env.example .env
+docker-compose up
+```
+
+or
+
+```sh
+make start
+```
+
+#### Units Tests
+
+##### Backend
+
+###### Docker Container
+
+```sh
+backend-test
+```
+
+Then into container:
+
+```sh
+npm run rm:prod
+npm install
+npm build
+npx jest --detectOpenHandles --config jest.config.ts
+```
+
+Don't forget to :
+
+```sh
+npm run rm:prod
+```
+
+after each testing session.
+
+###### Host Environment
+
+```sh
+make backend-test-without-docker
+make backend-test-cmd
+```
+
+##### Frontend
