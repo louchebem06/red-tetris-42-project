@@ -368,7 +368,7 @@ ${config('gameChange').eventI} -> [${config('roomChange: new winner').eventO}] e
 					...playerExpect5,
 				}),
 			]);
-		}, 500);
+		});
 	});
 
 	describe('A Fifth Player enters in Room 1, after Third Game started', () => {

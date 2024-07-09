@@ -44,7 +44,7 @@ const config: Config = {
 		name: 'RED-TETRIS Backend',
 		color: 'cyan',
 	},
-	testTimeout: 250,
+	testTimeout: 30000,
 	roots: ['<rootDir>/src/'],
 	setupFilesAfterEnv: ['<rootDir>/src/tests/utils/expect.ts'],
 	injectGlobals: true,

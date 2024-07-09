@@ -12,8 +12,8 @@ test('Update Channel List', async ({ context, browser }) => {
 	await page.getByRole('button', { name: 'send' }).click();
 	await page.waitForTimeout(1000);
 	await page.goto('/');
-	expect(await page.title()).toEqual('ListRoom | Red Tetris');
 	await page.waitForTimeout(1000);
+	expect(await page.title()).toEqual('ListRoom | Red Tetris');
 
 	const newContext = await browser.newContext();
 	const newPage = await newContext.newPage();

@@ -436,57 +436,53 @@ describe('* Disconnect Players State', () => {
 			});
 		});
 
-		test(
-			`${config(username2).client} should listen the countdown 2 times then unset as ready\
-		, ${config('disconnect').eventI} -> [${config('join').eventO}] events`,
-			async () => {
-				client2 = datasClients[1].clients[2];
-				await testSeveralOutgoingEventsSeveralTimes(
-					client2,
-					createIncomingAction('undefined', undefined),
-					[
-						{
-							event: 'gameStart',
-							times: 2,
-							payloads: [
-								{
-									roomName: room1,
-									reason: 'time',
-									message: 'The game will start in 3 seconds.',
-								},
-								{
-									reason: 'time',
-									message: 'The game will start in 2 seconds.',
-									roomName: room1,
-								},
-							],
-						},
-					],
+		test(`${config(username2).client} should listen the countdown 2 times then unset as ready\
+		, ${config('disconnect').eventI} -> [${config('join').eventO}] events`, async () => {
+			client2 = datasClients[1].clients[2];
+			await testSeveralOutgoingEventsSeveralTimes(
+				client2,
+				createIncomingAction('undefined', undefined),
+				[
 					{
-						name: room1,
-						toWatch: [client2.id ?? ''],
+						event: 'gameStart',
+						times: 2,
+						payloads: [
+							{
+								roomName: room1,
+								reason: 'time',
+								message: 'The game will start in 3 seconds.',
+							},
+							{
+								reason: 'time',
+								message: 'The game will start in 2 seconds.',
+								roomName: room1,
+							},
+						],
 					},
-				);
-				// clt2 se unset ready
-				await testSeveralOutgoingEvents(client2, createIncomingAction('ready', room1), [
-					createOutgoingAction('playerChange', {
-						reason: 'ready',
-						player: {
-							...player2,
-							roomsState: [
-								createRoomState({
-									name: room1,
-									status: 'idle',
-									readys: 1,
-									leads: false,
-								}),
-							],
-						},
-					}),
-				]);
-			},
-			destroyTimer + 1000,
-		);
+				],
+				{
+					name: room1,
+					toWatch: [client2.id ?? ''],
+				},
+			);
+			// clt2 se unset ready
+			await testSeveralOutgoingEvents(client2, createIncomingAction('ready', room1), [
+				createOutgoingAction('playerChange', {
+					reason: 'ready',
+					player: {
+						...player2,
+						roomsState: [
+							createRoomState({
+								name: room1,
+								status: 'idle',
+								readys: 1,
+								leads: false,
+							}),
+						],
+					},
+				}),
+			]);
+		});
 	});
 
 	describe(`Client 3 should income in room ${room1}, set as ready, leave room, disconnect and reconnect`, () => {

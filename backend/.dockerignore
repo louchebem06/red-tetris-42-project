@@ -18,7 +18,6 @@ logs/
 
 # Test
 src/tests/coverage-reports
-jest.config.ts
 jest.onlyTest.config.ts
 
 # Config

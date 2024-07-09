@@ -8,8 +8,8 @@
 	"main": "app.js",
 	"scripts": {
 		"start": "TZ='UTC' node dist/src/app.js",
-		"env": "npx ts-node configSetup.ts",
 		"build": "npx tsc --build",
+		"env": "npx ts-node configSetup.ts",
 		"start:prod:without:docker": "unset DEV UNITSTESTS && npm run env && npm run build && TZ='UTC' node dist/src/app.js",
 		"dev": "npm run dev:backend",
 		"install:frontend": "npm install -C ../frontend",
@@ -27,13 +27,17 @@
 		"logs:rm": "rm -rf ./logs/*.txt",
 		"tests:rm": "rm -rf ./src/tests/output.txt",
 		"rm": " npm run env:rm && npm run tests:rm ",
+		"rm:prod": " npm run env:rm && npm run tests:rm && npm run logs:rm && npm run rm:sqlite && rm -rf node_modules dist",
 		"rm:sqlite": "rm -rf data/leaderboard.sqlite",
 		"test:noCovDebug": "npm run rm:sqlite && UNITSTESTS='1' && export DEBUG=engine,socket* && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts",
 		"test:noCov": "npm run rm:sqlite && export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles --config jest.onlyTest.config.ts",
-		"test:Cov": "npm run rm:sqlite && export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles --config jest.config.ts",
+		"test:cov:prod": "jest --detectOpenHandles --config jest.config.ts",
+		"test:Cov": "npm run rm:sqlite && export UNITSTESTS='1'  && npm run env && npm run build && jest --detectOpenHandles --config jest.config.ts",
+		"test:fmt:Cov": "npm run rm:sqlite && export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles --config jest.config.ts",
 		"test": "npm run rm:sqlite && export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles > src/tests/output.txt --config jest.config.ts",
 		"test:rm": "npm run rm:sqlite && npm run test && npm run tests:rm",
-		"test:open": "open src/tests/coverage-reports/lcov-report/index.html"
+		"test:open": "open src/tests/coverage-reports/lcov-report/index.html",
+		"test:prod": "npm run rm:prod && npm install && npm run build && npm run test:cov:prod"
 	},
 	"license": "ISC",
 	"devDependencies": {
