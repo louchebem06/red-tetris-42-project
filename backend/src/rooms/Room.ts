@@ -37,7 +37,17 @@ export default class Room extends RoomPropsBase {
 	}
 
 	public close(): Room {
+		if (this.game && this.game.state instanceof StartedState) {
+			this.game.gamers.forEach((gamer) => {
+				const game = this.game;
+				if (game && game.state instanceof StartedState) {
+					game?.removePlayer(gamer, game.getPlayerGame(gamer));
+				}
+			});
+			this.game?.finish();
+		}
 		this.service.close(this, this.leader);
+		this.log('CLOSING ROOM');
 		return this;
 	}
 

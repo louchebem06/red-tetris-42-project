@@ -32,7 +32,7 @@ export class Session {
 			if (client.disconnectTimer) {
 				clearTimeout(client.disconnectTimer);
 			}
-			const timeout = parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000;
+			const timeout = parseInt(process.env.DISCO_TIMER ?? '15', 10) * 1000;
 			this.clientsStore.disconnect(socket);
 			const disconnectTimer = setTimeout(() => {
 				if (this.clientsStore.total === 0) {

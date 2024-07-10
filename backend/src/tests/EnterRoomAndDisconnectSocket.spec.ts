@@ -1247,8 +1247,8 @@ ${config('disconnect').eventI} -> [${config('join').eventO}] events`, async () =
 		});
 
 		test(`${config(username1).client} should connect with \
-		2 others client socket, simulating several browser tabs opened\
-		, ${config('disconnect').eventI} -> [${config('join').eventO}] events`, async () => {
+2 others client socket, simulating several browser tabs opened\
+, ${config('disconnect').eventI} -> [${config('join').eventO}] events`, async () => {
 			await testDuplicateClient(
 				{
 					client: client1,
@@ -1291,11 +1291,6 @@ ${config('getRoom').eventI} -> [${config('roomInfo').eventO}] events`, async () 
 			);
 		}, 10000);
 
-		/* TODO
-		 * Ce test ne passe pas car le player1, ex leader a quitté la room,
-		 * mais est toujours dans les gamers de la partie
-		 * soit on l'autorise a quitter, soit on l'autorise pas a quitter la room
-		 */
 		test(
 			`${config(username1).client} should disconnect all its sockets, allowing destroying session, \
 then ${config(username2).client} should become leader of the room,
@@ -1326,22 +1321,6 @@ ${config('disconnect').eventI} -> [${config('join').eventO}] events`,
 					leads: [room1],
 				};
 
-				const roomsState1ExLeader = [
-					createRoomState({
-						name: room1,
-						status: 'left',
-						readys: 0,
-						started: true,
-						leads: false,
-					}),
-				];
-
-				const player1ExLeaderGame = {
-					...playerExpect1,
-					roomsState: roomsState1ExLeader,
-					leads: [],
-				};
-
 				const roomGameStartedLeader = {
 					...roomGameStarted,
 					leader: player2LeaderGame,
@@ -1353,7 +1332,7 @@ ${config('disconnect').eventI} -> [${config('join').eventO}] events`,
 							id: expect.any(String) as unknown as string,
 							state: 'StartedState',
 							winner: null,
-							gamers: [player1ExLeaderGame, player2LeaderGame],
+							gamers: [player2LeaderGame],
 						},
 					]),
 				};

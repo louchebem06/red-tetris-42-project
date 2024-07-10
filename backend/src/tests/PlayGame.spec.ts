@@ -419,7 +419,7 @@ ${config('gameChange').eventI} -> [${config('roomChange: new winner').eventO}] e
 		}, 6000);
 	});
 
-	describe('disconnect all clients', () => {
+	describe('Disconnect all clients', () => {
 		test(
 			'disconnect',
 			(done) => {

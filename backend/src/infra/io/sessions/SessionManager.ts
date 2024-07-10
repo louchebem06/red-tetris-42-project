@@ -46,13 +46,32 @@ export class SessionManager {
 	}
 
 	public async close(session: Session): Promise<SessionManager> {
+		logger.logContext(
+			`session ${session.sid}[empty:${session.isEmpty()}] entering SessionManager close function`,
+			'SessionManager::close scope',
+			`session ${colors.fBlue}${colors.underline}${session.sid}[empty:${session.isEmpty()}]${colors.reset}\
+ entering SessionManager close function`,
+		);
 		if (session.isEmpty()) {
+			logger.logContext(
+				`session ${session.sid}[empty:${session.isEmpty()}] entering SessionManager close function`,
+				'SessionManager::close scope, check if session is empty then DisconnectPlayer',
+				`session ${colors.fBlue}${colors.underline}${session.sid}[empty:${session.isEmpty()}]${colors.reset}\
+ entering SessionManager close function`,
+			);
 			const sid = session.sid;
 			const player = await this.pm.getPlayerById(sid);
 			new DisconnectPlayer<RM>(this.rm).execute(player);
 			const tm = setTimeout(
 				() => {
 					if (session.isEmpty()) {
+						logger.logContext(
+							`session ${session.sid}[empty:${session.isEmpty()}] entering SessionManager close function`,
+							'SessionManager::close destroy timeout scope, check if session is empty',
+							`session ${colors.fBlue}${colors.underline}${session.sid}\
+[empty:${session.isEmpty()}]${colors.reset}\
+ entering SessionManager close function`,
+						);
 						this.delete(sid);
 						this.pm.delete(sid);
 						logger.logContext(
@@ -62,7 +81,7 @@ export class SessionManager {
 						);
 					}
 				},
-				parseInt(process.env.DESTROY_TIMER ?? '60', 10) * 1000,
+				parseInt(process.env.DESTROY_TIMER ?? '10', 15) * 1000,
 			);
 			TimeoutManager.addTimeout(tm);
 		}

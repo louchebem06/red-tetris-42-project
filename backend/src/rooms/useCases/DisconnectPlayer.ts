@@ -21,9 +21,11 @@ export class DisconnectPlayer<
 				const isPlayerDisconnected = state.status?.match(/left|disconnect/);
 				const room = this.manager.get(state.name);
 				if (!isPlayerDisconnected && room?.has(player.sessionID)) {
+					player.connected = false;
 					room.updatePlayer(player, 'disconnected');
 					room.removePlayer(player);
 				}
+				this.manager.log();
 			});
 		} catch (e) {
 			throw new Error(`${(<Error>e).message}`);

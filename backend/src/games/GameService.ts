@@ -41,7 +41,9 @@ export class GameService extends ServerService {
 		try {
 			const log = `GameRoom ${id} ${username}(${sid}): ${action}`;
 			logger.logContext(log, `gameservice ${id}: setgamer ${username}`, log);
-			this.changeRoom(player.sessionID, this.game.id, action);
+			if (player.connected) {
+				this.changeRoom(player.sessionID, this.game.id, action);
+			}
 		} catch (error) {
 			const log = `Error: GameRoom ${id} ${username}(${sid}): ${action} failed ${(error as Error).message}`;
 			logger.logContext(log, `ERROR: gameservice ${id}: setgamer ${username}`, log);

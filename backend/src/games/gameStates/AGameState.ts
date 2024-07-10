@@ -33,7 +33,8 @@ export abstract class AGameState {
 			this.game?.gamers.forEach((gamer: Player) => {
 				const stateGame = this.state(gamer);
 				const state = this.game?.state.constructor.name ?? '';
-				if (stateGame && state === `StartedState`) this.service?.emitStatePlayer(stateGame, gamer.sessionID);
+				if (stateGame && state === `StartedState` && gamer.connected)
+					this.service?.emitStatePlayer(stateGame, gamer.sessionID);
 				const playerGame = this.logic?.endGame(gamer.sessionID);
 				if (playerGame?.getEndGame()) this.game?.removePlayer(gamer, playerGame);
 			});
