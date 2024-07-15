@@ -44,6 +44,9 @@
 		&.S {
 			background: map.get($tetriminos, 'colors', 'S');
 		}
+		&.G {
+			background: map.get($tetriminos, 'colors', 'G');
+		}
 
 		.lumens {
 			position: absolute;
