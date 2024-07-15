@@ -1,5 +1,5 @@
 import { ATetriminos } from 'games/tetriminos/ATetriminos';
-import { TetriminosArrayType } from './tetriminos/tetriminos.interface';
+import { TetriminosArrayType, TetriminosType } from './tetriminos/tetriminos.interface';
 
 export const X = 10;
 export const Y = 20;
@@ -178,8 +178,10 @@ export class Map {
 		const lineForRemove: number[] = [];
 		for (let y = this.map.length - 1; y >= 0; y--) {
 			const line = this.map[y];
-			const lineArray = line.filter((v) => v == '');
-			if (lineArray.length == 0) lineForRemove.push(y);
+			const lineArray = line.filter((v) => v == '' || v == 'G');
+			if (lineArray.length == 0) {
+				lineForRemove.push(y);
+			}
 		}
 		for (const l of lineForRemove) {
 			this.map.splice(l, 1);
@@ -189,5 +191,21 @@ export class Map {
 			this.map.unshift(this.createEmptyLine());
 		}
 		return count;
+	}
+
+	public addBlock(): void {
+		const newMap: TetriminosArrayType = [];
+		let newLine = -1;
+		for (let y = Y - 1; y >= 0; y--) {
+			if (this.map[y][0] == 'G') continue;
+			newLine = y;
+			break;
+		}
+		for (let y = 0; y < Y; y++) {
+			if (y == newLine) {
+				newMap.push('G'.repeat(X).split('') as TetriminosType[]);
+			} else newMap.push([...this.map[y]]);
+		}
+		this.map = newMap.map((row) => [...row]);
 	}
 }

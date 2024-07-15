@@ -126,6 +126,11 @@ export class PlayerGame {
 		}
 	}
 
+	public addBlockLine(line: number): void {
+		if (line - 1 <= 0) return;
+		for (let i = 0; i < line - 1; i++) this.getMap().addBlock();
+	}
+
 	public getEndGame(): boolean {
 		return this.endGame;
 	}
@@ -153,6 +158,7 @@ export class GameLogic {
 
 	private generateTetriminos(): void {
 		this.tetriminos.push(TetriminosFactory.generateRandom());
+		// this.tetriminos.push(TetriminosFactory.generateI());
 	}
 
 	public addPlayer(player: Player): void {
@@ -231,6 +237,13 @@ export class GameLogic {
 		}
 		const newLineCount = player.getMap().clearMap();
 		player.addNewLine(newLineCount);
+		if (newLineCount - 1 > 0) {
+			Object.keys(this.players).forEach((v) => {
+				if (v != player.getPlayer().sessionID) {
+					this.players[v].addBlockLine(newLineCount);
+				}
+			});
+		}
 	}
 
 	public action(identifiantPlayer: string, action: TypeAction): void {
