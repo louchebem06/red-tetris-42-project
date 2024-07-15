@@ -5,7 +5,7 @@ on: workflow_call
 jobs:
   test-frontend:
     name: Check test frontend
-    runs-on: macos-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
@@ -30,6 +30,8 @@ jobs:
     
     - name: Install playright
       run: npx playwright install
+    - name: Install playright dep
+      run: npx playwright install-deps
     
     - name: Run build
       working-directory: frontend/

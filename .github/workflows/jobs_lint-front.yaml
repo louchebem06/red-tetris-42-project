@@ -5,7 +5,7 @@ on: workflow_call
 jobs:
   lint-frontend:
     name: Check lint frontend
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
@@ -41,7 +41,3 @@ jobs:
         else
           echo "Not forbidden tags found"
         fi
-
-    - name: Run build
-      working-directory: frontend/
-      run: npm run build
