@@ -6,8 +6,8 @@ import { TimeoutManager } from '../infra/io';
 
 export class Timer extends Observer<Observable> {
 	public room: Room | null = null;
-	public destroySession: number = parseInt(process.env.DESTROY_TIMER ?? '60', 10) * 1000;
-	public disconnectSession: number = parseInt(process.env.DISCO_TIMER ?? '60', 10) * 1000;
+	public destroySession: number = parseInt(process.env.DESTROY_TIMER ?? '15', 10) * 1000;
+	public disconnectSession: number = parseInt(process.env.DISCO_TIMER ?? '15', 10) * 1000;
 	public timerId: NodeJS.Timeout | null = null;
 	public countdown: number = parseInt(process.env.START_GAME_TIMER ?? '10', 10);
 	public lock: boolean = false;

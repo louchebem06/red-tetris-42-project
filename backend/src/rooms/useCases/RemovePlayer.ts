@@ -29,8 +29,6 @@ export class RemovePlayerCommand extends RoomCommand {
 		if (!this.room.has(sessionID)) {
 			this.service.error(`Not in room ${name}`);
 		}
-		if (this.service.isConnectedOnServer() && this.service.hasPlayer(player)) {
-		}
 	}
 
 	private processPlayerRemoval(player: Player): void {
@@ -54,16 +52,33 @@ export class RemovePlayerCommand extends RoomCommand {
 		// Room does not exist anymore on server but still in manager
 		this.removePlayer(player);
 		this.service.handleRoomEmpty(this.room);
+		logger.logContext(
+			`player ${player.username} has left disconnected room ${this.room.name}`,
+			'remove player from disconnected room',
+			`player ${player.username} has left disconnected room ${this.room.name}`,
+		);
 	}
 
 	private removeDisconnectedPlayer(player: Player, wasLeader: boolean): void {
-		this.removePlayer(player);
+		new PlayerReady(player, this.room.name).delete(this.room);
+		const game = this.room.game;
+		if (game) {
+			game.removePlayer(player, game.getPlayerGame(player));
+		}
+		this.room.delete(player.sessionID);
+		this.room.updatePlayer(player, 'disconnected');
 
-		if (this.room.total === 1) {
+		if (this.room.total === 0) {
 			this.service.handleRoomEmpty(this.room);
 		} else if (wasLeader) {
 			new UpdateRoleCommand(this.room, this.service, 'lead').execute(player);
 		}
+
+		logger.logContext(
+			`disconnected player ${player.username} has left room ${this.room.name}`,
+			'remove disconnected player',
+			`disconnected player ${player.username} has left room ${this.room.name}`,
+		);
 	}
 
 	private removePlayerFromRoom(player: Player, wasLeader: boolean): void {

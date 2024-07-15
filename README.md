@@ -155,9 +155,9 @@ The mandatory environment variables needed to be set are (prod mode):
 HOST=localhost
 PORT=8080
 PROTOCOL=ws
-DESTROY_TIMER=3600
-DISCO_TIMER=60
-START_GAME_TIMER=60
+DESTROY_TIMER=15
+DISCO_TIMER=15
+START_GAME_TIMER=10
 ```
 
 _The timers variables are set in seconds. Then, into codebase, it will be converted into milliseconds._
@@ -167,8 +167,8 @@ _The timers variables are set in seconds. Then, into codebase, it will be conver
 If the `DEV` variable is set to `1` the server will run in development mode.
 The timers are decreased to:
 
-- 60s for DESTROY_TIMER
-- 30s for DISCO_TIMER
+- 10s for DESTROY_TIMER
+- 10s for DISCO_TIMER
 - 10s for START_GAME_TIMER
   The .env file is automatically created.
 
@@ -177,8 +177,8 @@ The timers are decreased to:
 If the `UNITSTESTS` variable is set to `1` the server will run in unit tests mode
 The timers are decreased to:
 
-- 9s for DESTROY_TIMER
-- 5s for DISCO_TIMER
+- 1s for DESTROY_TIMER
+- 1s for DISCO_TIMER
 - 5s for START_GAME_TIMER
   The .env file is automatically created.
 
@@ -187,9 +187,9 @@ The timers are decreased to:
 If the `DEV` and the `UNITSTESTS` variables are unset, we are in production mode.
 The timers are decreased to:
 
-- 3600s for DESTROY_TIMER
-- 60s for DISCO_TIMER
-- 60s for START_GAME_TIMER
+- 15s for DESTROY_TIMER
+- 15s for DISCO_TIMER
+- 10s for START_GAME_TIMER
   The .env file should be handled by the provider.
 
 #### Application
@@ -204,39 +204,3 @@ or
 ```sh
 make start
 ```
-
-#### Units Tests
-
-##### Backend
-
-###### Docker Container
-
-```sh
-backend-test
-```
-
-Then into container:
-
-```sh
-npm run rm:prod
-npm install
-npm build
-npx jest --detectOpenHandles --config jest.config.ts
-```
-
-Don't forget to :
-
-```sh
-npm run rm:prod
-```
-
-after each testing session.
-
-###### Host Environment
-
-```sh
-make backend-test-without-docker
-make backend-test-cmd
-```
-
-##### Frontend

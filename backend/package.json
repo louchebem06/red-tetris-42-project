@@ -37,7 +37,8 @@
 		"test": "npm run rm:sqlite && export UNITSTESTS='1' && npm run env && npm run format && npm run build && jest --detectOpenHandles > src/tests/output.txt --config jest.config.ts",
 		"test:rm": "npm run rm:sqlite && npm run test && npm run tests:rm",
 		"test:open": "open src/tests/coverage-reports/lcov-report/index.html",
-		"test:prod": "npm run rm:prod && npm install && npm run build && npm run test:cov:prod"
+		"test:prod": "npm run rm:prod && npm install && npm run build && npm run test:cov:prod",
+		"crash": "export UNITSTESTS='1' && npm run env && jest --detectOpenHandles --config jest.onlyTest.config.ts src/tests/DisconnectDuringSoloGameButWaitingRoomNotEmpty.spec.ts"
 	},
 	"license": "ISC",
 	"devDependencies": {
@@ -45,6 +46,7 @@
 		"@babel/preset-typescript": "^7.24.7",
 		"@types/express": "^4.17.21",
 		"@types/jest": "^29.5.12",
+		"@types/mocha": "^10.0.7",
 		"@types/node": "^20.14.10",
 		"@types/sqlite3": "^3.1.11",
 		"@types/supertest": "^6.0.2",

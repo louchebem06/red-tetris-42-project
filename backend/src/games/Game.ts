@@ -30,6 +30,10 @@ export default class Game {
 		logger.logContext(log, `game creation`, log);
 	}
 
+	public getPlayerGame(player: Player): PlayerGame {
+		return this.logic?.endGame(player.sessionID);
+	}
+
 	public removePlayer(player: Player, playerGame: PlayerGame): Game {
 		if (this.gamers.includes(player)) {
 			this.handlePlayerRemoval(player, playerGame).checkGameEnd();
@@ -38,14 +42,24 @@ export default class Game {
 	}
 
 	private handlePlayerRemoval(player: Player, playerGame: PlayerGame): Game {
-		this.service.leave(player);
+		const room = this.room.name;
+		const status = player.status(room);
+		if (status !== 'disconnected') {
+			this.service.leave(player);
+		}
 		this.gamers = this.gamers.filter((gamer) => gamer !== player);
 
-		this.room.updatePlayer(player, 'idle');
-		const log = `Game ${this._id}: remove player ${JSON.stringify(player)},
+		if (status !== 'disconnected' && status !== 'left') {
+			this.room.updatePlayer(player, 'idle');
+		} else {
+			this.room.updatePlayer(player, status);
+		}
+		const log = `Game ${this._id}: remove player ${JSON.stringify(player)} (${status}),
 			score ${JSON.stringify(playerGame)}`;
-		logger.logContext(log, `remove player`, log);
-		this.service.emitEndGamePlayer(playerGame, player);
+		logger.logContext(log, `remove player (${status})`, log);
+		if (status !== 'disconnected') {
+			this.service.emitEndGamePlayer(playerGame, player);
+		}
 		this.gameStore.addPlayerGame(this.id as string, player.sessionID, playerGame); // game end to player
 		return this;
 	}
@@ -53,8 +67,10 @@ export default class Game {
 	private checkGameEnd(): Game {
 		if (this.gamers.length === 0) {
 			this.finish();
-			const log = `finished game Game ${this._id}`;
-			logger.logContext(log, `remove player`, log);
+			const log = `finished game Game ${this._id}\n
+winner: ${JSON.stringify(this.winner)}\n
+scores: ${JSON.stringify(this.gameStore.get(this.id)?.scores)}`;
+			logger.logContext(log, `GameEnd`, log);
 		}
 		return this;
 	}
@@ -72,7 +88,7 @@ export default class Game {
 	}
 
 	public finish(): Game {
-		this.state.finish();
+		this.state?.finish();
 		return this;
 	}
 

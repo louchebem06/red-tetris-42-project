@@ -14,8 +14,8 @@ const env: Env[] = [
 	{ key: 'PROTOCOL', value: 'ws' },
 	{ key: 'TICKS', value: '128' },
 	{ key: 'TICKS_INTERVAL_MS', value: '1000' },
-	{ key: 'DESTROY_TIMER', value: '60' },
-	{ key: 'DISCO_TIMER', value: '60' },
+	{ key: 'DESTROY_TIMER', value: '15' },
+	{ key: 'DISCO_TIMER', value: '15' },
 	{ key: 'START_GAME_TIMER', value: '10' },
 ];
 
@@ -30,8 +30,8 @@ if (process.env.UNITSTESTS) {
 	replace('START_GAME_TIMER', '5');
 	replace('TICKS', '128');
 } else if (process.env.DEV) {
-	replace('DESTROY_TIMER', '20');
-	replace('DISCO_TIMER', '15');
+	replace('DESTROY_TIMER', '10');
+	replace('DISCO_TIMER', '10');
 	replace('START_GAME_TIMER', '10');
 }
 
